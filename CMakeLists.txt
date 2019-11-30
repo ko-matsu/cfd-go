@@ -57,7 +57,8 @@ endfunction()
 ####################
 # test
 ####################
-if(ENABLE_TESTS)
+if(NOT ENABLE_TESTS)
+else()
 enable_testing()
 endif()		# ENABLE_TESTS
 
