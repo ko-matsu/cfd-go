@@ -15,13 +15,17 @@ on:
 
 jobs:
   cmake-build:
-    name: cmake build-mac
+    name: cmake build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [macos-latest, windows-latest]
 
     steps:
+    - name: setup go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13.x
     - uses: actions/checkout@v1
     - name: cmake_version
       run: cmake --version
@@ -37,20 +41,7 @@ jobs:
       run: cmake --build build --config Release
     - name: go_test-windows
       if: matrix.os == 'windows-latest'
-      run: go_test.bat
+      run: .\go_test.bat
     - name: go_test-macos
       if: matrix.os == 'macos-latest'
       run: ./go_test.sh
-
-  doxygen-ubuntu:
-    name: doxygen-ubuntu
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: install_doxygen
-      run: sudo apt install doxygen graphviz
-    - name: doxygen_check
-      run: |
-        cd doc
-        doxygen Doxyfile_quiet_all
