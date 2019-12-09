@@ -1,0 +1,56 @@
+name: check-build
+
+on: 
+  push:
+    branches:
+    - master
+    - develop
+    - testing/*
+    - release/*
+  pull_request:
+    branches:
+    - master
+    - develop
+    - testing/*
+
+jobs:
+  cmake-build:
+    name: cmake build-mac
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: cmake_version
+      run: cmake --version
+    - name: cmake_generage-windows
+      if: matrix.os == 'windows-latest'
+      run: cmake -S . -B build -G "MSYS Makefiles"
+    - name: cmake_generage-macos
+      if: matrix.os == 'macos-latest'
+      run: cmake -S . -B build -G "Unix Makefiles"
+    - name: cmake_configure
+      run: cmake -DENABLE_SHARED=on -DENABLE_TESTS=off --build build
+    - name: cmake_build
+      run: cmake --build build --config Release
+    - name: go_test-windows
+      if: matrix.os == 'windows-latest'
+      run: go_test.bat
+    - name: go_test-macos
+      if: matrix.os == 'macos-latest'
+      run: ./go_test.sh
+
+  doxygen-ubuntu:
+    name: doxygen-ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_doxygen
+      run: sudo apt install doxygen graphviz
+    - name: doxygen_check
+      run: |
+        cd doc
+        doxygen Doxyfile_quiet_all
