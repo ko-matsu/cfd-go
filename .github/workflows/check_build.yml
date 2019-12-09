@@ -7,6 +7,11 @@ on:
     - develop
     - testing/*
     - release/*
+    paths-ignore:
+    - 'Dockerfile'
+    - 'README.md'
+    - 'package.json'
+    - 'swig.i'
   pull_request:
     branches:
     - master
