@@ -3,5 +3,5 @@
 cd /github/workspace/dist
 cp -rf usr /
 ls -l /usr/local/*
-export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib
-go test
+ls -l /usr/local/go/bin
+LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib64:/usr/local/lib" /usr/local/go/bin/go test
