@@ -1,5 +1,7 @@
 #!/bin/sh -l
 
+apk add --update --no-cache musl gcc g++ make
+
 cd /github/workspace/dist
 cp -rf usr /
 ls -l /usr/local/*
