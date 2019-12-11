@@ -1,4 +1,4 @@
-name: check-build
+name: check-tag
 
 on: 
   push:
