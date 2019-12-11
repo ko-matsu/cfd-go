@@ -1,6 +1,6 @@
 #!/bin/sh -l
 
-apk add --update --no-cache musl gcc g++ make cmake
+apk add --update --no-cache musl gcc g++ make git cmake
 
 cd /github/workspace
 ls
