@@ -74,7 +74,7 @@ jobs:
     - name: go_test-windows
       if: matrix.os == 'windows-latest'
       run: .\go_test.bat
-    - name: go_test-macos
+    - name: go_test
       if: matrix.os != 'windows-latest'
       run: ./go_test.sh
     - name: ubuntu-after
