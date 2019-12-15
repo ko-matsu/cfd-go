@@ -6,8 +6,8 @@ on:
     - 'v*'
 
 jobs:
-  docker-build:
-    name: docker-build
+  upload-object-alpine:
+    name: upload-object-alpine
     runs-on: ubuntu-latest
 
     steps:
