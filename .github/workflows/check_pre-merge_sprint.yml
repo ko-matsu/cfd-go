@@ -39,7 +39,7 @@ jobs:
       id: cache
       with:
         path: cache/cmake
-        key: ${{ runner.os }}-cmake-${{ CMAKE_VERSION }}-x64
+        key: ${{ runner.os }}-cmake-3.15.5-x64
     - name: cmake-download-ubuntu
       if: matrix.os == 'ubuntu-latest' && steps.cache.outputs.cache-hit != 'true'
       run: |
@@ -49,9 +49,8 @@ jobs:
         cd ../..
     - name: cmake-setting-ubuntu
       if: matrix.os == 'ubuntu-latest'
-      env:
-        cmake_file_name: cmake-${{ CMAKE_VERSION }}-Linux-x86_64
       run: |
+        export cmake_file_name="cmake-$CMAKE_VERSION-Linux-x86_64"
         cd cache/cmake
         tar zxvf $cmake_file_name.tar.gz
         chmod +x $cmake_file_name/bin/cmake $cmake_file_name/bin/ctest
