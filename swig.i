@@ -455,6 +455,7 @@ type CfdAddressInfo struct {
 	// hash
 	Hash string
 }
+
 /**
  * Get address information.
  * param: handle         cfd handle
@@ -1984,8 +1985,8 @@ func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err
 	}
 	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
 
-	scriptAsm := strings.Join(scriptItems, " ");
-	script, err = CfdGoConvertScriptAsmToHex(cfdErrHandle, scriptAsm);
+	scriptAsm := strings.Join(scriptItems, " ")
+	script, err = CfdGoConvertScriptAsmToHex(cfdErrHandle, scriptAsm)
 
 	return
 }
@@ -2163,5 +2164,4 @@ func CfdGoNormalizeSignature(handle uintptr, signature string) (normalizedSignat
 
 	return
 }
-
 %}
