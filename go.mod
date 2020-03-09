@@ -1,4 +1,4 @@
-module github.com/cryptogarageinc/cfd-go
+module github.com/ko-matsu/cfd-go/v2
 
 go 1.13
 
