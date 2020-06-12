@@ -364,6 +364,67 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
 
+	// miniscript wsh
+	networkType = (int)(KCfdNetworkMainnet)
+	descriptorDataList, multisigList, err = CfdGoParseDescriptor(
+		"wsh(thresh(2,multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),a:multi(1,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),ac:pk_k(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01)))",
+		networkType,
+		"0")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "00206a6c42f62db9fab091ffaf930e0a847646898d225e1ad94ff43226e20180b9d1", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1qdfky9a3dh8atpy0l47fsuz5ywergnrfztcddjnl5xgnwyqvqh8gschn2ch", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "522103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c721036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0052ae6b5121036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0051ae6c936b21022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01ac6c935287", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// miniscript wsh derive
+	networkType = (int)(KCfdNetworkMainnet)
+	descriptorDataList, multisigList, err = CfdGoParseDescriptor(
+		"sh(wsh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))))",
+		networkType,
+		"44")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 2 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "a914a7a9f411001e3e3db96d7f02fc9ab1d0dc6aa69187", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "3GyYN9WnJBoMn8M5tuqVcFJq1BvbAcdPAt", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2shP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "0020e29b7f3e543d581c99c92b59d45218b008b82c2d406bba3c7384d52e568124aa", descriptorDataList[0].RedeemScript)
+
+		assert.Equal(t, uint32(1), descriptorDataList[1].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].ScriptType)
+		assert.Equal(t, "0020e29b7f3e543d581c99c92b59d45218b008b82c2d406bba3c7384d52e568124aa", descriptorDataList[1].LockingScript)
+		assert.Equal(t, "bc1qu2dh70j584vpexwf9dvag5sckqytstpdgp4m50rnsn2ju45pyj4qudazmh", descriptorDataList[1].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[1].HashType)
+		assert.Equal(t, "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", descriptorDataList[1].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[1].KeyType)
+		assert.Equal(t, "", descriptorDataList[1].Pubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
