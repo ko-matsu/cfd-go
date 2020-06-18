@@ -98,6 +98,30 @@ go build
 
 On Linux or MacOS, can use install / uninstall.
 
+On Windows, can use `releases asset`.
+
+### Using releases asset
+
+The fastest and easiest way.
+
+- macos / linux(ubuntu)
+```Shell
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(download)
+wget https://github.com/cryptogarageinc/cfd-go/releases/download/v0.1.24/cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip
+
+(unzip)
+sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
+```
+
+- windows
+  1. cleanup: `c:/usr/local` directory.
+  2. download: https://github.com/cryptogarageinc/cfd-go/releases/download/v0.1.30/cfdgo-v0.1.30-win-gcc-static-x86_64.zip
+  3. Unzip and extract to `c:/usr/local` directory.
+
 ### install (after build)
 
 install for `/usr/local/lib`.
@@ -149,20 +173,6 @@ cd build && sudo ninja install
 ```
 
 cmake version is 3.15 or higher: `cmake --install build`
-
-#### Using releases asset (ubuntu / macos)
-
-```Shell
-(cleanup)
-./tools/cmake_cleanup.sh
-sudo ./tools/cleanup_install_files.sh
-
-(download)
-wget https://github.com/cryptogarageinc/cfd-go/releases/download/v0.1.24/cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip
-
-(unzip)
-sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
-```
 
 ### uninstall
 ```Shell
