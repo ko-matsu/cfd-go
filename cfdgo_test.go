@@ -1054,6 +1054,11 @@ func TestCfdAddSignConfidentialTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 
+	isVerify, reason, err := CfdGoVerifyTxSignReason(int(KCfdNetworkLiquidv1), txHex, txid, vout, "ert1qs58jzsgjsteydejyhy32p2v2vm8llh9uns6d93", int(KCfdP2wpkhAddress), "", int64(13000000000000), "")
+	assert.NoError(t, err)
+	assert.False(t, isVerify)
+	assert.Equal(t, "Unmatch locking script.", reason)
+
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
@@ -2267,6 +2272,13 @@ func TestCfdGoAddConfidentialTxMultisigSign(t *testing.T) {
 		isVerify, err := CfdGoVerifyConfidentialTxSign(kTxData, txid, vout, addr, addressType, "", satoshi, "")
 		assert.NoError(t, err)
 		assert.Equal(t, false, isVerify)
+	}
+
+	if err == nil {
+		isVerify, reason, err := CfdGoVerifyConfidentialTxSignReason(kTxData, txid, vout, addr, addressType, "", satoshi, "")
+		assert.NoError(t, err)
+		assert.Equal(t, false, isVerify)
+		assert.Equal(t, "NotFound witness stack. segwit need scriptsig.", reason)
 	}
 
 	if err == nil {
