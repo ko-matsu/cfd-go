@@ -174,6 +174,20 @@ cd build && sudo ninja install
 
 cmake version is 3.15 or higher: `cmake --install build`
 
+#### Using releases asset (ubuntu / macos)
+
+```Shell
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(download)
+wget https://github.com/cryptogarageinc/cfd-go/releases/download/v0.1.24/cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip
+
+(unzip)
+sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
+```
+
 ### uninstall
 ```Shell
 (uninstall by using makefile)
