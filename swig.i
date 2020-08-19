@@ -270,6 +270,7 @@ func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPat
 	var maxMultisigKeyNum uint32
 	lastMultisigFlag := false
 	keyNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxMultisigKeyNum)))
+	descriptorDataList = make([]CfdDescriptorData, maxIndex+1, maxIndex+1)
 	for i := uint32(0); i <= maxIndex; i++ {
 		var data CfdDescriptorData
 		var maxNum uint32
@@ -285,11 +286,12 @@ func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPat
 		if ret != (int)(KCfdSuccess) {
 			break
 		}
-		descriptorDataList = append(descriptorDataList, data)
+		descriptorDataList[i] = data
 		lastMultisigFlag = data.IsMultisig
 	}
 
 	if lastMultisigFlag && (ret == (int)(KCfdSuccess)) {
+		multisigList = make([]CfdDescriptorKeyData, maxMultisigKeyNum, maxMultisigKeyNum)
 		for i := uint32(0); i < maxMultisigKeyNum; i++ {
 			var keyData CfdDescriptorKeyData
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -299,7 +301,7 @@ func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPat
 			if ret != (int)(KCfdSuccess) {
 				break
 			}
-			multisigList = append(multisigList, keyData)
+			multisigList[i] = keyData
 		}
 	}
 
@@ -358,6 +360,8 @@ func CfdGoGetAddressesFromMultisig(redeemScript string, networkType int, hashTyp
 	}
 	defer CfdFreeAddressesMultisigHandle(handle, multisigHandle)
 
+	addressList = make([]string, maxKeyNum, maxKeyNum)
+	pubkeyList = make([]string, maxKeyNum, maxKeyNum)
 	for i := uint32(0); i < maxKeyNum; i++ {
 		var pubkey string
 		var address string
@@ -367,8 +371,8 @@ func CfdGoGetAddressesFromMultisig(redeemScript string, networkType int, hashTyp
 		if ret != (int)(KCfdSuccess) {
 			break
 		}
-		addressList = append(addressList, address)
-		pubkeyList = append(pubkeyList, pubkey)
+		addressList[i] = address
+		pubkeyList[i] = pubkey
 	}
 
 	if ret == (int)(KCfdSuccess) {
@@ -591,6 +595,8 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 		return
 	}
 
+	selectUtxoCount := 0
+	tempUtxos := make([]CfdUtxo, utxoCount, utxoCount)
 	for i := uint32(0); i < utxoCount; i++ {
 		utxoIndex := int32(0)
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -603,9 +609,17 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 		if utxoIndex < 0 {
 			break
 		}
-		selectUtxos = append(selectUtxos, utxos[utxoIndex])
+		tempUtxos[i] = utxos[utxoIndex]
+		selectUtxoCount += 1
+	}
+	if selectUtxoCount > 0 {
+		selectUtxos = make([]CfdUtxo, selectUtxoCount, selectUtxoCount)
+		for i := 0; i < selectUtxoCount; i++ {
+			selectUtxos[i] = tempUtxos[i]
+		}
 	}
 
+	totalAmounts = make([]CfdTargetAmount, amountCount, amountCount)
 	for i := uint32(0); i < amountCount; i++ {
 		amount := int64(0)
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -615,7 +629,7 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 			err = convertCfdError(ret, handle)
 			return
 		}
-		totalAmounts = append(totalAmounts, targetAmounts[i])
+		totalAmounts[i] = targetAmounts[i]
 		totalAmounts[i].Amount = amount
 	}
 	return
@@ -2260,13 +2274,15 @@ func CfdGoParseScript(script string) (scriptItems []string, err error) {
 	var ret int
 
 	if ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); ret == (int)(KCfdSuccess) {
-		scriptItems = make([]string, 0, itemNum)
+		scriptItems = make([]string, itemNum, itemNum)
 		for i := uint32(0); i < itemNum; i++ {
 			var item string
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-			if ret = CfdGetScriptItem(handle, scriptItemHandle, index, &item); ret == (int)(KCfdSuccess) {
-				scriptItems = append(scriptItems, item)
+			ret = CfdGetScriptItem(handle, scriptItemHandle, index, &item)
+			if ret != (int)(KCfdSuccess) {
+				break
 			}
+			scriptItems[i] = item
 		}
 
 		if freeRet := CfdFreeScriptItemHandle(handle, scriptItemHandle); ret == (int)(KCfdSuccess) {
@@ -3979,7 +3995,7 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 	}
 	defer CfdFreeMnemonicWordList(handle, mnemonicHandle)
 
-	mnemonicList = make([]string, 0, maxIndex)
+	mnemonicList = make([]string, maxIndex, maxIndex)
 	for i := uint32(0); i < maxIndex; i++ {
 		var word string
 		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -3988,7 +4004,7 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 			err = convertCfdError(ret, handle)
 			return
 		}
-		mnemonicList = append(mnemonicList, word)
+		mnemonicList[i] = word
 	}
 	return mnemonicList, err
 }
@@ -4246,7 +4262,7 @@ func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, 
 		return
 	}
 
-	usedAddressList = make([]string, 0, appendTxoutCount)
+	usedAddressList = make([]string, appendTxoutCount, appendTxoutCount)
 	for i := uint32(0); i < appendTxoutCount; i++ {
 		var addr string
 		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -4255,7 +4271,7 @@ func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, 
 			err = convertCfdError(ret, handle)
 			return
 		}
-		usedAddressList = append(usedAddressList, addr)
+		usedAddressList[i] = addr
 	}
 	return outputTx, fee, usedAddressList, nil
 }
