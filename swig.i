@@ -4303,7 +4303,242 @@ func CfdGoGetAmountCommitment(amount int64, assetCommitment, blinder string) (co
 	return commitment, err
 }
 
+func CfdGoInitializeTxDataHandle(networkType int, txHex string) (txDataHandle uintptr, err error) {
+	txDataHandle = uintptr(0)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdInitializeTxDataHandle(handle, networkType, txHex, &txDataHandle)
+	err = convertCfdError(ret, handle)
+	return txDataHandle, err
+}
+
+func CfdGoFreeTxDataHandle(txDataHandle uintptr) (err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdFreeTxDataHandle(handle, txDataHandle)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+func CfdGoGetTxInfoByHandle(txDataHandle uintptr) (data CfdTxData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	sizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Size)))
+	vsizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Vsize)))
+	weightPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Weight)))
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.LockTime)))
+	ret := CfdGetTxInfoByHandle(handle, txDataHandle, &data.Txid, &data.Wtxid, sizePtr, vsizePtr, weightPtr, versionPtr, locktimePtr)
+	err = convertCfdError(ret, handle)
+	return data, err
+}
+
+func CfdGoGetConfidentialTxDataByHandle(txDataHandle uintptr) (data CfdTxData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	sizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Size)))
+	vsizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Vsize)))
+	weightPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Weight)))
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.LockTime)))
+	ret := CfdGetConfidentialTxInfoByHandle(handle, txDataHandle, &data.Txid, &data.Wtxid, &data.WitHash, sizePtr, vsizePtr, weightPtr, versionPtr, locktimePtr)
+	err = convertCfdError(ret, handle)
+	return data, err
+}
+
+func CfdGoGetTxInByHandle(txDataHandle uintptr, index uint32) (txid string, vout uint32, sequence uint32, scriptSig string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdGetTxInByHandle(handle, txDataHandle, indexPtr, &txid, voutPtr, sequencePtr, &scriptSig)
+	err = convertCfdError(ret, handle)
+	return txid, vout, sequence, scriptSig, err
+}
+
+func CfdGoGetTxInIssuanceInfoByHandle(txDataHandle uintptr, index uint32) (entropy string, nonce string, assetAmount int64, assetValue string, tokenAmount int64, tokenValue string, assetRangeproof string, tokenRangeproof string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	assetAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetAmount)))
+	tokenAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenAmount)))
+	ret := CfdGetTxInIssuanceInfoByHandle(handle, txDataHandle, indexPtr, &entropy, &nonce, assetAmountPtr, &assetValue, tokenAmountPtr, &tokenValue, &assetRangeproof, &tokenRangeproof)
+	err = convertCfdError(ret, handle)
+	return entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err
+}
+
+func CfdGoGetTxInWitnessByHandle(txDataHandle uintptr, witnessType int, txinIndex uint32, stackIndex uint32) (stackData string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
+	stackIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&stackIndex)))
+	ret := CfdGetTxInWitnessByHandle(handle, txDataHandle, witnessType, txinIndexPtr, stackIndexPtr, &stackData)
+	err = convertCfdError(ret, handle)
+	return stackData, err
+}
+
+func CfdGoGetTxOutByHandle(txDataHandle uintptr, index uint32) (satoshiAmount int64, lockingScript string, asset string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdGetTxOutByHandle(handle, txDataHandle, indexPtr, satoshiPtr, &lockingScript, &asset)
+	err = convertCfdError(ret, handle)
+	return satoshiAmount, lockingScript, asset, err
+}
+
+func CfdGoGetConfidentialTxOutSimpleByHandle(txDataHandle uintptr, index uint32) (asset string, satoshiAmount int64, valueCommitment string, nonce string, lockingScript string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdGetConfidentialTxOutSimpleByHandle(handle, txDataHandle, indexPtr, &asset, satoshiPtr, &valueCommitment, &nonce, &lockingScript)
+	err = convertCfdError(ret, handle)
+	return asset, satoshiAmount, valueCommitment, nonce, lockingScript, err
+}
+
+func CfdGoGetConfidentialTxOutByHandle(txDataHandle uintptr, index uint32) (asset string, satoshiAmount int64, valueCommitment string, nonce string, lockingScript string, surjectionProof string, rangeproof string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdGetConfidentialTxOutByHandle(handle, txDataHandle, indexPtr, &asset, satoshiPtr, &valueCommitment, &nonce, &lockingScript, &surjectionProof, &rangeproof)
+	err = convertCfdError(ret, handle)
+	return asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, err
+}
+
+func CfdGoGetTxInCountByHandle(txDataHandle uintptr) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxInCountByHandle(handle, txDataHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+func CfdGoGetTxInWitnessCountByHandle(txDataHandle uintptr, witnessType int, txinIndex uint32) (count uint32, err error) {
+	// witnessType: 0 (normal), 1(pegin)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxInWitnessCountByHandle(handle, txDataHandle, witnessType, txinIndexPtr, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+func CfdGoGetTxOutCountByHandle(txDataHandle uintptr) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxOutCountByHandle(handle, txDataHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+func CfdGoGetTxInIndexByHandle(txDataHandle uintptr, txid string, vout uint32) (index uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTxInIndexByHandle(handle, txDataHandle, txid, voutPtr, indexPtr)
+	err = convertCfdError(ret, handle)
+	return index, err
+}
+
+func CfdGoGetTxOutIndexByHandle(txDataHandle uintptr, address string, directLockingScript string) (index uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTxOutIndexByHandle(handle, txDataHandle, address, directLockingScript, indexPtr)
+	err = convertCfdError(ret, handle)
+	return index, err
+}
+
 // refine API ------------------------------------------------------------------
+
+/**
+ * TransactionData data struct.
+ */
+type TransactionData struct {
+	// txid
+	Txid string
+	// witness txid
+	Wtxid string
+	// witness hash
+	WitHash string
+	// size
+	Size uint32
+	// virtual size
+	Vsize uint32
+	// weight
+	Weight uint32
+	// version
+	Version uint32
+	// locktime
+	LockTime uint32
+}
 
 // InitializeTransaction : initialize createrawtransaction with version & locktime.
 // param: networkType      nettype string. (mainnet/testnet/regtest)
@@ -4431,6 +4666,8 @@ type TxIn struct {
 	OutPoint OutPoint
 	// sequence number.
 	Sequence uint32
+	// script sig.
+	ScriptSig string
 	// witness stack.
 	WitnessStack ScriptWitness
 }
@@ -4445,10 +4682,22 @@ type TxOut struct {
 	Address string
 }
 
+// IssuanceData : confidential transaction issuance input.
+type IssuanceData struct {
+	Entropy     string
+	Nonce       string
+	AssetAmount int64
+	AssetValue  string
+	TokenAmount int64
+	TokenValue  string
+}
+
 // ConfidentialTxIn : confidential transaction input.
 type ConfidentialTxIn struct {
 	OutPoint                 OutPoint
 	Sequence                 uint32
+	ScriptSig                string
+	Issuance                 IssuanceData
 	WitnessStack             ScriptWitness
 	PeginWitness             ScriptWitness
 	IssuanceAmountRangeproof string
@@ -4582,6 +4831,222 @@ func AppendConfidentialTx(txHex string, txinList []ConfidentialTxIn, txoutList [
 	ret = CfdFinalizeTransaction(handle, createTxHandle, &outputTxHex)
 	err = convertCfdError(ret, handle)
 	return outputTxHex, err
+}
+
+func GetBitcoinTransactionData(txHex string, hasWitness bool) (data TransactionData, txinList []TxIn, txoutList []TxOut, err error) {
+	data, txinList, txoutList, err = GetTransactionDataAll(txHex, hasWitness, false, int(KCfdNetworkMainnet))
+	return
+}
+
+func GetTransactionDataAll(txHex string, hasWitness bool, hasAddress bool, networkType int) (data TransactionData, txinList []TxIn, txoutList []TxOut, err error) {
+	handle, err := CfdGoInitializeTxDataHandle(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeTxDataHandle(handle)
+
+	tempData, err := CfdGoGetTxInfoByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txinCount, err := CfdGoGetTxInCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txoutCount, err := CfdGoGetTxOutCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+
+	tempTxins := make([]TxIn, txinCount, txinCount)
+	for i := uint32(0); i < txinCount; i++ {
+		txid, vout, sequence, scriptSig, err := CfdGoGetTxInByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+
+		tempTxins[i].OutPoint.Txid = txid
+		tempTxins[i].OutPoint.Vout = vout
+		tempTxins[i].Sequence = sequence
+		tempTxins[i].ScriptSig = scriptSig
+		if hasWitness {
+			wCount, err := CfdGoGetTxInWitnessCountByHandle(handle, 0, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			wList := make([]string, txinCount, txinCount)
+			for j := uint32(0); j < wCount; j++ {
+				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
+				if err != nil {
+					return data, txinList, txoutList, err
+				}
+				wList[j] = stackData
+			}
+			tempTxins[i].WitnessStack.Stack = wList
+		}
+	}
+
+	tempTxouts := make([]TxOut, txoutCount, txoutCount)
+	for i := uint32(0); i < txoutCount; i++ {
+		satoshiAmount, lockingScript, _, err := CfdGoGetTxOutByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+		tempTxouts[i].Amount = satoshiAmount
+		tempTxouts[i].LockingScript = lockingScript
+		if hasAddress {
+			addr, err := CfdGoGetAddressFromLockingScript(lockingScript, networkType)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Address = addr
+		}
+	}
+
+	data.Txid = tempData.Txid
+	data.Wtxid = tempData.Wtxid
+	data.Size = tempData.Size
+	data.Vsize = tempData.Vsize
+	data.Weight = tempData.Weight
+	data.Version = tempData.Version
+	data.LockTime = tempData.LockTime
+	txinList = tempTxins
+	txoutList = tempTxouts
+	return data, txinList, txoutList, nil
+}
+
+func GetConfidentialTxData(txHex string, hasWitness bool) (data TransactionData, txinList []ConfidentialTxIn, txoutList []ConfidentialTxOut, err error) {
+	data, txinList, txoutList, err = GetConfidentialTxDataAll(txHex, hasWitness, false, int(KCfdNetworkLiquidv1))
+	return
+}
+
+func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, networkType int) (data TransactionData, txinList []ConfidentialTxIn, txoutList []ConfidentialTxOut, err error) {
+	handle, err := CfdGoInitializeTxDataHandle(networkType, txHex)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	defer CfdGoFreeTxDataHandle(handle)
+
+	tempData, err := CfdGoGetConfidentialTxDataByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txinCount, err := CfdGoGetTxInCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txoutCount, err := CfdGoGetTxOutCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+
+	tempTxins := make([]ConfidentialTxIn, txinCount, txinCount)
+	for i := uint32(0); i < txinCount; i++ {
+		txid, vout, sequence, scriptSig, err := CfdGoGetTxInByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+
+		entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err := CfdGoGetTxInIssuanceInfoByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+
+		tempTxins[i].OutPoint.Txid = txid
+		tempTxins[i].OutPoint.Vout = vout
+		tempTxins[i].Sequence = sequence
+		tempTxins[i].ScriptSig = scriptSig
+		if len(assetValue) > 2 {
+			tempTxins[i].Issuance.Entropy = entropy
+			tempTxins[i].Issuance.Nonce = nonce
+			tempTxins[i].Issuance.AssetAmount = assetAmount
+			tempTxins[i].Issuance.AssetValue = assetValue
+			tempTxins[i].Issuance.TokenAmount = tokenAmount
+			tempTxins[i].Issuance.TokenValue = tokenValue
+			if hasWitness {
+				tempTxins[i].IssuanceAmountRangeproof = assetRangeproof
+				tempTxins[i].InflationKeysRangeproof = tokenRangeproof
+			}
+		}
+
+		if hasWitness {
+			wCount, err := CfdGoGetTxInWitnessCountByHandle(handle, 0, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			wList := make([]string, txinCount, txinCount)
+			for j := uint32(0); j < wCount; j++ {
+				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
+				if err != nil {
+					return data, txinList, txoutList, err
+				}
+				wList[j] = stackData
+			}
+			tempTxins[i].WitnessStack.Stack = wList
+
+			pCount, err := CfdGoGetTxInWitnessCountByHandle(handle, 1, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			pList := make([]string, pCount, pCount)
+			for j := uint32(0); j < wCount; j++ {
+				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 1, i, j)
+				if err != nil {
+					return data, txinList, txoutList, err
+				}
+				wList[j] = stackData
+			}
+			tempTxins[i].PeginWitness.Stack = pList
+		}
+	}
+
+	tempTxouts := make([]ConfidentialTxOut, txoutCount, txoutCount)
+	for i := uint32(0); i < txoutCount; i++ {
+		var lockingScript string
+
+		if hasWitness {
+			asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, err := CfdGoGetConfidentialTxOutByHandle(handle, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Amount = satoshiAmount
+			tempTxouts[i].Asset = asset
+			tempTxouts[i].CommitmentValue = valueCommitment
+			tempTxouts[i].CommitmentNonce = nonce
+			tempTxouts[i].LockingScript = lockingScript
+			tempTxouts[i].Surjectionproof = surjectionProof
+			tempTxouts[i].Rangeproof = rangeproof
+		} else {
+			asset, satoshiAmount, valueCommitment, nonce, lockingScript, err := CfdGoGetConfidentialTxOutSimpleByHandle(handle, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Amount = satoshiAmount
+			tempTxouts[i].Asset = asset
+			tempTxouts[i].CommitmentValue = valueCommitment
+			tempTxouts[i].CommitmentNonce = nonce
+			tempTxouts[i].LockingScript = lockingScript
+		}
+		if hasAddress {
+			addr, err := CfdGoGetAddressFromLockingScript(lockingScript, networkType)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Address = addr
+		}
+	}
+
+	data.Txid = tempData.Txid
+	data.Wtxid = tempData.Wtxid
+	data.WitHash = tempData.WitHash
+	data.Size = tempData.Size
+	data.Vsize = tempData.Vsize
+	data.Weight = tempData.Weight
+	data.Version = tempData.Version
+	data.LockTime = tempData.LockTime
+	txinList = tempTxins
+	txoutList = tempTxouts
+	return data, txinList, txoutList, nil
 }
 
 %}
