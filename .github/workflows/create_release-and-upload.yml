@@ -52,8 +52,10 @@ jobs:
         include:
           - bin: gcc
             shared: on
+            generator: MSYS Makefiles
           - bin: gcc-static
             shared: off
+            generator: MSYS Makefiles
 
     steps:
     - name: checkout
@@ -82,7 +84,7 @@ jobs:
       run: mkdir dist
     - name: cmake-build
       run: |
-        cmake -S . -B build -G "MSYS Makefiles"
+        cmake -S . -B build -G "${{ matrix.generator }}"
         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
         cmake --build build --parallel 2 --config Release
       timeout-minutes: 20
@@ -144,6 +146,7 @@ jobs:
         make
         sudo make install DESTDIR=../dist
         cd ..
+      timeout-minutes: 20
     - name: create archive file
       run: |
         cd dist
@@ -173,8 +176,8 @@ jobs:
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu${{ matrix.os_ver }}04-${{ matrix.bin }}-x86_64.zip
         asset_content_type: application/zip
 
-  upload-object-alpine:
-    name: upload-object-alpine
+  upload-object-alpine-3-10:
+    name: upload-object-alpine-3.10
     needs: create-releases
     runs-on: ubuntu-latest
 
@@ -228,4 +231,120 @@ jobs:
         upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: /tmp/cfd/cfd.zip
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine_x86_64.zip
+        asset_content_type: application/zip
+
+  upload-object-alpine-3-12:
+    name: upload-object-alpine-3.12
+    needs: create-releases
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: list
+      run: ls -a $GITHUB_WORKSPACE
+    - name: docker setup
+      uses: docker://alpine:3.12
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: create archive file
+      run: |
+        echo "---- dump output data ----"
+        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
+        mkdir -p /tmp/cfd
+        sudo chmod 777 /tmp/cfd
+        sudo chown runner /tmp/cfd
+        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
+        cd /tmp/cfd
+        sudo zip -r /tmp/cfd/cfd.zip usr
+        sudo chmod 777 /tmp/cfd/cfd.zip
+        sudo chown runner /tmp/cfd/cfd.zip
+        sudo cp -rp /tmp/cfd/cfd.zip $GITHUB_WORKSPACE/dist/cfd.zip
+        echo "---- dump zip file ----"
+        sudo ls -l /tmp/cfd
+    - name: pre-release-test
+      uses: docker://golang:1.15-alpine
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
+    - name: download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: artifact-upload_url
+    - name: dump upload url
+      id: get_url
+      run: |
+        url=$(cat artifact-upload_url/upload_url.txt)
+        echo ::set-output name=upload_url::$url
+    - name: Upload Release Asset
+      id: upload-release-asset 
+#      if: success()
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: /tmp/cfd/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine-3.12-x86_64.zip
+        asset_content_type: application/zip
+
+  upload-object-macos:
+    name: upload-object-macos
+    needs: create-releases
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        xcode: [10.3, 11.6]
+        shared: [on, off]
+        include:
+          - shared: on
+            suffix:
+          - shared: off
+            suffix: -static
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: Select Xcode version
+      run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
+    - name: Show Xcode version
+      run: xcodebuild -version
+    - name: cmake-build
+      run: |
+        mkdir dist
+        mkdir build
+        cd build
+        cmake .. -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib;@executable_path;./build/Release"
+        make
+        sudo make install DESTDIR=../dist
+        cd ..
+      timeout-minutes: 20
+    - name: create archive file
+      run: |
+        cd dist
+        zip -r cfd.zip usr
+        echo "---- dump zip file ----"
+        ls -l
+    - name: download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: artifact-upload_url
+    - name: dump upload url
+      id: get_url
+      run: |
+        url=$(cat artifact-upload_url/upload_url.txt)
+        echo ::set-output name=upload_url::$url
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: ./dist/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-osx-xcode${{ matrix.xcode }}${{ matrix.suffix }}-x86_64.zip
         asset_content_type: application/zip
