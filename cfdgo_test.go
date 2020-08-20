@@ -3022,6 +3022,12 @@ func BlindLargeTx(t *testing.T) (err error) {
 	// assetAmt := int64(4940 + 2530000 + 5060 + 99939782 + 60218)  // 102540000
 	asset2Amt := int64(49500 + 25300)
 
+	_, txinList, txoutList, err := GetConfidentialTxData(txHex, false)
+	if err != nil {
+		fmt.Printf("GetConfidentialTxData fail[%s]\n", err.Error())
+		return err
+	}
+
 	// blind
 	blindHandle, err := CfdGoInitializeBlindTx()
 	assert.NoError(t, err)
@@ -3033,14 +3039,8 @@ func BlindLargeTx(t *testing.T) (err error) {
 
 	emptyBlinder := "0000000000000000000000000000000000000000000000000000000000000000"
 	for i := 1; i <= maxTxin; i++ {
-		txid, vout, _, _, err := CfdGoGetConfidentialTxIn(txHex, uint32(i-1))
-		assert.NoError(t, err)
-		if err != nil {
-			fmt.Printf("CfdGoGetConfidentialTxIn fail[%s] idx[%d]\n", err.Error(), i)
-			return err
-		}
-
-		//txid := "00000000000000000000000000000000000000000000000000000000" + fmt.Sprintf("%08x", i)
+		txid := txinList[i-1].OutPoint.Txid
+		vout := txinList[i-1].OutPoint.Vout
 		useAsset := asset
 		amt := int64(403600) // 254 num
 		if i == maxTxin {
@@ -3059,12 +3059,7 @@ func BlindLargeTx(t *testing.T) (err error) {
 	}
 
 	for i := 1; i <= maxTxout; i++ {
-		_, _, _, nonce, _, _, _, err := CfdGoGetConfidentialTxOut(txHex, uint32(i-1))
-		assert.NoError(t, err)
-		if err != nil {
-			fmt.Printf("CfdGoGetConfidentialTxIn fail[%s] idx[%d]\n", err.Error(), i)
-			return err
-		}
+		nonce := txoutList[i-1].CommitmentNonce
 
 		if nonce == "" {
 			continue
