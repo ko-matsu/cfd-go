@@ -4591,6 +4591,25 @@ func (obj *SchnorrUtil) Verify(signature, msg, pubkey ByteData) (isVerify bool, 
 	return isVerify, err
 }
 
+// SplitSignature This function return schnorr nonce and schnorr privkey.
+func (obj *SchnorrUtil) SplitSignature(signature ByteData) (nonce, key ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrNonce string
+	var privkey string
+	ret := CfdSplitSchnorrSignature(handle, signature.ToHex(), &schnorrNonce, &privkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		nonce = ByteData{hex: schnorrNonce}
+		key = ByteData{hex: privkey}
+	}
+	return nonce, key, err
+}
+
 // refine API ------------------------------------------------------------------
 
 /**

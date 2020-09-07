@@ -3160,6 +3160,11 @@ func TestSchnorrApi(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "020d17280b8d2c2bd3b597b4446419c151dc237353d0fb9ec03d4eb7e8de7ee0a8", point.ToHex())
 
+	sigsNonce, sigsKey, err := obj.SplitSignature(signature)
+	assert.NoError(t, err)
+	assert.Equal(t, schnorrNonce.ToHex(), sigsNonce.ToHex())
+	assert.Equal(t, "7c988c51634a8dc955950a58ff5dc8c506ddb796121e6675946312680c26cf33", sigsKey.ToHex())
+
 	isVerify, err := obj.Verify(signature, msg, pubkey)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
