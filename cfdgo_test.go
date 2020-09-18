@@ -1182,8 +1182,9 @@ func TestCfdBlindTransaction3(t *testing.T) {
 	assert.Equal(t, int64(7), inputFee)
 	totalFee, txFee, inputFee, err = CfdGoEstimateFee(txHex2, inputs, feeOption)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(99), totalFee)
-	assert.Equal(t, int64(92), txFee)
+	// TODO: When not set or blinding, calculation assuming the maximum size
+	assert.Equal(t, int64(130), totalFee)
+	assert.Equal(t, int64(123), txFee)
 	assert.Equal(t, int64(7), inputFee)
 	// feeOption.MinimumBits = 52
 	//assert.Equal(t, int64(129), totalFee)
