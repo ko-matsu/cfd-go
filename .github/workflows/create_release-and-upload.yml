@@ -46,6 +46,7 @@ jobs:
     needs: create_releases
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         bin: [gcc, gcc-static]
         include:
@@ -112,6 +113,7 @@ jobs:
     needs: create_releases
     runs-on: ubuntu-${{ matrix.os_ver }}.04
     strategy:
+      fail-fast: false
       matrix:
 #        os: [ubuntu-20.04, ubuntu-18.04, ubuntu-16.04]
         os_ver: [20, 18, 16]
@@ -270,6 +272,7 @@ jobs:
     needs: create_releases
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         xcode: [10.3, 11.6]
         shared: [on, off]
