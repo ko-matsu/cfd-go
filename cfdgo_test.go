@@ -3148,6 +3148,11 @@ func TestSchnorrApi(t *testing.T) {
 	assert.NoError(t, err)
 
 	obj := NewSchnorrUtil()
+
+	schnorrPubkey, err := obj.GetPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+
 	signature, err := obj.Sign(msg, sk, auxRand)
 	assert.NoError(t, err)
 	assert.Equal(t, "6470fd1303dda4fda717b9837153c24a6eab377183fc438f939e0ed2b620e9ee5077c4a8b8dca28963d772a94f5f0ddf598e1c47c137f91933274c7c3edadce8", signature.ToHex())

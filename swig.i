@@ -4520,6 +4520,23 @@ func NewSchnorrUtil() *SchnorrUtil {
 	return &SchnorrUtil{}
 }
 
+// GetPubkeyFromPrivkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetPubkeyFromPrivkey(key ByteData) (pubkey ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, err
+}
+
 // Sign This function return a schnorr's signature.
 func (obj *SchnorrUtil) Sign(msg, secretKey, auxRand ByteData) (signature ByteData, err error) {
 	handle, err := CfdGoCreateHandle()
