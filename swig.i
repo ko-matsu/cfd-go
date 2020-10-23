@@ -4520,7 +4520,7 @@ func NewSchnorrUtil() *SchnorrUtil {
 	return &SchnorrUtil{}
 }
 
-// GetPubkeyFromPrivkey This function return a schnorr's pubkey.
+// GetPubkeyFromPrivkey (deprecated) This function return a schnorr's pubkey. Please use GetSchnorrPubkeyFromPrivkey.
 func (obj *SchnorrUtil) GetPubkeyFromPrivkey(key ByteData) (pubkey ByteData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
@@ -4529,12 +4529,102 @@ func (obj *SchnorrUtil) GetPubkeyFromPrivkey(key ByteData) (pubkey ByteData, err
 	defer CfdGoFreeHandle(handle)
 
 	var schnorrPubkey string
-	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey)
+	parity := false
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey, &parity)
 	err = convertCfdError(ret, handle)
 	if err == nil {
 		pubkey = ByteData{hex: schnorrPubkey}
 	}
 	return pubkey, err
+}
+
+// GetSchnorrPubkeyFromPrivkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetSchnorrPubkeyFromPrivkey(key ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// GetSchnorrPubkeyFromPubkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetSchnorrPubkeyFromPubkey(key ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPubkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// TweakAddKeyPair This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) TweakAddKeyPair(key, tweak ByteData) (pubkey ByteData, parity bool, privkey ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var tweakedPubkey string
+	var tweakedPrivkey string
+	ret := CfdSchnorrKeyPairTweakAdd(handle, key.ToHex(), tweak.ToHex(), &tweakedPubkey, &parity, &tweakedPrivkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: tweakedPubkey}
+		privkey = ByteData{hex: tweakedPrivkey}
+	}
+	return pubkey, parity, privkey, err
+}
+
+// TweakAddPubkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) TweakAddPubkey(key, tweak ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var tweakedPubkey string
+	ret := CfdSchnorrPubkeyTweakAdd(handle, key.ToHex(), tweak.ToHex(), &tweakedPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: tweakedPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// IsTweakedPubkey This function return a tweaked flag.
+func (obj *SchnorrUtil) IsTweakedPubkey(key ByteData, parity bool, basePubkey, tweak ByteData) (isTweaked bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdCheckTweakAddFromSchnorrPubkey(handle, key.ToHex(), parity, basePubkey.ToHex(), tweak.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isTweaked = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isTweaked = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isTweaked, err
 }
 
 // Sign This function return a schnorr's signature.
