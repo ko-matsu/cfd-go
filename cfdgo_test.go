@@ -3138,6 +3138,8 @@ func TestSchnorrApi(t *testing.T) {
 	assert.NoError(t, err)
 	sk, err := NewByteDataFromHex("688c77bc2d5aaff5491cf309d4753b732135470d05b7b2cd21add0744fe97bef")
 	assert.NoError(t, err)
+	pk, err := NewByteDataFromHex("03b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390")
+	assert.NoError(t, err)
 	pubkey, err := NewByteDataFromHex("b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390")
 	assert.NoError(t, err)
 	auxRand, err := NewByteDataFromHex("02cce08e913f22a36c5648d6405a2c7c50106e7aa2f1649e381c7f09d16b80ab")
@@ -3147,11 +3149,47 @@ func TestSchnorrApi(t *testing.T) {
 	schnorrNonce, err := NewByteDataFromHex("f14d7e54ff58c5d019ce9986be4a0e8b7d643bd08ef2cdf1099e1a457865b547")
 	assert.NoError(t, err)
 
+	tweak, err := NewByteDataFromHex("e48441762fb75010b2aa31a512b62b4148aa3fb08eb0765d76b252559064a614")
+	assert.NoError(t, err)
+	expTweakedPk, err := NewByteDataFromHex("1fc8e882e34cc7942a15f39ffaebcbdf58a19239bcb17b7f5aa88e0eb808f906")
+	assert.NoError(t, err)
+	expTweakedSk, err := NewByteDataFromHex("7bf7c9ba025ca01b698d3e9b3e40efce2774f8a388f8c390550481e1407b2a25")
+	assert.NoError(t, err)
+
 	obj := NewSchnorrUtil()
 
 	schnorrPubkey, err := obj.GetPubkeyFromPrivkey(sk)
 	assert.NoError(t, err)
 	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+
+	schnorrPubkey, parity, err := obj.GetSchnorrPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+	assert.True(t, parity)
+
+	schnorrPubkey, parity, err = obj.GetSchnorrPubkeyFromPubkey(pk)
+	assert.NoError(t, err)
+	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+	assert.True(t, parity)
+
+	tweakedPubkey, parity, err := obj.TweakAddPubkey(pubkey, tweak)
+	assert.NoError(t, err)
+	assert.Equal(t, expTweakedPk.ToHex(), tweakedPubkey.ToHex())
+	assert.True(t, parity)
+
+	isTweaked, err := obj.IsTweakedPubkey(tweakedPubkey, true, pubkey, tweak)
+	assert.NoError(t, err)
+	assert.True(t, isTweaked)
+
+	isTweaked, err = obj.IsTweakedPubkey(tweakedPubkey, false, pubkey, tweak)
+	assert.NoError(t, err)
+	assert.False(t, isTweaked)
+
+	tweakedPubkey, parity, tweakedPrivkey, err := obj.TweakAddKeyPair(sk, tweak)
+	assert.NoError(t, err)
+	assert.Equal(t, expTweakedPk.ToHex(), tweakedPubkey.ToHex())
+	assert.True(t, parity)
+	assert.Equal(t, expTweakedSk.ToHex(), tweakedPrivkey.ToHex())
 
 	signature, err := obj.Sign(msg, sk, auxRand)
 	assert.NoError(t, err)
