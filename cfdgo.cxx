@@ -409,6 +409,18 @@ intgo _wrap_kCfdSignVerificationError_cfdgo_3d6cebb5a0a2cdc2() {
 }
 
 
+intgo _wrap_kCfdNotFoundError_cfdgo_3d6cebb5a0a2cdc2() {
+  CfdErrorCode result;
+  intgo _swig_go_result;
+  
+  
+  result = kCfdNotFoundError;
+  
+  _swig_go_result = (intgo)result; 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_kCfdEnableBitcoin_cfdgo_3d6cebb5a0a2cdc2() {
   CfdLibraryFunction result;
   intgo _swig_go_result;
@@ -639,6 +651,316 @@ intgo _wrap_CfdSerializeByteData_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostr
   {
     if (arg3 && *arg3) {
       _swig_go_2->n = strlen(*arg3);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdEncryptAES_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, _gostring_* _swig_go_4) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  char **arg5 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  arg4 = (char *)malloc(_swig_go_3.n + 1);
+  memcpy(arg4, _swig_go_3.p, _swig_go_3.n);
+  arg4[_swig_go_3.n] = '\0';
+  
+  arg5 = *(char ***)&_swig_go_4; 
+  
+  result = (int)CfdEncryptAES(arg1,(char const *)arg2,(char const *)arg3,(char const *)arg4,arg5);
+  _swig_go_result = result; 
+  {
+    if (arg5 && *arg5) {
+      _swig_go_4->n = strlen(*arg5);
+    }
+  }
+  free(arg2); 
+  free(arg3); 
+  free(arg4); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdDecryptAES_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, _gostring_* _swig_go_4) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  char **arg5 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  arg4 = (char *)malloc(_swig_go_3.n + 1);
+  memcpy(arg4, _swig_go_3.p, _swig_go_3.n);
+  arg4[_swig_go_3.n] = '\0';
+  
+  arg5 = *(char ***)&_swig_go_4; 
+  
+  result = (int)CfdDecryptAES(arg1,(char const *)arg2,(char const *)arg3,(char const *)arg4,arg5);
+  _swig_go_result = result; 
+  {
+    if (arg5 && *arg5) {
+      _swig_go_4->n = strlen(*arg5);
+    }
+  }
+  free(arg2); 
+  free(arg3); 
+  free(arg4); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdEncodeBase64_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_* _swig_go_2) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char **arg3 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = *(char ***)&_swig_go_2; 
+  
+  result = (int)CfdEncodeBase64(arg1,(char const *)arg2,arg3);
+  _swig_go_result = result; 
+  {
+    if (arg3 && *arg3) {
+      _swig_go_2->n = strlen(*arg3);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdDecodeBase64_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_* _swig_go_2) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char **arg3 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = *(char ***)&_swig_go_2; 
+  
+  result = (int)CfdDecodeBase64(arg1,(char const *)arg2,arg3);
+  _swig_go_result = result; 
+  {
+    if (arg3 && *arg3) {
+      _swig_go_2->n = strlen(*arg3);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdEncodeBase58_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, bool _swig_go_2, _gostring_* _swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  char **arg4 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = (bool)_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  
+  result = (int)CfdEncodeBase58(arg1,(char const *)arg2,arg3,arg4);
+  _swig_go_result = result; 
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdDecodeBase58_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, bool _swig_go_2, _gostring_* _swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  char **arg4 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = (bool)_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  
+  result = (int)CfdDecodeBase58(arg1,(char const *)arg2,arg3,arg4);
+  _swig_go_result = result; 
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdRipemd160_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, bool _swig_go_2, _gostring_* _swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  char **arg4 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = (bool)_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  
+  result = (int)CfdRipemd160(arg1,(char const *)arg2,arg3,arg4);
+  _swig_go_result = result; 
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdSha256_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, bool _swig_go_2, _gostring_* _swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  char **arg4 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = (bool)_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  
+  result = (int)CfdSha256(arg1,(char const *)arg2,arg3,arg4);
+  _swig_go_result = result; 
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdHash160_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, bool _swig_go_2, _gostring_* _swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  char **arg4 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = (bool)_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  
+  result = (int)CfdHash160(arg1,(char const *)arg2,arg3,arg4);
+  _swig_go_result = result; 
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdHash256_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, bool _swig_go_2, _gostring_* _swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  char **arg4 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = (bool)_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  
+  result = (int)CfdHash256(arg1,(char const *)arg2,arg3,arg4);
+  _swig_go_result = result; 
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
     }
   }
   free(arg2); 
@@ -5672,6 +5994,33 @@ intgo _wrap_CfdGetPubkeyFromPrivkey_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _go
   }
   free(arg2); 
   free(arg3); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdGetPubkeyFingerprint_cfdgo_3d6cebb5a0a2cdc2(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_* _swig_go_2) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char **arg3 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = *(char ***)&_swig_go_2; 
+  
+  result = (int)CfdGetPubkeyFingerprint(arg1,(char const *)arg2,arg3);
+  _swig_go_result = result; 
+  {
+    if (arg3 && *arg3) {
+      _swig_go_2->n = strlen(*arg3);
+    }
+  }
+  free(arg2); 
   return _swig_go_result;
 }
 
