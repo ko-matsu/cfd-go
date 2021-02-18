@@ -66,6 +66,7 @@ When using the cmake-js package and npm script, the options for compilation are 
 ```Shell
 npm install
 npm run cmake_release
+go mod download
 go build
 ```
 
@@ -78,6 +79,7 @@ mkdir build && cd $_
 cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib/
 make
 cd ..
+go mod download
 go build
 ```
 
