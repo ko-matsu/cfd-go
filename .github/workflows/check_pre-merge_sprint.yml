@@ -51,6 +51,10 @@ jobs:
       run: |
         cmake --version
         cmake --build build --config Release --parallel 2
+    - name: go-mod
+      run: go mod download
+    - name: go-build
+      run: go build
     - name: go_test-windows
       if: runner.os == 'Windows'
       run: .\go_test.bat
