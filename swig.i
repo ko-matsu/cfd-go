@@ -637,6 +637,7 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 
 /**
  * EstimateFee Input data struct.
+ * (deprecated) Because it is already integrated with CfdUtxo.
  */
 type CfdEstimateFeeInput struct {
 	// utxo data
@@ -730,6 +731,92 @@ func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeE
 			peginBtcTxSize,
 			input.FedpegScript,
 			input.Utxo.ScriptSigTemplate,
+		); ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.Exponent)))
+	ret := CfdSetOptionEstimateFee(handle, estimateFeeHandle, int(KCfdEstimateFeeExponent), exponentPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	minimumBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.MinimumBits)))
+	ret = CfdSetOptionEstimateFee(handle, estimateFeeHandle, int(KCfdEstimateFeeMinimumBits), minimumBitsPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+
+	var txFeeWork, inputFeeWork int64
+	txFeeWorkPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txFeeWork)))
+	inputFeeWorkPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&inputFeeWork)))
+	if ret := CfdFinalizeEstimateFee(
+		handle,
+		estimateFeeHandle,
+		txHex,
+		option.FeeAsset,
+		txFeeWorkPtr,
+		inputFeeWorkPtr,
+		option.RequireBlind,
+		option.EffectiveFeeRate,
+	); ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+
+	totalFee = txFeeWork + inputFeeWork
+	txoutFee = txFeeWork
+	utxoFee = inputFeeWork
+	return
+}
+
+/**
+ * Estimate fee amount.
+ * param: txHex         transaction hex
+ * param: inputs        inputs to set in the transaction
+ * param: option        options for fee estimation
+ * return: totalFee     total fee value when all utxos set to input.
+ *     (totalFee = txoutFee + utxoFee)
+ * return: txoutFee     base transaction fee value.
+ * return: utxoFee      fee value all of input set utxo.
+ */
+func CfdGoEstimateFeeUsingUtxo(txHex string, inputs []CfdUtxo, option CfdFeeEstimateOption) (totalFee, txoutFee, utxoFee int64, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var estimateFeeHandle uintptr
+	if ret := CfdInitializeEstimateFee(
+		handle,
+		&estimateFeeHandle,
+		option.UseElements,
+	); ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	defer CfdFreeEstimateFeeHandle(handle, estimateFeeHandle)
+
+	for _, input := range inputs {
+		vout := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.Vout)))
+		peginBtcTxSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.PeginBtcTxSize)))
+		if ret := CfdAddTxInTemplateForEstimateFee(
+			handle,
+			estimateFeeHandle,
+			input.Txid,
+			vout,
+			input.Descriptor,
+			input.Asset,
+			input.IsIssuance,
+			input.IsBlindIssuance,
+			input.IsPegin,
+			peginBtcTxSize,
+			input.FedpegScript,
+			input.ScriptSigTemplate,
 		); ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return

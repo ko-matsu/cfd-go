@@ -1167,15 +1167,13 @@ func TestCfdBlindTransaction3(t *testing.T) {
 	assert.NoError(t, err)
 	// assert.Equal(t, "", txHex2)
 
-	inputs := []CfdEstimateFeeInput{
+	inputs := []CfdUtxo{
 		{
-			Utxo: CfdUtxo{
-				Txid:       "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-				Vout:       uint32(0),
-				Amount:     int64(100000000),
-				Asset:      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-				Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000a01)",
-			},
+			Txid:       "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+			Vout:       uint32(0),
+			Amount:     int64(100000000),
+			Asset:      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+			Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000a01)",
 			IsIssuance:      false,
 			IsBlindIssuance: false,
 			IsPegin:         false,
@@ -1189,12 +1187,12 @@ func TestCfdBlindTransaction3(t *testing.T) {
 	feeOption.FeeAsset = "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"
 	feeOption.RequireBlind = true
 	feeOption.MinimumBits = 36
-	totalFee, txFee, inputFee, err := CfdGoEstimateFee(baseTxHex3, inputs, feeOption)
+	totalFee, txFee, inputFee, err := CfdGoEstimateFeeUsingUtxo(baseTxHex3, inputs, feeOption)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(99), totalFee)
 	assert.Equal(t, int64(92), txFee)
 	assert.Equal(t, int64(7), inputFee)
-	totalFee, txFee, inputFee, err = CfdGoEstimateFee(txHex2, inputs, feeOption)
+	totalFee, txFee, inputFee, err = CfdGoEstimateFeeUsingUtxo(txHex2, inputs, feeOption)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(99), totalFee)
 	assert.Equal(t, int64(92), txFee)
