@@ -1107,7 +1107,7 @@ func TestCfdBlindTransaction3(t *testing.T) {
 			Vout:             uint32(0),
 			Asset:            "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 			AssetBlindFactor: "ebfecaae1665f32a3843ce65c42fb6e3f51136fa9d37274b810887923ae89339",
-			Amount:           int64(2000000000),
+			Amount:           int64(100000200),
 			ValueBlindFactor: "80af7bd339db43ad22c1fa9109eea6d617c8b87b91c4bde2b5fafcbb1902211a",
 			AssetBlindingKey: "",
 			TokenBlindingKey: "",
@@ -1980,7 +1980,7 @@ func TestCfdCoinSelection(t *testing.T) {
 
 	selectUtxos, totalAmounts, utxoFee, err := CfdGoCoinSelection(utxos, targets, option)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(9100), utxoFee)
+	assert.Equal(t, int64(9200), utxoFee)
 	assert.Equal(t, 5, len(selectUtxos))
 	assert.Equal(t, 3, len(totalAmounts))
 
@@ -2158,9 +2158,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 		option.RequireBlind = false
 		totalFee, txFee, inputFee, err := CfdGoEstimateFee(txHex, inputs, option)
 		assert.NoError(t, err)
-		assert.Equal(t, int64(10760), totalFee)
-		assert.Equal(t, int64(1060), txFee)
-		assert.Equal(t, int64(9700), inputFee)
+		assert.Equal(t, int64(10840), totalFee)
+		assert.Equal(t, int64(1100), txFee)
+		assert.Equal(t, int64(9740), inputFee)
 	})
 
 	t.Run("ElementsTest", func(t *testing.T) {
@@ -2170,9 +2170,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 		option.FeeAsset = asset[0]
 		totalFee, txFee, inputFee, err := CfdGoEstimateFee(txHex, inputs, option)
 		assert.NoError(t, err)
-		assert.Equal(t, int64(46120), totalFee)
+		assert.Equal(t, int64(46160), totalFee)
 		assert.Equal(t, int64(36360), txFee)
-		assert.Equal(t, int64(9760), inputFee)
+		assert.Equal(t, int64(9800), inputFee)
 	})
 
 	fmt.Printf("%s test done.\n", GetFuncName())
@@ -2900,8 +2900,8 @@ func TestFundRawTransactionBtc(t *testing.T) {
 
 	outputTx, fee, usedAddressList, err := CfdGoFundRawTransactionBtc(txHex, txinList, utxos, int64(0), "bc1qfhpyztlrm36euwpskmanvqnyer8q403cnzfn9t", &option)
 	assert.NoError(t, err)
-	assert.Equal(t, "02000000000102f1993fe8e7189542ee4506258e170201be292703cd275acb09ece16672fd848b0000000017160014703e50206e4d27ad1340a7b6a0d94563a3fb768afeffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff03080410240100000017a9141e60c63c6d099ee2b48eded11acfdf3a79a891f48700e1f5050000000017a9142699570770f32e0cf3e1d12d81064fbc45899e8a87a5f41901000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe380247304402202b12edc9a75edd70a0e4261c5816efa2c5256e3f8bcffdd49182bd9f791c74e902201e3ae5c1062a83d787098322b3071fe68c4b181e0088b0e0087020495adaf6e3012102f466d403c0c4057257e7bcbed1d172880fe75f337c77df5490ad9bc8cc2d6a160000000000", outputTx)
-	assert.Equal(t, int64(1425), fee)
+	assert.Equal(t, "02000000000102f1993fe8e7189542ee4506258e170201be292703cd275acb09ece16672fd848b0000000017160014703e50206e4d27ad1340a7b6a0d94563a3fb768afeffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff03080410240100000017a9141e60c63c6d099ee2b48eded11acfdf3a79a891f48700e1f5050000000017a9142699570770f32e0cf3e1d12d81064fbc45899e8a878cf41901000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe380247304402202b12edc9a75edd70a0e4261c5816efa2c5256e3f8bcffdd49182bd9f791c74e902201e3ae5c1062a83d787098322b3071fe68c4b181e0088b0e0087020495adaf6e3012102f466d403c0c4057257e7bcbed1d172880fe75f337c77df5490ad9bc8cc2d6a160000000000", outputTx)
+	assert.Equal(t, int64(1450), fee)
 	assert.Equal(t, 1, len(usedAddressList))
 	if len(usedAddressList) == 1 {
 		assert.Equal(t, "bc1qfhpyztlrm36euwpskmanvqnyer8q403cnzfn9t", usedAddressList[0])
