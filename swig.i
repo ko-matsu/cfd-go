@@ -471,6 +471,8 @@ type CfdUtxo struct {
 	FedpegScript string
 	// scriptsig template hex (require script hash estimate fee)
 	ScriptSigTemplate string
+	// amount commitment hex
+	AmountCommitment string
 }
 
 /**
@@ -4631,6 +4633,36 @@ func (obj *ByteData) ToSlice() []byte {
 	return data
 }
 
+// SigHashType This struct use for the sighashtype utility function.
+type SigHashType struct {
+	Type         int
+	AnyoneCanPay bool
+}
+
+// NewSigHashType This function return a SigHashType.
+func NewSigHashType(sighashType int) *SigHashType {
+	value := sighashType & 0x0f
+	anyoneCanPay := false
+	if (sighashType & 0x80) != 0 {
+		anyoneCanPay = true
+	}
+	return &SigHashType{
+		Type:         value,
+		AnyoneCanPay: anyoneCanPay,
+	}
+}
+
+// ToHex This function return a byte array.
+func (obj *SigHashType) GetValue() int {
+	value := obj.Type
+	if (value & 0x80) != 0 {
+		// do nothing
+	} else if obj.AnyoneCanPay {
+		value |= 0x80
+	}
+	return value
+}
+
 // EcdsaAdaptorUtil This struct use for the accessing to ecdsa-adaptor function.
 type EcdsaAdaptorUtil struct {
 }
@@ -4919,6 +4951,871 @@ func (obj *SchnorrUtil) SplitSignature(signature ByteData) (nonce, key ByteData,
 	return nonce, key, err
 }
 
+// AddSighashTypeInSignature This function return schnorr signature added sighashType.
+func (obj *SchnorrUtil) AddSighashTypeInSignature(signature ByteData, sighashType SigHashType) (addedSighash ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var newSignature string
+	ret := CfdAddSighashTypeInSchnorrSignature(handle, signature.ToHex(), sighashType.GetValue(), sighashType.AnyoneCanPay, &newSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		addedSighash = ByteData{hex: newSignature}
+	}
+	return addedSighash, err
+}
+
+// v0.3 API ------------------------------------------------------------------
+
+// Script This struct holds a redeem script.
+type Script struct {
+	hex string
+}
+
+// NewScript This function create a script from a byte array.
+func NewScript(data []byte) Script {
+	var obj Script
+	obj.hex = hex.EncodeToString(data)
+	return obj
+}
+
+// NewScriptFromHex This function create a script from a hex string.
+func NewScriptFromHex(hexStr string) (Script, error) {
+	var obj Script
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// NewScriptFromHex This function create a script from a hex string. On error, it returns nil.
+func NewScriptFromHexIgnoreError(hexStr string) *Script {
+	var obj Script
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return nil
+	}
+	obj.hex = hexStr
+	return &obj
+}
+
+// NewScriptFromAsm This function create a script from an asm string.
+func NewScriptFromAsm(scriptAsm string) (Script, error) {
+	var obj Script
+	hexStr, err := CfdGoConvertScriptAsmToHex(scriptAsm)
+	if err != nil {
+		return obj, err
+	}
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// NewScriptFromAsmList This function create a script from the asm string list.
+func NewScriptFromAsmList(scriptAsmList []string) (Script, error) {
+	var obj Script
+	hexStr, err := CfdGoCreateScript(scriptAsmList)
+	if err != nil {
+		return obj, err
+	}
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// ToHex This function return a hex string.
+func (obj *Script) ToHex() string {
+	return obj.hex
+}
+
+// ToHex This function return a byte array.
+func (obj *Script) ToSlice() []byte {
+	data, osErr := hex.DecodeString(obj.hex)
+	if osErr != nil {
+		return []byte{}
+	}
+	return data
+}
+
+// IsEmpty This function return a empty or not.
+func (obj *Script) IsEmpty() bool {
+	if len(obj.hex) == 0 {
+		return true
+	}
+	return false
+}
+
+// Parse This function return a parsing script.
+func (obj *Script) Parse() (scriptItems []string, err error) {
+	return CfdGoParseScript(obj.hex)
+}
+
+// Descriptor This struct use for the output descriptor.
+type Descriptor struct {
+	// Output Descriptor
+	OutputDescriptor string
+	// Network Type
+	Network int
+}
+
+// NewDescriptorFromAddress This function return a Descriptor from address.
+func NewDescriptorFromPubkey(hashType int, pubkey string, networkType int) *Descriptor {
+	var desc string
+	if hashType == (int)(KCfdP2shP2wpkh) {
+		desc = "sh(wpkh(" + pubkey + "))"
+	} else if hashType == (int)(KCfdP2wpkh) {
+		desc = "wpkh(" + pubkey + ")"
+	} else {
+		desc = "pkh(" + pubkey + ")"
+	}
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptorFromMultisig This function return a Descriptor from address.
+func NewDescriptorFromMultisig(hashType int, pubkeys []string, requireNum, networkType int) *Descriptor {
+	var desc string
+	desc = desc + "multi(" + strconv.Itoa(requireNum) + "," + strings.Join(pubkeys, ",") + ")"
+	if hashType == (int)(KCfdP2shP2wsh) {
+		desc = "sh(wsh(" + desc + "))"
+	} else if hashType == (int)(KCfdP2wsh) {
+		desc = "wsh(" + desc + ")"
+	} else if hashType == (int)(KCfdP2sh) {
+		desc = "sh(" + desc + ")"
+	}
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptor This function return a Descriptor.
+func NewDescriptorFromString(descriptor string, networkType int) *Descriptor {
+	return &Descriptor{
+		OutputDescriptor: descriptor,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptorFromLockingScript This function return a Descriptor from locking script.
+func NewDescriptorFromLockingScript(lockingScript string, networkType int) *Descriptor {
+	desc := "raw(" + lockingScript + ")"
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptorFromAddress This function return a Descriptor from address.
+func NewDescriptorFromAddress(address string, networkType int) *Descriptor {
+	desc := "addr(" + address + ")"
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// Parse This function return a Descriptor parsing data.
+func (obj *Descriptor) Parse() (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	return CfdGoParseDescriptor(obj.OutputDescriptor, obj.Network, "")
+}
+
+// ParseWithDerivationPath This function return a Descriptor parsing data.
+func (obj *Descriptor) ParseWithDerivationPath(bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	return CfdGoParseDescriptor(obj.OutputDescriptor, obj.Network, bip32DerivationPath)
+}
+
+// GetChecksum This function return a descriptor adding checksum.
+func (obj *Descriptor) GetChecksum() (descriptorAddedChecksum string, err error) {
+	return CfdGoGetDescriptorChecksum(obj.Network, obj.OutputDescriptor)
+}
+
+// tapscript API ---------------------------------------------------------------
+
+// CfdGoCreateScriptTreeHandle This function is create a script tree handle.
+func CfdGoCreateScriptTreeHandle(handle uintptr) (treeHandle uintptr, err error) {
+	ret := CfdInitializeTaprootScriptTree(handle, &treeHandle)
+	err = convertCfdError(ret, handle)
+	return treeHandle, err
+}
+
+// CfdGoFreeScriptTreeHandle This function is free a script tree handle.
+func CfdGoFreeScriptTreeHandle(handle uintptr, treeHandle uintptr) error {
+	ret := CfdFreeTaprootScriptTreeHandle(handle, treeHandle)
+	return convertCfdError(ret, handle)
+}
+
+// internalCreateScriptTreeHandle This function is create cfd handle and script tree handle.
+func internalCreateScriptTreeHandle() (handle uintptr, treeHandle uintptr, err error) {
+	handle, err = CfdGoCreateHandle()
+	if err != nil {
+		return uintptr(0), uintptr(0), err
+	}
+
+	ret := CfdInitializeTaprootScriptTree(handle, &treeHandle)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		CfdGoFreeHandle(handle)
+		return uintptr(0), uintptr(0), err
+	}
+	return handle, treeHandle, err
+}
+
+// TapBranch This struct use for the taproot script tree branch.
+type TapBranch struct {
+	// Branch Hash
+	Hash ByteData
+	// TapScript
+	TapScript Script
+	// tree string
+	treeStr string
+	// target node string
+	targetNodeStr string
+}
+
+// internalTapBranchFromStringByNodes This function return a TapBranch.
+func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) error {
+	script := ""
+	node := ""
+	if tapscript != nil {
+		script = tapscript.ToHex()
+		node = targetNodes
+	}
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	ret := CfdSetScriptTreeFromString(handle, treeHandle, treeStr, script, leafVersionPtr, node)
+	return convertCfdError(ret, handle)
+}
+
+// internalGetTapBranchData This function return a TapBranch.
+func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) (branch *TapBranch, err error) {
+	script := ""
+	node := ""
+	if tapscript != nil {
+		script = tapscript.ToHex()
+		node = targetNodes
+	}
+
+	var tempScript string
+	var hash string
+	index := uint8(0)
+	indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
+	depth := uint8(0)
+	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	ret := CfdGetTapBranchData(handle, treeHandle, indexPtr, true, &hash, leafVersionPtr, &tempScript, depthPtr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+	targetNodeStr := node
+	if len(script) != 0 && len(node) == 0 {
+		count := uint32(0)
+		countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+		ret = CfdGetTapBranchCount(handle, treeHandle, countPtr)
+		err = convertCfdError(ret, handle)
+		if err != nil {
+			return nil, err
+		}
+
+		for idx := uint8(0); idx < uint8(count); idx++ {
+			var branchHash string
+			idxPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&idx)))
+			ret = CfdGetTapBranchData(handle, treeHandle, idxPtr, false, &branchHash, nil, &tempScript, nil)
+			if err = convertCfdError(ret, handle); err != nil {
+				return nil, err
+			}
+			targetNodeStr += branchHash
+		}
+	}
+
+	branch = &TapBranch{
+		Hash:          ByteData{hex: hash},
+		TapScript:     Script{hex: script},
+		treeStr:       treeStr,
+		targetNodeStr: targetNodeStr,
+	}
+	return branch, nil
+}
+
+// NewTapBranchFromHash This function return a TapBranch.
+func NewTapBranchFromHash(hash *ByteData) (*TapBranch, error) {
+	if hash == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	if len(hash.hex) != 64 {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	emptyScript := Script{hex: ""}
+	treeStr := hash.ToHex()
+	return &TapBranch{
+		Hash:          *hash,
+		TapScript:     emptyScript,
+		treeStr:       treeStr,
+		targetNodeStr: "",
+	}, nil
+}
+
+// NewTapBranchFromTapScript This function return a TapBranch.
+func NewTapBranchFromTapScript(tapscript *Script) (*TapBranch, error) {
+	if tapscript == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	ret := CfdSetInitialTapLeaf(handle, treeHandle, tapscript.ToHex(), leafVersionPtr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	var treeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &treeStr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	branch, err := internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "")
+	return branch, err
+}
+
+// NewTapBranchFromTapScript This function return a TapBranch.
+func NewTapBranchFromString(treeStr string, tapscript *Script) (*TapBranch, error) {
+	branch, err := NewTapBranchFromStringByNodes(treeStr, tapscript, []string{})
+	return branch, err
+}
+
+// NewTapBranchFromStringByNodes This function return a TapBranch.
+func NewTapBranchFromStringByNodes(treeStr string, tapscript *Script, nodes []string) (*TapBranch, error) {
+	targetNodes := ""
+	if tapscript != nil && len(nodes) > 0 {
+		targetNodes = strings.Join(nodes, "")
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, treeStr, tapscript, targetNodes)
+	if err != nil {
+		return nil, err
+	}
+
+	return internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, targetNodes)
+}
+
+// NewTapBranchFromControlBlock This function return a TapBranch.
+func NewTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Script) (branch *TapBranch, internalPubkey *ByteData, err error) {
+	if controlBlock == nil || tapscript == nil {
+		return nil, nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	internalPubkeyStr := ""
+	ret := CfdSetTapScriptByWitnessStack(handle, treeHandle, controlBlock.ToHex(), tapscript.ToHex(), &internalPubkeyStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, nil, err
+	}
+
+	var tempScript string
+	var hash string
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	index := uint8(0)
+	indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
+	depth := uint8(0)
+	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
+	ret = CfdGetTapBranchData(handle, treeHandle, indexPtr, true, &hash, leafVersionPtr, &tempScript, depthPtr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, nil, err
+	}
+
+	var treeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &treeStr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	branch, err = internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	internalPubkey = &ByteData{hex: internalPubkeyStr}
+	return branch, internalPubkey, nil
+}
+
+// GetChecksum This function return a descriptor adding checksum.
+func (obj *TapBranch) AddBranchByTapScript(tapscript *Script) error {
+	if tapscript == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	treeStr := "tr(" + tapscript.ToHex() + ")"
+	return obj.AddBranchByString(treeStr)
+}
+
+// AddBranchByHash This function return a descriptor adding checksum.
+func (obj *TapBranch) AddBranchByHash(hash *ByteData) error {
+	if hash == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	return obj.AddBranchByString(hash.hex)
+}
+
+// AddBranchByHash This function return a descriptor adding checksum.
+func (obj *TapBranch) AddBranchByBranch(branch *TapBranch) error {
+	if branch == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	return obj.AddBranchByString(branch.treeStr)
+}
+
+// AddBranchByString This function return a descriptor adding checksum.
+func (obj *TapBranch) AddBranchByString(treeStr string) error {
+	addBranch, err := NewTapBranchFromString(treeStr, nil)
+	if err != nil {
+		return err
+	}
+
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return err
+	}
+
+	ret := CfdAddTapBranchByScriptTreeString(handle, treeHandle, treeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	var newTreeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &newTreeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	branch, err := internalGetTapBranchData(handle, treeHandle, newTreeStr, &obj.TapScript, obj.targetNodeStr)
+	if err == nil {
+		obj.Hash = branch.Hash
+		obj.treeStr = newTreeStr
+		obj.targetNodeStr = obj.targetNodeStr + addBranch.Hash.ToHex()
+	}
+	return err
+}
+
+func (obj *TapBranch) GetMaxBranchCount() (count uint32, err error) {
+	count = uint32(0)
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, nil, "")
+	if err != nil {
+		return
+	}
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTapBranchCount(handle, treeHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+func (obj *TapBranch) GetBranch(index uint32) (branch *TapBranch, err error) {
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	var branchHandle uintptr
+	var hash string
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTapBranchHandle(handle, treeHandle, indexPtr, &hash, &branchHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeScriptTreeHandle(handle, branchHandle)
+
+	var branchTreeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, branchHandle, &branchTreeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+
+	return internalGetTapBranchData(handle, branchHandle, branchTreeStr, nil, "")
+}
+
+func (obj *TapBranch) GetControlNodeList() (nodeList []string, err error) {
+	nodeList = []string{}
+	if obj.TapScript.IsEmpty() {
+		return nodeList, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	if len(obj.targetNodeStr) == 0 {
+		return nodeList, nil
+	}
+	if (len(obj.targetNodeStr) % 64) != 0 {
+		return nodeList, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	offset := 0
+	endOffset := 0
+	count := len(obj.targetNodeStr) / 64
+	nodeList = make([]string, count)
+	for index := 0; index < count; index++ {
+		offset = 64 * index
+		endOffset = offset + 64
+		nodeList[index] = obj.targetNodeStr[offset:endOffset]
+	}
+	return nodeList, nil
+}
+
+func (obj *TapBranch) GetTweakedPubkey(internalPubkey *ByteData) (pubkey *ByteData, tapLeafHash *ByteData, controlBlock *ByteData, err error) {
+	if internalPubkey == nil {
+		return nil, nil, nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	if obj.TapScript.IsEmpty() {
+		return nil, nil, nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	var branchHash string
+	var tapLeafHashStr string
+	var controlBlockStr string
+	ret := CfdGetTaprootScriptTreeHash(handle, treeHandle, internalPubkey.ToHex(), &branchHash, &tapLeafHashStr, &controlBlockStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, nil, nil, err
+	}
+
+	return &ByteData{hex: branchHash}, &ByteData{hex: tapLeafHashStr}, &ByteData{hex: controlBlockStr}, nil
+}
+
+func (obj *TapBranch) GetTweakedPrivkey(internalPrivkey *ByteData) (privkey *ByteData, err error) {
+	if internalPrivkey == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	if obj.TapScript.IsEmpty() {
+		return nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	var privkeyStr string
+	ret := CfdGetTaprootTweakedPrivkey(handle, treeHandle, internalPrivkey.ToHex(), &privkeyStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+
+	return &ByteData{hex: privkeyStr}, nil
+}
+
+func internalInitializeTransactionByHex(networkType int, txHex string) (createTxHandle uintptr, err error) {
+	createTxHandle = uintptr(0)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	version := 0
+	locktime := 0
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
+	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, txHex, &createTxHandle)
+	err = convertCfdError(ret, handle)
+	return createTxHandle, err
+}
+
+func internalFinalizeTransaction(createTxHandle uintptr) (txHex string, err error) {
+	txHex = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdFinalizeTransaction(handle, createTxHandle, &txHex)
+	err = convertCfdError(ret, handle)
+	return txHex, err
+}
+
+// SignWithPrivkeyByHandle
+func SignWithPrivkeyByHandle(createTxHandle uintptr, txid string, vout uint32, privkey string, sighashType SigHashType, hasGrindR bool, auxRand, annex *ByteData) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	auxRandStr := ""
+	annexStr := ""
+	if auxRand != nil {
+		auxRandStr = auxRand.hex
+	}
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddSignWithPrivkeyByHandle(handle, createTxHandle, txid, voutPtr, privkey, sighashType.GetValue(), sighashType.AnyoneCanPay, hasGrindR, auxRandStr, annexStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+// SetUtxoListByHandle
+func SetUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	for index := 0; index < len(txinUtxoList); index++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinUtxoList[index].Vout)))
+		satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txinUtxoList[index].Amount)))
+		ret := CfdSetTransactionUtxoData(handle, createTxHandle, txinUtxoList[index].Txid, voutPtr, satoshiAmountPtr, txinUtxoList[index].AmountCommitment, txinUtxoList[index].Descriptor, "", txinUtxoList[index].Asset, txinUtxoList[index].ScriptSigTemplate, false)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CfdGoAddTxSignWithPrivkeyByUtxoList
+func CfdGoAddTxSignWithPrivkeyByUtxoList(networkType int, txHex string, txinUtxoList []CfdUtxo, txid string, vout uint32, privkey string, sighashType SigHashType, hasGrindR bool, auxRand, annex *ByteData) (outputTxHex string, err error) {
+	outputTxHex = ""
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+		return
+	}
+
+	if err = SignWithPrivkeyByHandle(txHandle, txid, vout, privkey, sighashType, hasGrindR, auxRand, annex); err != nil {
+		return
+	}
+	return internalFinalizeTransaction(txHandle)
+}
+
+func GetSighash(createTxHandle uintptr, txid string, vout uint32, sighashType SigHashType, pubkey *ByteData, redeemScript *Script, tapLeafHash, annex *ByteData, codeSeparatorPosition uint32) (sighash string, err error) {
+	sighash = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	pubkeyStr := ""
+	scriptStr := ""
+	tapLeafHashStr := ""
+	annexStr := ""
+	if pubkey != nil {
+		pubkeyStr = pubkey.hex
+	}
+	if redeemScript != nil {
+		scriptStr = redeemScript.hex
+	}
+	if tapLeafHash != nil {
+		tapLeafHashStr = tapLeafHash.hex
+	}
+	if annex != nil {
+		annexStr = annex.hex
+	}
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	codeSeparatorPosPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&codeSeparatorPosition)))
+	ret := CfdCreateSighashByHandle(handle, createTxHandle, txid, voutPtr, sighashType.GetValue(), sighashType.AnyoneCanPay, pubkeyStr, scriptStr, tapLeafHashStr, codeSeparatorPosPtr, annexStr, &sighash)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+func CfdGoGetSighash(networkType int, txHex string, txinUtxoList []CfdUtxo, txid string, vout uint32, sighashType SigHashType, pubkey *ByteData, redeemScript *Script, tapLeafHash, annex *ByteData, codeSeparatorPosition uint32) (sighash string, err error) {
+	sighash = ""
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+		return
+	}
+
+	return GetSighash(txHandle, txid, vout, sighashType, pubkey, redeemScript, tapLeafHash, annex, codeSeparatorPosition)
+}
+
+func VerifySign(createTxHandle uintptr, txid string, vout uint32) (isVerify bool, reason string, err error) {
+	isVerify = false
+	reason = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return isVerify, reason, err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdVerifyTxSignByHandle(handle, createTxHandle, txid, voutPtr)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		CfdGetLastErrorMessage(handle, &reason)
+	} else {
+		err = convertCfdError(ret, handle)
+		CfdGetLastErrorMessage(handle, &reason)
+	}
+	return isVerify, reason, err
+}
+
+func CfdGoVerifySign(networkType int, txHex string, txinUtxoList []CfdUtxo, txid string, vout uint32) (isVerify bool, reason string, err error) {
+	isVerify = false
+	reason = ""
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+		return
+	}
+	return VerifySign(txHandle, txid, vout)
+}
+
+func AddTaprootSchnorrSign(createTxHandle uintptr, txid string, vout uint32, signature *ByteData, annex *ByteData) error {
+	if signature == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	annexStr := ""
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddTaprootSignByHandle(handle, createTxHandle, txid, voutPtr, signature.hex, "", "", annexStr)
+	return convertCfdError(ret, handle)
+}
+
+func CfdGoAddTaprootSchnorrSign(networkType int, txHex string, txid string, vout uint32, signature *ByteData, annex *ByteData) (outputTxHex string, err error) {
+	outputTxHex = ""
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = AddTaprootSchnorrSign(txHandle, txid, vout, signature, annex); err != nil {
+		return
+	}
+	return internalFinalizeTransaction(txHandle)
+}
+
+func AddTapScriptSign(createTxHandle uintptr, txid string, vout uint32, signDataList []ByteData, tapscript *Script, controlBlock *ByteData, annex *ByteData) error {
+	if tapscript == nil || controlBlock == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	for index := 0; index < len(signDataList); index++ {
+		ret := CfdAddTxSignByHandle(handle, createTxHandle, txid, voutPtr, (int)(KCfdTaproot), signDataList[index].hex, false, 0, false, false)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	annexStr := ""
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	ret := CfdAddTaprootSignByHandle(handle, createTxHandle, txid, voutPtr, "", tapscript.hex, controlBlock.hex, annexStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+func CfdGoAddTapScriptSign(networkType int, txHex string, txid string, vout uint32, signDataList []ByteData, tapscript *Script, controlBlock *ByteData, annex *ByteData) (outputTxHex string, err error) {
+	outputTxHex = ""
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = AddTapScriptSign(txHandle, txid, vout, signDataList, tapscript, controlBlock, annex); err != nil {
+		return
+	}
+	return internalFinalizeTransaction(txHandle)
+}
+
 // refine API ------------------------------------------------------------------
 
 /**
@@ -4970,20 +5867,7 @@ func InitializeTransaction(networkType int, version uint32, locktime uint32) (cr
 // return: createTxHandle  handle of createrawtransaction.
 // return: err             error
 func InitializeTransactionByHex(networkType int, txHex string) (createTxHandle uintptr, err error) {
-	createTxHandle = uintptr(0)
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	version := 0
-	locktime := 0
-	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
-	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
-	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, txHex, &createTxHandle)
-	err = convertCfdError(ret, handle)
-	return createTxHandle, err
+	return internalInitializeTransactionByHex(networkType, txHex)
 }
 
 // AddTransactionInput : add createrawtransaction input data. (bitcoin, elements)
@@ -5031,16 +5915,7 @@ func AddTransactionOutput(createTxHandle uintptr, amount int64, address string, 
 // return: txHex           transaction hex.
 // return: err             error
 func FinalizeTransaction(createTxHandle uintptr) (txHex string, err error) {
-	txHex = ""
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdFinalizeTransaction(handle, createTxHandle, &txHex)
-	err = convertCfdError(ret, handle)
-	return txHex, err
+	return internalFinalizeTransaction(createTxHandle)
 }
 
 // FreeTransactionHandle : free createrawtransaction handle.
@@ -5142,13 +6017,12 @@ func CreateConfidentialTx(version uint32, locktime uint32, txinList []Confidenti
 	}
 	defer CfdGoFreeHandle(handle)
 
+	var createTxHandle uintptr
 	networkType := int(KCfdNetworkLiquidv1)
-	createTxHandle := uintptr(0)
 	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
 	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
 	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, "", &createTxHandle)
-	if ret != int(KCfdSuccess) {
-		err = convertCfdError(ret, handle)
+	if err = convertCfdError(ret, handle); err != nil {
 		return
 	}
 	defer CfdFreeTransactionHandle(handle, createTxHandle)
