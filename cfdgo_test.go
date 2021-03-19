@@ -241,6 +241,16 @@ func TestCfdGoGetAddressInfo(t *testing.T) {
 	assert.Equal(t, (int)(KCfdWitnessVersion0), info.WitnessVersion)
 	assert.Equal(t, "0020d2fa4bd23f2f8178792329cc7dc11b99d5940569b86c49d22cb2d4af8cd07097", info.LockingScript)
 
+	addr = "tb1pzamhq9jglfxaj0r5ahvatr8uc77u973s5tm04yytdltsey5r8naskf8ee6"
+	info, err = CfdGoGetAddressInfo(addr)
+	assert.NoError(t, err)
+	assert.Equal(t, addr, info.Address)
+	assert.Equal(t, (int)(KCfdNetworkTestnet), info.NetworkType)
+	assert.Equal(t, (int)(KCfdTaproot), info.HashType)
+	assert.Equal(t, (int)(KCfdWitnessVersion1), info.WitnessVersion)
+	assert.Equal(t, "51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", info.LockingScript)
+	assert.Equal(t, "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", info.Hash)
+
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
@@ -3445,6 +3455,14 @@ func TestTaprootSchnorr1(t *testing.T) {
 	}
 	txid := utxos[0].Txid
 	vout := utxos[0].Vout
+
+	option := CfdFeeEstimateOption{
+		EffectiveFeeRate: 2.0,
+	}
+	fee, _, _, err := CfdGoEstimateFeeUsingUtxo(txHex, utxos, option)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(202), fee)
+
 	sighashType := NewSigHashType(int(KCfdSigHashAll))
 	sighash, err := CfdGoGetSighashByKey(networkType, txHex, utxos, txid, vout, sighashType, &spk, nil)
 	assert.NoError(t, err)
