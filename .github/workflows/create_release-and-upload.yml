@@ -325,7 +325,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: [10.3, 11.6]
+        xcode: [10.3, 11.7, 12.4]
         shared: [on, off]
         include:
           - shared: on
