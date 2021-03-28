@@ -5228,7 +5228,7 @@ func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscr
 	depth := uint8(0)
 	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
 	if count == uint32(0) { // single leaf
-		ret = CfdGetRootTapLeaf(handle, treeHandle, leafVersionPtr, &tempScript, &hash)
+		ret = CfdGetBaseTapLeaf(handle, treeHandle, leafVersionPtr, &tempScript, &hash)
 	} else { // top branch
 		index := uint8(0)
 		indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
