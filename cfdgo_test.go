@@ -2263,14 +2263,14 @@ func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 		vout := uint32(1)
 
 		// prepare pkh signature
-		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkElementsRegtest))
+		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkRegtest))
 		assert.NoError(t, err)
 		sighashType := (int)(KCfdSigHashAll)
 		satoshiValue := int64(1000000000)
 		sighash, err := CfdGoCreateConfidentialSighash(txHex, txid, vout,
 			(int)(KCfdP2pkh), pubkey, "", satoshiValue, "", sighashType, false)
 		assert.NoError(t, err)
-		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkElementsRegtest), true)
+		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkRegtest), true)
 		assert.NoError(t, err)
 
 		// check signature
@@ -2289,14 +2289,14 @@ func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 		vout := uint32(1)
 
 		// prepare pkh signature
-		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkElementsRegtest))
+		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkRegtest))
 		assert.NoError(t, err)
 		sighashType := (int)(KCfdSigHashAll)
 		satoshiValue := int64(1000000000)
 		sighash, err := CfdGoCreateConfidentialSighash(txHex, txid, vout,
 			(int)(KCfdP2pkh), pubkey, "", satoshiValue, "", sighashType, false)
 		assert.NoError(t, err)
-		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkElementsRegtest), true)
+		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkRegtest), true)
 		assert.NoError(t, err)
 
 		// check signature
@@ -2317,7 +2317,7 @@ func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 
 		// prepare signature
 		pubkey, privkey, _, err := CfdGoCreateKeyPair(
-			true, (int)(KCfdNetworkElementsRegtest))
+			true, (int)(KCfdNetworkRegtest))
 		assert.NoError(t, err)
 		dummyPubkey := "0229ebd1cac7855ca60b0846bd179ff3d411f807f3f3a43abf498e0a415c94d622"
 		redeemScript, err := CfdGoCreateScript(
@@ -2472,6 +2472,7 @@ func TestCfdGoAddConfidentialTxMultisigSign(t *testing.T) {
 	pubkey2 := "02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71"
 	privkey2 := "cQUTZ8VbWNYBEtrB7xwe41kqiKMQPRZshTvBHmkoJGaUfmS5pxzR"
 	networkType := (int)(KCfdNetworkLiquidv1)
+	networkKeyType := (int)(KCfdNetworkTestnet)
 	sigHashType := (int)(KCfdSigHashAll)
 	hashType := (int)(KCfdP2wsh)
 	addressType := (int)(KCfdP2wshAddress)
@@ -2507,12 +2508,12 @@ func TestCfdGoAddConfidentialTxMultisigSign(t *testing.T) {
 	if err == nil {
 		// user1
 		signature1, err := CfdGoCalculateEcSignature(
-			sighash, "", privkey1, networkType, true)
+			sighash, "", privkey1, networkKeyType, true)
 		assert.NoError(t, err)
 
 		// user2
 		signature2, err := CfdGoCalculateEcSignature(
-			sighash, "", privkey2, networkType, true)
+			sighash, "", privkey2, networkKeyType, true)
 		assert.NoError(t, err)
 
 		signDataList := []CfdMultisigSignData{
