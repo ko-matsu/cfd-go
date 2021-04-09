@@ -2063,6 +2063,9 @@ func TestCfdCoinSelectionUnuseFee(t *testing.T) {
 }
 
 func GetCoinSelectionTestData() (assets []string, utxos []CfdUtxo) {
+	// mnemonic: token hair neglect leader furnace obtain sadness tool you father paddle skate remain carry impact dinosaur correct essay rent illness predict mercy exist ring
+	// xpriv: xprv9s21ZrQH143K4QXrTfC9L43GKCuLcDiBCWjyVqfZUTzoPJWUstD4HTJKGz1U5jAGZzKshcX6cCyZ1ZdxSUQLz92pEZWEGwxa39ks2vhTsfA
+	// derive: 44h/0h/0h/0/*
 	assets = []string{
 		"aa00000000000000000000000000000000000000000000000000000000000000",
 		"bb00000000000000000000000000000000000000000000000000000000000000",
@@ -2074,84 +2077,84 @@ func GetCoinSelectionTestData() (assets []string, utxos []CfdUtxo) {
 			Vout:       uint32(0),
 			Amount:     int64(312500000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(037ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a))",
+			Descriptor: "sh(wpkh(0329165ca5832de80305c92d4b1415f10340d267ba05cbffcfe02d386dc5020e4d))",
 		},
 		{
 			Txid:       "30f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a",
 			Vout:       uint32(0),
 			Amount:     int64(78125000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(0330f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a))",
+			Descriptor: "sh(wpkh(022db3cb17d98db6cd8d513f88b095dbe80ef9e57acd5b1d9e8bd7f24618079451))",
 		},
 		{
 			Txid:       "9e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a",
 			Vout:       uint32(0),
 			Amount:     int64(1250000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(039e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a))",
+			Descriptor: "sh(wpkh(032d04e0b1474a82ad68c0ef37e1a7cf6c75ef01b22c00882e8e4e127a942823a1))",
 		},
 		{
 			Txid:       "8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a",
 			Vout:       uint32(0),
 			Amount:     int64(39062500),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(038f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a))",
+			Descriptor: "sh(wpkh(03a7fb569db921abf70f1b6b9ad9ac863196deecd99d606b139bba7d740d1cc5bf))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(0),
 			Amount:     int64(156250000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(02df74fc8124ff6f3982e90afb318f3e955b10f58c4c6014b3a767e16160f811d9))",
 		},
 		{
 			Txid:       "b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b",
 			Vout:       uint32(0),
 			Amount:     int64(2500000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(03b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b))",
+			Descriptor: "sh(wpkh(029222484db385d268a2a4604ea40fd2228401061f741ad9da8c907ba9df29c2d3))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b01",
 			Vout:       uint32(0),
 			Amount:     int64(26918400),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b01))",
+			Descriptor: "sh(wpkh(038f9011753b74fa0134d4b64a1491f99e0c4c0e16da616627c1f6a93c5e7555c0))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b02",
 			Vout:       uint32(0),
 			Amount:     int64(750000),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b02))",
+			Descriptor: "sh(wpkh(0302f567f9671b570dbcf179f3ba5f2fb381ea7e8db6ab9e0968c07d40325c3fcd))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b03",
 			Vout:       uint32(0),
 			Amount:     int64(346430050),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b03))",
+			Descriptor: "sh(wpkh(034ff60d8fb18ae88019f6f905cfaa0e1841f75edfa1f3c0a5bfaf77b796243901))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b04",
 			Vout:       uint32(0),
 			Amount:     int64(18476350),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b04))",
+			Descriptor: "sh(wpkh(029f2126cd8b55af7cc3cee8154c44de7cb7cb214809f81144d6b323d9c7a3993e))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000c01",
 			Vout:       uint32(0),
 			Amount:     int64(37654200),
 			Asset:      assets[2],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c01))",
+			Descriptor: "sh(wpkh(02f1d2c28388e3fd609ff383f022b615f1cd8a1931632706f63bfb6e253875ca03))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000c02",
 			Vout:       uint32(0),
 			Amount:     int64(127030000),
 			Asset:      assets[2],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c02))",
+			Descriptor: "sh(wpkh(02cca4482dc1e7d54c879c0d9069e3d66c3bf91b2bf46eddc74f18d76c659dfd10))",
 		},
 	}
 
@@ -2189,6 +2192,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 }
 
 func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
+	// mnemonic: token hair neglect leader furnace obtain sadness tool you father paddle skate remain carry impact dinosaur correct essay rent illness predict mercy exist ring
+	// xpriv: xprv9s21ZrQH143K4QXrTfC9L43GKCuLcDiBCWjyVqfZUTzoPJWUstD4HTJKGz1U5jAGZzKshcX6cCyZ1ZdxSUQLz92pEZWEGwxa39ks2vhTsfA
+	// derive: 44h/0h/0h/0/*
 	assets = []string{
 		"aa00000000000000000000000000000000000000000000000000000000000000",
 		"bb00000000000000000000000000000000000000000000000000000000000000",
@@ -2200,7 +2206,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(0),
 				Amount:     int64(100000000),
 				Asset:      assets[0],
-				Descriptor: "pkh(030000000000000000000000000000000000000000000000000000000000000a01)",
+				Descriptor: "pkh(0329165ca5832de80305c92d4b1415f10340d267ba05cbffcfe02d386dc5020e4d)",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2214,7 +2220,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(0),
 				Amount:     int64(200000000),
 				Asset:      assets[0],
-				Descriptor: "sh(multi(1,020000000000000000000000000000000000000000000000000000000000000a02,030000000000000000000000000000000000000000000000000000000000000a02))",
+				Descriptor: "sh(multi(1,022db3cb17d98db6cd8d513f88b095dbe80ef9e57acd5b1d9e8bd7f24618079451,032d04e0b1474a82ad68c0ef37e1a7cf6c75ef01b22c00882e8e4e127a942823a1))",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2228,7 +2234,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(1),
 				Amount:     int64(30000000),
 				Asset:      assets[1],
-				Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000b01)",
+				Descriptor: "wpkh(03a7fb569db921abf70f1b6b9ad9ac863196deecd99d606b139bba7d740d1cc5bf)",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2242,7 +2248,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(2),
 				Amount:     int64(40000000),
 				Asset:      assets[1],
-				Descriptor: "wsh(multi(1,020000000000000000000000000000000000000000000000000000000000000b02,030000000000000000000000000000000000000000000000000000000000000b02))",
+				Descriptor: "wsh(multi(1,02df74fc8124ff6f3982e90afb318f3e955b10f58c4c6014b3a767e16160f811d9,029222484db385d268a2a4604ea40fd2228401061f741ad9da8c907ba9df29c2d3))",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -3001,35 +3007,35 @@ func TestFundRawTransaction2(t *testing.T) {
 			Vout:       uint32(0),
 			Amount:     int64(95000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(039e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a))",
+			Descriptor: "sh(wpkh(032d04e0b1474a82ad68c0ef37e1a7cf6c75ef01b22c00882e8e4e127a942823a1))",
 		},
 		{
 			Txid:       "8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a",
 			Vout:       uint32(0),
 			Amount:     int64(100000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(038f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a))",
+			Descriptor: "sh(wpkh(03a7fb569db921abf70f1b6b9ad9ac863196deecd99d606b139bba7d740d1cc5bf))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(0),
 			Amount:     int64(99992500),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(02df74fc8124ff6f3982e90afb318f3e955b10f58c4c6014b3a767e16160f811d9))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(1),
 			Amount:     int64(94992500),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(029222484db385d268a2a4604ea40fd2228401061f741ad9da8c907ba9df29c2d3))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(2),
 			Amount:     int64(5000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(038f9011753b74fa0134d4b64a1491f99e0c4c0e16da616627c1f6a93c5e7555c0))",
 		},
 	}
 	netType := int(KCfdNetworkLiquidv1)
