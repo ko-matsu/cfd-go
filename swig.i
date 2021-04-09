@@ -4637,18 +4637,24 @@ func (obj *ByteData) ToSlice() []byte {
 type SigHashType struct {
 	Type         int
 	AnyoneCanPay bool
+	Rangeproof   bool
 }
 
 // NewSigHashType This function return a SigHashType.
 func NewSigHashType(sighashType int) *SigHashType {
 	value := sighashType & 0x0f
 	anyoneCanPay := false
+	isRangeproof := false
 	if (sighashType & 0x80) != 0 {
 		anyoneCanPay = true
+	}
+	if (sighashType & 0x40) != 0 {
+		isRangeproof = true
 	}
 	return &SigHashType{
 		Type:         value,
 		AnyoneCanPay: anyoneCanPay,
+		Rangeproof:   isRangeproof,
 	}
 }
 
@@ -4659,6 +4665,11 @@ func (obj *SigHashType) GetValue() int {
 		// do nothing
 	} else if obj.AnyoneCanPay {
 		value |= 0x80
+	}
+	if (value & 0x40) != 0 {
+		// do nothing
+	} else if obj.Rangeproof {
+		value |= 0x40
 	}
 	return value
 }
