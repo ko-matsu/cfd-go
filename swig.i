@@ -217,10 +217,14 @@ type CfdDescriptorData struct {
 	ExtPubkey string
 	// extend privkey
 	ExtPrivkey string
+	// schnorr pubkey
+	SchnorrPubkey string
 	// has multisig
 	IsMultisig bool
 	// number of multisig require signatures
 	ReqSigNum uint32
+	// Taproot ScriptTree string
+	TreeString string
 }
 
 /**
@@ -232,6 +236,7 @@ type CfdDescriptorKeyData struct {
 	// - KCfdDescriptorKeyPublic
 	// - KCfdDescriptorKeyBip32
 	// - KCfdDescriptorKeyBip32Priv
+	// - KCfdDescriptorKeySchnorr
 	KeyType int
 	// pubkey
 	Pubkey string
@@ -239,6 +244,8 @@ type CfdDescriptorKeyData struct {
 	ExtPubkey string
 	// extend privkey
 	ExtPrivkey string
+	// schnorr pubkey
+	SchnorrPubkey string
 }
 
 /**
@@ -246,11 +253,12 @@ type CfdDescriptorKeyData struct {
  * param: descriptor           output descriptor
  * param: networkType          network type
  * param: bip32DerivationPath  derive path
+ * return: data                descriptor data
  * return: descriptorDataList  descriptor data struct list
  * return: multisigList        multisig key struct list
  * return: err                 error
  */
-func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+func CfdGoParseDescriptorData(descriptor string, networkType int, bip32DerivationPath string) (data CfdDescriptorData, descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -270,24 +278,40 @@ func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPat
 	var maxMultisigKeyNum uint32
 	lastMultisigFlag := false
 	keyNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxMultisigKeyNum)))
-	descriptorDataList = make([]CfdDescriptorData, maxIndex+1, maxIndex+1)
-	for i := uint32(0); i <= maxIndex; i++ {
-		var data CfdDescriptorData
-		var maxNum uint32
-		maxNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxNum)))
-		depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(data.Depth))))
-		index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+	{
 		reqSigNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(data.ReqSigNum))))
-		ret = CfdGetDescriptorData(handle, descriptorHandle, index, maxNumPtr,
-			depthPtr, &data.ScriptType, &data.LockingScript,
+		ret = CfdGetDescriptorRootData(handle, descriptorHandle,
+			&data.ScriptType, &data.LockingScript,
 			&data.Address, &data.HashType, &data.RedeemScript,
 			&data.KeyType, &data.Pubkey, &data.ExtPubkey, &data.ExtPrivkey,
+			&data.SchnorrPubkey, &data.TreeString,
 			&data.IsMultisig, keyNumPtr, reqSigNumPtr)
-		if ret != (int)(KCfdSuccess) {
-			break
+	}
+
+	if ret == (int)(KCfdSuccess) {
+		descriptorDataList = make([]CfdDescriptorData, maxIndex+1, maxIndex+1)
+		for i := uint32(0); i <= maxIndex; i++ {
+			var tempData CfdDescriptorData
+			var maxNum uint32
+			maxNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxNum)))
+			depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(tempData.Depth))))
+			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+			reqSigNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(tempData.ReqSigNum))))
+			ret = CfdGetDescriptorData(handle, descriptorHandle, index, maxNumPtr,
+				depthPtr, &tempData.ScriptType, &tempData.LockingScript,
+				&tempData.Address, &tempData.HashType, &tempData.RedeemScript,
+				&tempData.KeyType, &tempData.Pubkey, &tempData.ExtPubkey, &tempData.ExtPrivkey,
+				&tempData.IsMultisig, keyNumPtr, reqSigNumPtr)
+			if ret != (int)(KCfdSuccess) {
+				break
+			}
+			if tempData.KeyType == (int)(KCfdDescriptorKeySchnorr) {
+				tempData.SchnorrPubkey = tempData.Pubkey
+				tempData.Pubkey = ""
+			}
+			descriptorDataList[i] = tempData
+			lastMultisigFlag = tempData.IsMultisig
 		}
-		descriptorDataList[i] = data
-		lastMultisigFlag = data.IsMultisig
 	}
 
 	if lastMultisigFlag && (ret == (int)(KCfdSuccess)) {
@@ -306,11 +330,25 @@ func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPat
 	}
 
 	if ret == (int)(KCfdSuccess) {
-		return descriptorDataList, multisigList, err
+		return data, descriptorDataList, multisigList, err
 	} else {
 		err = convertCfdError(ret, handle)
-		return []CfdDescriptorData{}, []CfdDescriptorKeyData{}, err
+		return data, []CfdDescriptorData{}, []CfdDescriptorKeyData{}, err
 	}
+}
+
+/**
+ * Parse Output Descriptor.
+ * param: descriptor           output descriptor
+ * param: networkType          network type
+ * param: bip32DerivationPath  derive path
+ * return: descriptorDataList  descriptor data struct list
+ * return: multisigList        multisig key struct list
+ * return: err                 error
+ */
+func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	_, descriptorDataList, multisigList, err = CfdGoParseDescriptorData(descriptor, networkType, bip32DerivationPath)
+	return descriptorDataList, multisigList, err
 }
 
 /**
@@ -5143,13 +5181,13 @@ func NewDescriptorFromAddress(address string, networkType int) *Descriptor {
 }
 
 // Parse This function return a Descriptor parsing data.
-func (obj *Descriptor) Parse() (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
-	return CfdGoParseDescriptor(obj.OutputDescriptor, obj.Network, "")
+func (obj *Descriptor) Parse() (data CfdDescriptorData, descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	return CfdGoParseDescriptorData(obj.OutputDescriptor, obj.Network, "")
 }
 
 // ParseWithDerivationPath This function return a Descriptor parsing data.
-func (obj *Descriptor) ParseWithDerivationPath(bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
-	return CfdGoParseDescriptor(obj.OutputDescriptor, obj.Network, bip32DerivationPath)
+func (obj *Descriptor) ParseWithDerivationPath(bip32DerivationPath string) (data CfdDescriptorData, descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	return CfdGoParseDescriptorData(obj.OutputDescriptor, obj.Network, bip32DerivationPath)
 }
 
 // GetChecksum This function return a descriptor adding checksum.
