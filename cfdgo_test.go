@@ -3183,6 +3183,74 @@ func TestFundRawTransaction2(t *testing.T) {
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
+func TestFundRawTransaction3(t *testing.T) {
+	assets := []string{
+		"6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d",
+		"f59c5f3e8141f322276daa63ed5f307085808aea6d4ef9ba61e28154533fdec7",
+	}
+	utxos := []CfdUtxo{
+		{
+			Txid:       "cd4433fd3d014187050aefe878f76ab76aa8b1eef3ba965cb8dc76b0d271d002",
+			Vout:       uint32(2),
+			Amount:     int64(999799),
+			Asset:      assets[0],
+			Descriptor: "wpkh(02db28ad892aa1e500d1e88ffa24200088bc82a8a87807cd13a1d1a1c7799c41e5)",
+		},
+		{
+			Txid:       "62ac8a5272b67aab0ca60db859bed64729463de72ee1743fd7eb9c72f4437b06",
+			Vout:       uint32(0),
+			Amount:     int64(19999),
+			Asset:      assets[1],
+			Descriptor: "wpkh(023004f49c61a63e339fa554e218774d6b4752bbfcfca61fe1c567b96af196b524)",
+		},
+		{
+			Txid:       "376906dfec46e2abc2c98cc4a51d725cb8bbc5ece38ae1127c90802823202988",
+			Vout:       uint32(2),
+			Amount:     int64(1),
+			Asset:      assets[1],
+			Descriptor: "wpkh(02272bcdbec1c0a2170e72f2d8cf42188d59ea7eae9296d60d435af3fe465d9bb5)",
+		},
+	}
+
+	netType := int(KCfdNetworkLiquidv1)
+	option := NewCfdFundRawTxOption(netType)
+	option.EffectiveFeeRate = float64(0.15)
+	option.FeeAsset = assets[0]
+	option.KnapsackMinChange = int64(0)
+	targets := []CfdFundRawTxTargetAmount{
+		{
+			Amount:          int64(0),
+			Asset:           assets[1],
+			ReservedAddress: "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8",
+		},
+		{
+			Amount:          int64(0),
+			Asset:           assets[0],
+			ReservedAddress: "lq1qqgv5wwfp4h0pfnyy2kkxl0kg3qnahcpfq7emrxu9xusz879axq0spg9cxu8wf72ktsft5r8vxnkfd8s5kmg32fvy8texp5p6s",
+		},
+	}
+	txinList := []CfdUtxo{}
+
+	txHex, err := CfdGoAddConfidentialTxOut(
+		"0200000000000000000000",
+		"f59c5f3e8141f322276daa63ed5f307085808aea6d4ef9ba61e28154533fdec7",
+		int64(20000), "",
+		"lq1qqg0hpf63fs29e7cpep63hy4vtv6334v947e9dkhfh397ge9l234vv2d2jzk547809pvaq4e7d884v72hagesq35ggggjtedtw", "", "")
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000000000101c7de3f535481e261baf94e6dea8a808570305fed63aa6d2722f341813e5f9cf5010000000000004e20021f70a7514c145cfb01c8751b92ac5b3518d585afb256dae9bc4be464bf546ac616001429aa90ad4af8ef2859d0573e69cf567957ea330000000000", txHex)
+
+	outputTx, fee, usedAddressList, err := CfdGoFundRawTransaction(netType, txHex, txinList, utxos, targets, &option)
+	assert.NoError(t, err)
+	assert.Equal(t, "02000000000302d071d2b076dcb85c96baf3eeb1a86ab76af778e8ef0a058741013dfd3344cd0200000000ffffffff067b43f4729cebd73f74e12ee73d462947d6be59b80da60cab7ab672528aac620000000000ffffffff882920232880907c12e18ae3ecc5bbb85c721da5c48cc9c2abe246ecdf0669370200000000ffffffff0301c7de3f535481e261baf94e6dea8a808570305fed63aa6d2722f341813e5f9cf5010000000000004e20021f70a7514c145cfb01c8751b92ac5b3518d585afb256dae9bc4be464bf546ac616001429aa90ad4af8ef2859d0573e69cf567957ea3300016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f01000000000000013b0000016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f0100000000000f403c0219473921adde14cc8455ac6fbec88827dbe02907b3b19b85372023f8bd301f00160014a0b8370ee4f9565c12ba0cec34ec969e14b6d11500000000", outputTx)
+	assert.Equal(t, int64(315), fee)
+	assert.Equal(t, 1, len(usedAddressList))
+	if len(usedAddressList) == 1 {
+		assert.Equal(t, "lq1qqgv5wwfp4h0pfnyy2kkxl0kg3qnahcpfq7emrxu9xusz879axq0spg9cxu8wf72ktsft5r8vxnkfd8s5kmg32fvy8texp5p6s", usedAddressList[0])
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
 func TestGetCommitment(t *testing.T) {
 	assetCommitment, err := CfdGoGetAssetCommitment(
 		"6f1a4b6bd5571b5f08ab79c314dc6483f9b952af2f5ef206cd6f8e68eb1186f3",
