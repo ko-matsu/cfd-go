@@ -5,13 +5,12 @@ on:
     tags:
     - 'v*'
 
-env:
-  CMAKE_VERSION: 3.17.2
-
 jobs:
-  create-releases:
+  create_releases:
     name: create-releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
+    outputs:
+      release_url: ${{ steps.output_url.outputs.upload_url }}
 
     steps:
     - name: checkout
@@ -30,23 +29,24 @@ jobs:
           - Second Change
         draft: false
         prerelease: true
-#      continue-on-error: true
-    - name: write upload url
+      continue-on-error: true
+    - name: Get release
+      if: steps.create_release.outcome == 'failure'
+      id: get_release
+      uses: bruceadams/get-release@v1.2.0
       env:
-        url: ${{ steps.create_release.outputs.upload_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: output url
+      id: output_url
       run: |
-        echo $url > upload_url.txt
-    - name: upload artifact
-      uses: actions/upload-artifact@v1
-      with:
-        name: artifact-upload_url
-        path: upload_url.txt
+        echo "::set-output name=upload_url::${{steps.get_release.outputs.upload_url}}${{steps.create_release.outputs.upload_url}}"
 
   upload-object-windows-mingw:
     name: upload-object-win-mingw
-    needs: create-releases
-    runs-on: windows-latest
+    needs: create_releases
+    runs-on: windows-2019
     strategy:
+      fail-fast: false
       matrix:
         bin: [gcc, gcc-static]
         include:
@@ -60,17 +60,9 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v2
-    - name: download artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: artifact-upload_url
-    - name: dump upload url
+    - name: output url
       id: get_url
-      run: |
-        export up_url="$(cat artifact-upload_url/upload_url.txt)"
-        echo "::set-output name=upload_url::$up_url"
-        echo "url=$up_url"
-      shell: bash
+      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
@@ -84,8 +76,7 @@ jobs:
       run: mkdir dist
     - name: cmake-build
       run: |
-        cmake -S . -B build -G "${{ matrix.generator }}"
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
+        cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off
         cmake --build build --parallel 2 --config Release
       timeout-minutes: 20
     - name: cmake-install
@@ -118,9 +109,10 @@ jobs:
 
   upload-object-ubuntu:
     name: upload-object-ubuntu
-    needs: create-releases
+    needs: create_releases
     runs-on: ubuntu-${{ matrix.os_ver }}.04
     strategy:
+      fail-fast: false
       matrix:
 #        os: [ubuntu-20.04, ubuntu-18.04, ubuntu-16.04]
         os_ver: [20, 18, 16]
@@ -159,15 +151,9 @@ jobs:
       run: |
         sudo unzip -q ./dist/cfd.zip -d /
         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib" go test
-    - name: download artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: artifact-upload_url
-    - name: dump upload url
+    - name: output url
       id: get_url
-      run: |
-        url=$(cat artifact-upload_url/upload_url.txt)
-        echo ::set-output name=upload_url::$url
+      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:
@@ -180,8 +166,8 @@ jobs:
 
   upload-object-alpine-3-10:
     name: upload-object-alpine-3.10
-    needs: create-releases
-    runs-on: ubuntu-latest
+    needs: create_releases
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -211,18 +197,12 @@ jobs:
         echo "---- dump zip file ----"
         sudo ls -l /tmp/cfd
     - name: pre-release-test
-      uses: docker://golang:1.13-alpine
+      uses: docker://golang:1.13-alpine3.10
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
-    - name: download artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: artifact-upload_url
-    - name: dump upload url
+    - name: output url
       id: get_url
-      run: |
-        url=$(cat artifact-upload_url/upload_url.txt)
-        echo ::set-output name=upload_url::$url
+      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -237,8 +217,8 @@ jobs:
 
   upload-object-alpine-3-12:
     name: upload-object-alpine-3.12
-    needs: create-releases
-    runs-on: ubuntu-latest
+    needs: create_releases
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -268,18 +248,12 @@ jobs:
         echo "---- dump zip file ----"
         sudo ls -l /tmp/cfd
     - name: pre-release-test
-      uses: docker://golang:1.15-alpine
+      uses: docker://golang:1.15-alpine3.12
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
-    - name: download artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: artifact-upload_url
-    - name: dump upload url
+    - name: output url
       id: get_url
-      run: |
-        url=$(cat artifact-upload_url/upload_url.txt)
-        echo ::set-output name=upload_url::$url
+      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -292,13 +266,65 @@ jobs:
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine-3.12-x86_64.zip
         asset_content_type: application/zip
 
+  upload-object-alpine-3-13:
+    name: upload-object-alpine-3.13
+    needs: create_releases
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: list
+      run: ls -a $GITHUB_WORKSPACE
+    - name: docker setup
+      uses: docker://alpine:3.13
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: create archive file
+      run: |
+        echo "---- dump output data ----"
+        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
+        mkdir -p /tmp/cfd
+        sudo chmod 777 /tmp/cfd
+        sudo chown runner /tmp/cfd
+        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
+        cd /tmp/cfd
+        sudo zip -r /tmp/cfd/cfd.zip usr
+        sudo chmod 777 /tmp/cfd/cfd.zip
+        sudo chown runner /tmp/cfd/cfd.zip
+        sudo cp -rp /tmp/cfd/cfd.zip $GITHUB_WORKSPACE/dist/cfd.zip
+        echo "---- dump zip file ----"
+        sudo ls -l /tmp/cfd
+    - name: pre-release-test
+      uses: docker://golang:1.15-alpine3.13
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
+    - name: output url
+      id: get_url
+      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+    - name: Upload Release Asset
+      id: upload-release-asset 
+#      if: success()
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: /tmp/cfd/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine-3.13-x86_64.zip
+        asset_content_type: application/zip
+
   upload-object-macos:
     name: upload-object-macos
-    needs: create-releases
-    runs-on: macos-latest
+    needs: create_releases
+    runs-on: macos-10.15
     strategy:
+      fail-fast: false
       matrix:
-        xcode: [10.3, 11.6]
+        xcode: [10.3, 11.7, 12.4]
         shared: [on, off]
         include:
           - shared: on
@@ -334,15 +360,9 @@ jobs:
         zip -r cfd.zip usr
         echo "---- dump zip file ----"
         ls -l
-    - name: download artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: artifact-upload_url
-    - name: dump upload url
+    - name: output url
       id: get_url
-      run: |
-        url=$(cat artifact-upload_url/upload_url.txt)
-        echo ::set-output name=upload_url::$url
+      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:

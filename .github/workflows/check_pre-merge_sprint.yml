@@ -14,26 +14,23 @@ on:
     branches:
     - features/sprint*
 
-env:
-  CMAKE_VERSION: 3.17.2
-
 jobs:
   cmake-build:
     name: cmake build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-20.04, ubuntu-18.04]
-        go-version: [1.13.x, 1.14.x, 1.15.x]
+        os: [macos-10.15, windows-2019, ubuntu-20.04, ubuntu-18.04]
+        go-version: [1.14.x, 1.15.x, 1.16.x]
         exclude:
-          - os: macos-latest
+          - os: macos-10.15
+            go-version: 1.15.x
+          - os: macos-10.15
             go-version: 1.14.x
-          - os: macos-latest
-            go-version: 1.13.x
         include:
-          - os: windows-latest
+          - os: windows-2019
             generator: MSYS Makefiles
-          - os: macos-latest
+          - os: macos-10.15
             generator: Unix Makefiles
           - os: ubuntu-20.04
             generator: Unix Makefiles
@@ -50,13 +47,15 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v1
     - name: cmake-generate
-      run: |
-        cmake -S . -B build -G "${{ matrix.generator }}"
-        cmake -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64;./build/Release" --build build
+      run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64;./build/Release"
     - name: cmake-build
       run: |
         cmake --version
         cmake --build build --config Release --parallel 2
+    - name: go-mod
+      run: go mod download
+    - name: go-build
+      run: go build
     - name: go_test-windows
       if: runner.os == 'Windows'
       run: .\go_test.bat
