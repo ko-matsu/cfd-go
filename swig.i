@@ -1339,16 +1339,21 @@ func CfdGoGetConfidentialTxOutIndex(txHex string, address string, directLockingS
  * return: err                 error
  */
 func CfdGoSetRawReissueAsset(txHex string, txid string, vout uint32, assetSatoshiAmount int64, blindingNonce string, entropy string, address string, directLockingScript string) (asset string, outputTxHex string, err error) {
-	handle, err := CfdGoCreateHandle()
+	outputTxHex = ""
+	txHandle, err := internalInitializeTransactionByHex((int)(KCfdNetworkLiquidv1), txHex)
 	if err != nil {
 		return
 	}
-	defer CfdGoFreeHandle(handle)
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
 
-	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
-	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
-	ret := CfdSetRawReissueAsset(handle, txHex, txid, voutPtr, satoshiPtr, blindingNonce, entropy, address, directLockingScript, &asset, &outputTxHex)
-	err = convertCfdError(ret, handle)
+	asset, err = SetReissueAsset(txHandle, txid, vout, assetSatoshiAmount, blindingNonce, entropy, address, directLockingScript)
+	if err != nil {
+		return "", "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", "", err
+	}
 	return asset, outputTxHex, err
 }
 
@@ -5667,6 +5672,11 @@ func internalFinalizeTransaction(createTxHandle uintptr) (txHex string, err erro
 	return txHex, err
 }
 
+// GetTransactionHex This function return a transacton hex.
+func GetTransactionHex(createTxHandle uintptr) (txHex string, err error) {
+	return internalFinalizeTransaction(createTxHandle)
+}
+
 // SignWithPrivkeyByHandle This function has adding sign with prikey.
 func SignWithPrivkeyByHandle(createTxHandle uintptr, txid string, vout uint32, privkey string, sighashType *SigHashType, hasGrindR bool, auxRand, annex *ByteData) error {
 	if sighashType == nil {
@@ -5919,6 +5929,370 @@ func CfdGoAddTapScriptSign(networkType int, txHex string, txid string, vout uint
 		return
 	}
 	return internalFinalizeTransaction(txHandle)
+}
+
+// TxOut : transaction output.
+type CfdTxOut struct {
+	// satoshi amount.
+	Amount int64
+	// locking script.
+	LockingScript string
+	// address (if locking script is usual hashtype.)
+	Address string
+}
+
+// ConfidentialTxOut : confidential transaction output.
+type CfdConfidentialTxOut struct {
+	// satoshi amount (unblind value)
+	Amount int64
+	// asset (or commitment asset)
+	Asset string
+	// locking script
+	LockingScript string
+	// address or confidential address. (if locking script is usual hashtype.)
+	Address string
+	// commitment value
+	CommitmentValue string
+	// commitment nonce
+	CommitmentNonce string
+	// surjectionprooof of asset
+	Surjectionproof string
+	// rangeproof of value
+	Rangeproof string
+}
+
+// SplitTxOut This function set the split outputs.
+func SplitTxOut(createTxHandle uintptr, index uint32, txouts []CfdTxOut) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	splitTxHandle := uintptr(0)
+	ret := CfdCreateSplitTxOutHandle(handle, createTxHandle, &splitTxHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+	defer CfdFreeSplitTxOutHandle(handle, splitTxHandle)
+
+	for _, txout := range txouts {
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txout.Amount)))
+		ret := CfdAddSplitTxOutData(handle, splitTxHandle, amountPtr, txout.Address, txout.LockingScript, "")
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret = CfdSplitTxOut(handle, createTxHandle, splitTxHandle, indexPtr)
+	return convertCfdError(ret, handle)
+}
+
+// SplitConfidentialTxOut This function set the split outputs.
+func SplitConfidentialTxOut(createTxHandle uintptr, index uint32, txouts []CfdConfidentialTxOut) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	splitTxHandle := uintptr(0)
+	ret := CfdCreateSplitTxOutHandle(handle, createTxHandle, &splitTxHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+	defer CfdFreeSplitTxOutHandle(handle, splitTxHandle)
+
+	for _, txout := range txouts {
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txout.Amount)))
+		ret := CfdAddSplitTxOutData(handle, splitTxHandle, amountPtr, txout.Address, txout.LockingScript, txout.CommitmentNonce)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret = CfdSplitTxOut(handle, createTxHandle, splitTxHandle, indexPtr)
+	return convertCfdError(ret, handle)
+}
+
+// GetTxOutIndexes This function get txout index list.
+func GetTxOutIndexes(createTxHandle uintptr, address, directLockingScript string) (indexes []uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return indexes, err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	outputIndex := uint32(0)
+	outputIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&outputIndex)))
+	offset := uint32(0)
+	offsetPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&offset)))
+	ret := CfdGetTxOutIndexWithOffsetByHandle(handle, createTxHandle, offsetPtr, address, directLockingScript, outputIndexPtr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return indexes, err
+	}
+	indexes = append(indexes, outputIndex)
+	offset = outputIndex + 1
+
+	for {
+		offsetPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&offset)))
+		ret := CfdGetTxOutIndexWithOffsetByHandle(handle, createTxHandle, offsetPtr, address, directLockingScript, outputIndexPtr)
+		if ret == int(KCfdOutOfRangeError) {
+			break
+		} else if err = convertCfdError(ret, handle); err != nil {
+			return indexes, err
+		}
+		indexes = append(indexes, outputIndex)
+		offset = outputIndex + 1
+	}
+	return indexes, err
+}
+
+// CfdGoSplitTxOut This function set the split outputs.
+func CfdGoSplitTxOut(txHex string, index uint32, txouts []CfdTxOut) (outputTxHex string, err error) {
+	txHandle, err := internalInitializeTransactionByHex((int)(KCfdNetworkMainnet), txHex)
+	if err != nil {
+		return "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = SplitTxOut(txHandle, index, txouts); err != nil {
+		return "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", err
+	}
+	return outputTxHex, err
+}
+
+// CfdGoSplitConfidentialTxOut This function set the split outputs.
+func CfdGoSplitConfidentialTxOut(txHex string, index uint32, txouts []CfdConfidentialTxOut) (outputTxHex string, err error) {
+	txHandle, err := internalInitializeTransactionByHex((int)(KCfdNetworkLiquidv1), txHex)
+	if err != nil {
+		return "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = SplitConfidentialTxOut(txHandle, index, txouts); err != nil {
+		return "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", err
+	}
+	return outputTxHex, err
+}
+
+// CfdGoGetTxOutIndexes This function get txout index list.
+func CfdGoGetTxOutIndexes(networkType int, txHex string, address, directLockingScript string) (indexes []uint32, err error) {
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return indexes, err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+	return GetTxOutIndexes(txHandle, address, directLockingScript)
+}
+
+// GetPeginAddress This function get a pegin address.
+func GetPeginAddress(mainchainNetworkType int, fedpegScript string, hashType int, pubkey, redeemScript string) (peginAddress, claimScript, tweakedFedpegScript string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetPeginAddress(handle, mainchainNetworkType, fedpegScript,
+		hashType, pubkey, redeemScript, &peginAddress, &claimScript, &tweakedFedpegScript)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoGetPeginAddress This function get a pegin address.
+func CfdGoGetPeginAddress(mainchainNetworkType int, fedpegScript string, hashType int, pubkey, redeemScript string) (peginAddress, claimScript, tweakedFedpegScript string, err error) {
+	return GetPeginAddress(mainchainNetworkType, fedpegScript, hashType, pubkey, redeemScript)
+}
+
+// AddPeginInput This function add a pegin input.
+func AddPeginInput(createTxHandle uintptr, txid string, vout uint32, amount int64, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
+	ret := CfdAddTxPeginInput(handle, createTxHandle, txid, voutPtr, amountPtr, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof)
+	return convertCfdError(ret, handle)
+}
+
+// AddPegoutOutput This function add a pegout output.
+func AddPegoutOutput(createTxHandle uintptr, asset string, amount int64, mainchainNetworkType, elementsNetworkType int, mainchainGenesisBlockHash, onlinePubkey, masterOnlineKey, mainchainOutputDescriptor string, bip32Counter uint32, whitelist string) (mainchainAddress string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	bip32CounterPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&bip32Counter)))
+	amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
+	ret := CfdAddTxPegoutOutput(handle, createTxHandle, asset, amountPtr,
+		mainchainNetworkType, elementsNetworkType, mainchainGenesisBlockHash, onlinePubkey, masterOnlineKey, mainchainOutputDescriptor, bip32CounterPtr, whitelist, &mainchainAddress)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoAddPeginInput This function add a pegin input.
+func CfdGoAddPeginInput(txHex string, txid string, vout uint32, amount int64, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof string) (outputTxHex string, err error) {
+	txHandle, err := internalInitializeTransactionByHex((int)(KCfdNetworkLiquidv1), txHex)
+	if err != nil {
+		return "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = AddPeginInput(txHandle, txid, vout, amount, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof); err != nil {
+		return "", err
+	}
+	if outputTxHex, err = internalFinalizeTransaction(txHandle); err != nil {
+		return "", err
+	}
+	return outputTxHex, err
+}
+
+// CfdGoAddPegoutOutput This function add a pegout output.
+func CfdGoAddPegoutOutput(txHex string, asset string, amount int64, mainchainNetworkType, elementsNetworkType int, mainchainGenesisBlockHash, onlinePubkey, masterOnlineKey, mainchainOutputDescriptor string, bip32Counter uint32, whitelist string) (outputTxHex string, mainchainAddress string, err error) {
+	txHandle, err := internalInitializeTransactionByHex(elementsNetworkType, txHex)
+	if err != nil {
+		return "", "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if mainchainAddress, err = AddPegoutOutput(txHandle, asset, amount, mainchainNetworkType, elementsNetworkType, mainchainGenesisBlockHash, onlinePubkey, masterOnlineKey, mainchainOutputDescriptor, bip32Counter, whitelist); err != nil {
+		return "", "", err
+	}
+
+	if outputTxHex, err = internalFinalizeTransaction(txHandle); err != nil {
+		return "", "", err
+	}
+	return outputTxHex, mainchainAddress, err
+}
+
+// UpdateWitnessStack This function set a witness stack item.
+func UpdateWitnessStack(createTxHandle uintptr, txid string, vout uint32, witnessIndex uint32, data string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	witnessIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&witnessIndex)))
+	ret := CfdUpdateWitnessStack(handle, createTxHandle, int(KCfdTxWitnessStackNormal), txid, voutPtr, witnessIndexPtr, data)
+	return convertCfdError(ret, handle)
+}
+
+// UpdatePeginWitnessStack This function set a witness stack item.
+func UpdatePeginWitnessStack(createTxHandle uintptr, txid string, vout uint32, witnessIndex uint32, data string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	witnessIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&witnessIndex)))
+	ret := CfdUpdateWitnessStack(handle, createTxHandle, int(KCfdTxWitnessStackPegin), txid, voutPtr, witnessIndexPtr, data)
+	return convertCfdError(ret, handle)
+}
+
+// CfdGoUpdateWitnessStack This function set a witness stack item.
+func CfdGoUpdateWitnessStack(networkType int, txHex string, txid string, vout uint32, witnessIndex uint32, data string) (outputTxHex string, err error) {
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = UpdateWitnessStack(txHandle, txid, vout, witnessIndex, data); err != nil {
+		return "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", err
+	}
+	return outputTxHex, err
+}
+
+// CfdGoUpdatePeginWitnessStack This function set a witness stack item
+func CfdGoUpdatePeginWitnessStack(txHex string, txid string, vout uint32, witnessIndex uint32, data string) (outputTxHex string, err error) {
+	txHandle, err := internalInitializeTransactionByHex((int)(KCfdNetworkLiquidv1), txHex)
+	if err != nil {
+		return "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = UpdatePeginWitnessStack(txHandle, txid, vout, witnessIndex, data); err != nil {
+		return "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", err
+	}
+	return outputTxHex, err
+}
+
+// SetReissueAsset This function set a reissuance information.
+func SetReissueAsset(createTxHandle uintptr, txid string, vout uint32, assetSatoshiAmount int64, blindingNonce string, entropy string, address string, directLockingScript string) (asset string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
+	ret := CfdSetReissueAsset(handle, createTxHandle, txid, voutPtr, satoshiPtr, blindingNonce, entropy, address, directLockingScript, &asset)
+	err = convertCfdError(ret, handle)
+	return asset, err
+}
+
+// SetIssueAsset This function set a issuance information.
+func SetIssueAsset(createTxHandle uintptr, txid string, vout uint32, contractHash string, assetSatoshiAmount int64, assetAddress, assetLockingScript string, tokenSatoshiAmount int64, tokenAddress, tokenLockingScript string, isBlindAsset bool) (entropy, asset, token string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	assetSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
+	tokenSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenSatoshiAmount)))
+	ret := CfdSetIssueAsset(handle, createTxHandle, txid, voutPtr, contractHash, assetSatoshiPtr, assetAddress, assetLockingScript, tokenSatoshiPtr, tokenAddress, tokenLockingScript, isBlindAsset, &entropy, &asset, &token)
+	err = convertCfdError(ret, handle)
+	return entropy, asset, token, err
+}
+
+// CfdGoSetRawIssueAsset This function set a issuance information.
+func CfdGoSetRawIssueAsset(txHex string, txid string, vout uint32, contractHash string, assetSatoshiAmount int64, assetAddress, assetLockingScript string, tokenSatoshiAmount int64, tokenAddress, tokenLockingScript string, isBlindAsset bool) (entropy, asset, token, outputTxHex string, err error) {
+	outputTxHex = ""
+	txHandle, err := internalInitializeTransactionByHex((int)(KCfdNetworkLiquidv1), txHex)
+	if err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	entropy, asset, token, err = SetIssueAsset(txHandle, txid, vout, contractHash, assetSatoshiAmount, assetAddress, assetLockingScript, tokenSatoshiAmount, tokenAddress, tokenLockingScript, isBlindAsset)
+	if err != nil {
+		return "", "", "", "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", "", "", "", err
+	}
+	return entropy, asset, token, outputTxHex, err
 }
 
 // refine API ------------------------------------------------------------------
