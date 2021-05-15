@@ -289,7 +289,7 @@ func CfdGoParseDescriptorData(descriptor string, networkType int, bip32Derivatio
 	}
 
 	if ret == (int)(KCfdSuccess) {
-		descriptorDataList = make([]CfdDescriptorData, maxIndex+1, maxIndex+1)
+		descriptorDataList = make([]CfdDescriptorData, maxIndex+1)
 		for i := uint32(0); i <= maxIndex; i++ {
 			var tempData CfdDescriptorData
 			var maxNum uint32
@@ -315,7 +315,7 @@ func CfdGoParseDescriptorData(descriptor string, networkType int, bip32Derivatio
 	}
 
 	if lastMultisigFlag && (ret == (int)(KCfdSuccess)) {
-		multisigList = make([]CfdDescriptorKeyData, maxMultisigKeyNum, maxMultisigKeyNum)
+		multisigList = make([]CfdDescriptorKeyData, maxMultisigKeyNum)
 		for i := uint32(0); i < maxMultisigKeyNum; i++ {
 			var keyData CfdDescriptorKeyData
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -398,8 +398,8 @@ func CfdGoGetAddressesFromMultisig(redeemScript string, networkType int, hashTyp
 	}
 	defer CfdFreeAddressesMultisigHandle(handle, multisigHandle)
 
-	addressList = make([]string, maxKeyNum, maxKeyNum)
-	pubkeyList = make([]string, maxKeyNum, maxKeyNum)
+	addressList = make([]string, maxKeyNum)
+	pubkeyList = make([]string, maxKeyNum)
 	for i := uint32(0); i < maxKeyNum; i++ {
 		var pubkey string
 		var address string
@@ -636,7 +636,7 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 	}
 
 	selectUtxoCount := 0
-	tempUtxos := make([]CfdUtxo, utxoCount, utxoCount)
+	tempUtxos := make([]CfdUtxo, utxoCount)
 	for i := uint32(0); i < utxoCount; i++ {
 		utxoIndex := int32(0)
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -653,13 +653,13 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 		selectUtxoCount += 1
 	}
 	if selectUtxoCount > 0 {
-		selectUtxos = make([]CfdUtxo, selectUtxoCount, selectUtxoCount)
+		selectUtxos = make([]CfdUtxo, selectUtxoCount)
 		for i := 0; i < selectUtxoCount; i++ {
 			selectUtxos[i] = tempUtxos[i]
 		}
 	}
 
-	totalAmounts = make([]CfdTargetAmount, amountCount, amountCount)
+	totalAmounts = make([]CfdTargetAmount, amountCount)
 	for i := uint32(0); i < amountCount; i++ {
 		amount := int64(0)
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -1589,10 +1589,10 @@ func CfdGoGetBlinderList(blindHandle uintptr) (blinderList []BlindData, err erro
 
 	err = nil
 	index := 0
-	tempBlinderList := make([]BlindData, 2, 2)
+	tempBlinderList := make([]BlindData, 2)
 	for {
 		if len(tempBlinderList) <= index {
-			tempList := make([]BlindData, len(tempBlinderList)*2, len(tempBlinderList)*2)
+			tempList := make([]BlindData, len(tempBlinderList)*2)
 			copy(tempList, tempBlinderList)
 			tempBlinderList = tempList
 		}
@@ -1611,7 +1611,7 @@ func CfdGoGetBlinderList(blindHandle uintptr) (blinderList []BlindData, err erro
 	}
 
 	if err == nil {
-		blinderList = make([]BlindData, index, index)
+		blinderList = make([]BlindData, index)
 		copy(blinderList, tempBlinderList)
 	}
 	return blinderList, err
@@ -2516,7 +2516,7 @@ func CfdGoParseScript(script string) (scriptItems []string, err error) {
 	var ret int
 
 	if ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); ret == (int)(KCfdSuccess) {
-		scriptItems = make([]string, itemNum, itemNum)
+		scriptItems = make([]string, itemNum)
 		for i := uint32(0); i < itemNum; i++ {
 			var item string
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -4100,7 +4100,7 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 	}
 	defer CfdFreeMnemonicWordList(handle, mnemonicHandle)
 
-	mnemonicList = make([]string, maxIndex, maxIndex)
+	mnemonicList = make([]string, maxIndex)
 	for i := uint32(0); i < maxIndex; i++ {
 		var word string
 		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -4367,7 +4367,7 @@ func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, 
 		return
 	}
 
-	usedAddressList = make([]string, appendTxoutCount, appendTxoutCount)
+	usedAddressList = make([]string, appendTxoutCount)
 	for i := uint32(0); i < appendTxoutCount; i++ {
 		var addr string
 		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
@@ -5102,10 +5102,7 @@ func (obj *Script) ToSlice() []byte {
 
 // IsEmpty This function return a empty or not.
 func (obj *Script) IsEmpty() bool {
-	if len(obj.hex) == 0 {
-		return true
-	}
-	return false
+	return len(obj.hex) == 0
 }
 
 // Parse This function return a parsing script.
@@ -5769,7 +5766,7 @@ func GetSighash(createTxHandle uintptr, txid string, vout uint32, sighashType *S
 	}
 
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
-	codeSeparatorPosPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&codeSeparatorPos)))
+	codeSeparatorPosPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&codeSeparatorPos)))
 	ret := CfdCreateSighashByHandle(handle, createTxHandle, txid, voutPtr, sighashType.GetValue(), sighashType.AnyoneCanPay, pubkeyStr, scriptStr, tapLeafHashStr, codeSeparatorPosPtr, annexStr, &sighash)
 	err = convertCfdError(ret, handle)
 	return
@@ -6243,7 +6240,7 @@ func GetTransactionDataAll(txHex string, hasWitness bool, hasAddress bool, netwo
 		return data, txinList, txoutList, err
 	}
 
-	tempTxins := make([]TxIn, txinCount, txinCount)
+	tempTxins := make([]TxIn, txinCount)
 	for i := uint32(0); i < txinCount; i++ {
 		txid, vout, sequence, scriptSig, err := CfdGoGetTxInByHandle(handle, i)
 		if err != nil {
@@ -6259,7 +6256,7 @@ func GetTransactionDataAll(txHex string, hasWitness bool, hasAddress bool, netwo
 			if err != nil {
 				return data, txinList, txoutList, err
 			}
-			wList := make([]string, txinCount, txinCount)
+			wList := make([]string, txinCount)
 			for j := uint32(0); j < wCount; j++ {
 				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
 				if err != nil {
@@ -6271,7 +6268,7 @@ func GetTransactionDataAll(txHex string, hasWitness bool, hasAddress bool, netwo
 		}
 	}
 
-	tempTxouts := make([]TxOut, txoutCount, txoutCount)
+	tempTxouts := make([]TxOut, txoutCount)
 	for i := uint32(0); i < txoutCount; i++ {
 		satoshiAmount, lockingScript, _, err := CfdGoGetTxOutByHandle(handle, i)
 		if err != nil {
@@ -6325,7 +6322,7 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 		return data, txinList, txoutList, err
 	}
 
-	tempTxins := make([]ConfidentialTxIn, txinCount, txinCount)
+	tempTxins := make([]ConfidentialTxIn, txinCount)
 	for i := uint32(0); i < txinCount; i++ {
 		txid, vout, sequence, scriptSig, err := CfdGoGetTxInByHandle(handle, i)
 		if err != nil {
@@ -6359,7 +6356,7 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 			if err != nil {
 				return data, txinList, txoutList, err
 			}
-			wList := make([]string, txinCount, txinCount)
+			wList := make([]string, txinCount)
 			for j := uint32(0); j < wCount; j++ {
 				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
 				if err != nil {
@@ -6373,7 +6370,7 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 			if err != nil {
 				return data, txinList, txoutList, err
 			}
-			pList := make([]string, pCount, pCount)
+			pList := make([]string, pCount)
 			for j := uint32(0); j < wCount; j++ {
 				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 1, i, j)
 				if err != nil {
@@ -6385,7 +6382,7 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 		}
 	}
 
-	tempTxouts := make([]ConfidentialTxOut, txoutCount, txoutCount)
+	tempTxouts := make([]ConfidentialTxOut, txoutCount)
 	for i := uint32(0); i < txoutCount; i++ {
 		var lockingScript string
 
