@@ -5,6 +5,7 @@ on:
     branches:
     - master
     - v[0-9]+
+    - stable_v*
     paths-ignore:
     - 'README.md'
     - '*.dockerfile'
@@ -15,6 +16,7 @@ on:
     branches:
     - master
     - v[0-9]+
+    - stable_v*
 
 jobs:
   cmake-build:
