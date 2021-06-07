@@ -2,6 +2,7 @@
 %{
 #include "cfdc/cfdcapi_common.h"
 #include "cfdc/cfdcapi_address.h"
+#include "cfdc/cfdcapi_block.h"
 #include "cfdc/cfdcapi_coin.h"
 #include "cfdc/cfdcapi_elements_address.h"
 #include "cfdc/cfdcapi_elements_transaction.h"
@@ -24,6 +25,7 @@
 
 %include "external/cfd/include/cfdc/cfdcapi_common.h"
 %include "external/cfd/include/cfdc/cfdcapi_address.h"
+%include "external/cfd/include/cfdc/cfdcapi_block.h"
 %include "external/cfd/include/cfdc/cfdcapi_coin.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_transaction.h"
@@ -62,6 +64,8 @@ func convertCfdErrorCode(retCode int) (err error) {
 		err = fmt.Errorf("CFD Error: Connection error occered.: errorCode=[%d]", retCode)
 	case (int)(KCfdDiskAccessError):
 		err = fmt.Errorf("CFD Error: Disk access error occered.: errorCode=[%d]", retCode)
+	case (int)(KCfdNotFoundError):
+		err = fmt.Errorf("CFD Error: NotFound error occered.: errorCode=[%d]", retCode)
 	}
 	return
 }
@@ -5658,7 +5662,7 @@ func internalInitializeTransactionByHex(networkType int, txHex string) (createTx
 	return createTxHandle, err
 }
 
-// internalInitializeTransactionByHex This function return a transacton hex.
+// internalFinalizeTransaction This function return a transacton hex.
 func internalFinalizeTransaction(createTxHandle uintptr) (txHex string, err error) {
 	txHex = ""
 	handle, err := CfdGoCreateHandle()
@@ -6180,6 +6184,20 @@ func CfdGoAddPegoutOutput(txHex string, asset string, amount int64, mainchainNet
 	return outputTxHex, mainchainAddress, err
 }
 
+// UpdateTxInSequence This function set a sequence number.
+func UpdateTxInSequence(createTxHandle uintptr, txid string, vout uint32, sequence uint32) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdUpdateTxInSequence(handle, createTxHandle, txid, voutPtr, sequencePtr)
+	return convertCfdError(ret, handle)
+}
+
 // UpdateWitnessStack This function set a witness stack item.
 func UpdateWitnessStack(createTxHandle uintptr, txid string, vout uint32, witnessIndex uint32, data string) error {
 	handle, err := CfdGoCreateHandle()
@@ -6206,6 +6224,24 @@ func UpdatePeginWitnessStack(createTxHandle uintptr, txid string, vout uint32, w
 	witnessIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&witnessIndex)))
 	ret := CfdUpdateWitnessStack(handle, createTxHandle, int(KCfdTxWitnessStackPegin), txid, voutPtr, witnessIndexPtr, data)
 	return convertCfdError(ret, handle)
+}
+
+// CfdGoUpdateTxInSequence This function set a sequence number.
+func CfdGoUpdateTxInSequence(networkType int, txHex string, txid string, vout uint32, sequence uint32) (outputTxHex string, err error) {
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return "", err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	if err = UpdateTxInSequence(txHandle, txid, vout, sequence); err != nil {
+		return "", err
+	}
+	outputTxHex, err = internalFinalizeTransaction(txHandle)
+	if err != nil {
+		return "", err
+	}
+	return outputTxHex, err
 }
 
 // CfdGoUpdateWitnessStack This function set a witness stack item.
@@ -6293,6 +6329,246 @@ func CfdGoSetRawIssueAsset(txHex string, txid string, vout uint32, contractHash 
 		return "", "", "", "", err
 	}
 	return entropy, asset, token, outputTxHex, err
+}
+
+// BlockHeader block header information.
+type BlockHeader struct {
+	Version       uint32 // Version
+	PrevBlockHash string // previous block hash
+	MerkleRoot    string // merkleroot
+	Time          uint32 // block time
+	Bits          uint32 // bit flag
+	Nonce         uint32 // nonce
+}
+
+// InitializeTransactionByHex This function is open block handle.
+func InitializeBlockHandleByHex(networkType int, block string) (blockHandle uintptr, err error) {
+	blockHandle = uintptr(0)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdInitializeBlockHandle(handle, networkType, block, &blockHandle)
+	err = convertCfdError(ret, handle)
+	return blockHandle, err
+}
+
+// FreeBlockHandle This function is free block handle.
+func FreeBlockHandle(blockHandle uintptr) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdFreeBlockHandle(handle, blockHandle)
+	return convertCfdError(ret, handle)
+}
+
+// GetBlockHash This function get a block hash.
+func GetBlockHash(blockHandle uintptr) (blockHash string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetBlockHash(handle, blockHandle, &blockHash)
+	err = convertCfdError(ret, handle)
+	return blockHash, err
+}
+
+// GetBlockHeaderData This function get a block header data.
+func GetBlockHeaderData(blockHandle uintptr) (header *BlockHeader, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	blockHeader := BlockHeader{}
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Version)))
+	timePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Time)))
+	bitsPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Bits)))
+	noncePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Nonce)))
+	ret := CfdGetBlockHeaderData(handle, blockHandle, versionPtr, &blockHeader.PrevBlockHash, &blockHeader.MerkleRoot, timePtr, bitsPtr, noncePtr)
+	err = convertCfdError(ret, handle)
+	header = &blockHeader
+	return header, err
+}
+
+// GetTransactionFromBlock This function get a transaction data.
+func GetTransactionFromBlock(blockHandle uintptr, txid string) (txHex string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetTransactionFromBlock(handle, blockHandle, txid, &txHex)
+	err = convertCfdError(ret, handle)
+	return txHex, err
+}
+
+// GetTxOutProof This function get a txoutproof.
+func GetTxOutProof(blockHandle uintptr, txid string) (txoutProof string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetTxOutProof(handle, blockHandle, txid, &txoutProof)
+	err = convertCfdError(ret, handle)
+	return txoutProof, err
+}
+
+// ExistTxidInBlock This function get a exist tx in a block.
+func ExistTxidInBlock(blockHandle uintptr, txid string) (exist bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdExistTxidInBlock(handle, blockHandle, txid)
+	if ret == int(KCfdSuccess) {
+		exist = true
+	} else {
+		exist = false
+		if ret != int(KCfdNotFoundError) {
+			err = convertCfdError(ret, handle)
+		}
+	}
+	return exist, err
+}
+
+// GetTxCountInBlock This function get a trasaction count in this block.
+func GetTxCountInBlock(blockHandle uintptr) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxCountInBlock(handle, blockHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+// GetTxidFromBlock This function get a txid from block.
+func GetTxidFromBlock(blockHandle uintptr, offset uint32) (txid string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	offsetPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&offset)))
+	ret := CfdGetTxidFromBlock(handle, blockHandle, offsetPtr, &txid)
+	err = convertCfdError(ret, handle)
+	return txid, err
+}
+
+// GetTxidListFromBlock This function get txid list from block.
+func GetTxidListFromBlock(blockHandle uintptr) (txidList []string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	count, err := GetTxCountInBlock(blockHandle)
+	if err != nil {
+		return nil, err
+	}
+	txidList = make([]string, count)
+
+	for index := uint32(0); index < count; index++ {
+		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+		ret := CfdGetTxidFromBlock(handle, blockHandle, indexPtr, &txidList[index])
+		err = convertCfdError(ret, handle)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return txidList, err
+}
+
+// CfdGoGetBlockHeaderData This function get a block header data.
+func CfdGoGetBlockHeaderData(networkType int, block string) (blockHash string, header *BlockHeader, err error) {
+	blockHash = ""
+	blockHandle, err := InitializeBlockHandleByHex(networkType, block)
+	if err != nil {
+		return
+	}
+	defer CfdFreeBlockHandle(uintptr(0), blockHandle)
+
+	blockHash, err = GetBlockHash(blockHandle)
+	if err != nil {
+		return "", nil, err
+	}
+	header, err = GetBlockHeaderData(blockHandle)
+	if err != nil {
+		return "", nil, err
+	}
+	return blockHash, header, err
+}
+
+// CfdGoGetTxCountInBlock This function get a tx count.
+func CfdGoGetTxCountInBlock(networkType int, block string) (count uint32, err error) {
+	blockHandle, err := InitializeBlockHandleByHex(networkType, block)
+	if err != nil {
+		return
+	}
+	defer CfdFreeBlockHandle(uintptr(0), blockHandle)
+
+	return GetTxCountInBlock(blockHandle)
+}
+
+// CfdGoGetTxidListFromBlock This function get txid list from block.
+func CfdGoGetTxidListFromBlock(networkType int, block string) (txidList []string, err error) {
+	blockHandle, err := InitializeBlockHandleByHex(networkType, block)
+	if err != nil {
+		return
+	}
+	defer CfdFreeBlockHandle(uintptr(0), blockHandle)
+
+	return GetTxidListFromBlock(blockHandle)
+}
+
+// CfdGoGetTransactionDataFromBlock This function get a tx data.
+func CfdGoGetTransactionDataFromBlock(networkType int, block, txid string) (txHex, txoutProof string, err error) {
+	blockHandle, err := InitializeBlockHandleByHex(networkType, block)
+	if err != nil {
+		return
+	}
+	defer CfdFreeBlockHandle(uintptr(0), blockHandle)
+
+	txHex, err = GetTransactionFromBlock(blockHandle, txid)
+	if err != nil {
+		return "", "", err
+	}
+
+	txoutProof, err = GetTxOutProof(blockHandle, txid)
+	if err != nil {
+		return "", "", err
+	}
+	return txHex, txoutProof, err
+}
+
+// CfdGoExistTxidInBlock This function get a exist tx in a block.
+func CfdGoExistTxidInBlock(networkType int, block, txid string) (exist bool, err error) {
+	blockHandle, err := InitializeBlockHandleByHex(networkType, block)
+	if err != nil {
+		return
+	}
+	defer CfdFreeBlockHandle(uintptr(0), blockHandle)
+
+	return ExistTxidInBlock(blockHandle, txid)
 }
 
 // refine API ------------------------------------------------------------------
