@@ -4722,16 +4722,17 @@ func (obj *SigHashType) GetValue() int {
 }
 
 // EcdsaAdaptorUtil This struct use for the accessing to ecdsa-adaptor function.
-type EcdsaAdaptorUtil struct {
+type AdaptorSignature struct {
+	Signature string
 }
 
-// NewEcdsaAdaptorUtil This function return a EcdsaAdaptorUtil.
-func NewEcdsaAdaptorUtil() *EcdsaAdaptorUtil {
-	return &EcdsaAdaptorUtil{}
+// NewAdaptorSignature This function return a ecdsa-adaptor's signature.
+func NewAdaptorSignature(adaptorSignature ByteData) *AdaptorSignature {
+	return &AdaptorSignature{Signature: adaptorSignature.hex}
 }
 
-// Sign This function return a ecdsa-adaptor's signature and proof.
-func (obj *EcdsaAdaptorUtil) Sign(msg, secretKey, adaptor ByteData) (adaptorSignature, adaptorProof ByteData, err error) {
+// EncryptEcdsaAdaptor This function return a ecdsa-adaptor's signature.
+func EncryptEcdsaAdaptor(msg, secretKey, encryptionKey ByteData) (adaptorSignature *AdaptorSignature, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4739,18 +4740,16 @@ func (obj *EcdsaAdaptorUtil) Sign(msg, secretKey, adaptor ByteData) (adaptorSign
 	defer CfdGoFreeHandle(handle)
 
 	var signature string
-	var proof string
-	ret := CfdSignEcdsaAdaptor(handle, msg.ToHex(), secretKey.ToHex(), adaptor.ToHex(), &signature, &proof)
+	ret := CfdEncryptEcdsaAdaptor(handle, msg.ToHex(), secretKey.ToHex(), encryptionKey.ToHex(), &signature)
 	err = convertCfdError(ret, handle)
 	if err == nil {
-		adaptorSignature = ByteData{hex: signature}
-		adaptorProof = ByteData{hex: proof}
+		adaptorSignature = &AdaptorSignature{Signature: signature}
 	}
-	return adaptorSignature, adaptorProof, err
+	return adaptorSignature, err
 }
 
 // Adapt This function return a decrypted signature.
-func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (signature ByteData, err error) {
+func (obj *AdaptorSignature) Decrypt(adaptorSecret ByteData) (signature ByteData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4758,7 +4757,7 @@ func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (si
 	defer CfdGoFreeHandle(handle)
 
 	var ecSignature string
-	ret := CfdAdaptEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorSecret.ToHex(), &ecSignature)
+	ret := CfdDecryptEcdsaAdaptor(handle, obj.Signature, adaptorSecret.ToHex(), &ecSignature)
 	err = convertCfdError(ret, handle)
 	if err == nil {
 		signature = ByteData{hex: ecSignature}
@@ -4767,7 +4766,7 @@ func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (si
 }
 
 // ExtractSecret This function return a adaptor secret.
-func (obj *EcdsaAdaptorUtil) ExtractSecret(adaptorSignature, signature, adaptor ByteData) (secret ByteData, err error) {
+func (obj *AdaptorSignature) Recover(signature, encryptionKey ByteData) (secret *ByteData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4775,16 +4774,16 @@ func (obj *EcdsaAdaptorUtil) ExtractSecret(adaptorSignature, signature, adaptor 
 	defer CfdGoFreeHandle(handle)
 
 	var adaptorSecret string
-	ret := CfdExtractEcdsaAdaptorSecret(handle, adaptorSignature.ToHex(), signature.ToHex(), adaptor.ToHex(), &adaptorSecret)
+	ret := CfdRecoverEcdsaAdaptor(handle, obj.Signature, signature.ToHex(), encryptionKey.ToHex(), &adaptorSecret)
 	err = convertCfdError(ret, handle)
 	if err == nil {
-		secret = ByteData{hex: adaptorSecret}
+		secret = &ByteData{hex: adaptorSecret}
 	}
 	return secret, err
 }
 
 // Verify This function verify a ecdsa-adaptor's signature.
-func (obj *EcdsaAdaptorUtil) Verify(adaptorSignature, adaptorProof, adaptor, msg, pubkey ByteData) (isVerify bool, err error) {
+func (obj *AdaptorSignature) Verify(msg, pubkey, encryptionKey ByteData) (isVerify bool, err error) {
 	isVerify = false
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
@@ -4792,7 +4791,7 @@ func (obj *EcdsaAdaptorUtil) Verify(adaptorSignature, adaptorProof, adaptor, msg
 	}
 	defer CfdGoFreeHandle(handle)
 
-	ret := CfdVerifyEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorProof.ToHex(), adaptor.ToHex(), msg.ToHex(), pubkey.ToHex())
+	ret := CfdVerifyEcdsaAdaptor(handle, obj.Signature, msg.ToHex(), pubkey.ToHex(), encryptionKey.ToHex())
 	if ret == (int)(KCfdSuccess) {
 		isVerify = true
 	} else if ret == (int)(KCfdSignVerificationError) {

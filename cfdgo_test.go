@@ -1265,37 +1265,35 @@ func TestByteData(t *testing.T) {
 }
 
 func TestEcdsaAdaptorApi(t *testing.T) {
-	msg, err := NewByteDataFromHex("024bdd11f2144e825db05759bdd9041367a420fad14b665fd08af5b42056e5e2")
+	msg, err := NewByteDataFromHex("8131e6f4b45754f2c90bd06688ceeabc0c45055460729928b4eecf11026a9e2d")
 	assert.NoError(t, err)
-	adaptor, err := NewByteDataFromHex("038d48057fc4ce150482114d43201b333bf3706f3cd527e8767ceb4b443ab5d349")
+	adaptor, err := NewByteDataFromHex("02042537e913ad74c4bbd8da9607ad3b9cb297d08e014afc51133083f1bd687a62")
 	assert.NoError(t, err)
 	sk, err := NewByteDataFromHex("90ac0d5dc0a1a9ab352afb02005a5cc6c4df0da61d8149d729ff50db9b5a5215")
 	assert.NoError(t, err)
 	pubkey, err := NewByteDataFromHex("03490cec9a53cd8f2f664aea61922f26ee920c42d2489778bb7c9d9ece44d149a7")
 	assert.NoError(t, err)
-	adaptorSig2, err := NewByteDataFromHex("01099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f47bb90e2ad6630900b69f55674c8ad74a419e6ce113c10a21a79345a6e47bc74c1")
+	adaptorSig2, err := NewByteDataFromHex("032c637cd797dd8c2ce261907ed43e82d6d1a48cbabbbece801133dd8d70a01b1403eb615a3e59b1cbbf4f87acaf645be1eda32a066611f35dd5557802802b14b19c81c04c3fefac5783b2077bd43fa0a39ab8a64d4d78332a5d621ea23eca46bc011011ab82dda6deb85699f508744d70d4134bea03f784d285b5c6c15a56e4e1fab4bc356abbdebb3b8fe1e55e6dd6d2a9ea457e91b2e6642fae69f9dbb5258854")
 	assert.NoError(t, err)
-	secret, err := NewByteDataFromHex("475697a71a74ff3f2a8f150534e9b67d4b0b6561fab86fcaa51f8c9d6c9db8c6")
+	secret, err := NewByteDataFromHex("324719b51ff2474c9438eb76494b0dc0bcceeb529f0a5428fd198ad8f886e99c")
 	assert.NoError(t, err)
-	derSignature := "30440220099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f4702204d13456e98d8989043fd4674302ce90c432e2f8bb0269f02c72aafec60b72de101"
+	ecSig := "2c637cd797dd8c2ce261907ed43e82d6d1a48cbabbbece801133dd8d70a01b144a0dbcde0aaf484622f911b03027d423e1fd99e71ba10f6f7232e52a1ca9d706"
 
-	obj := NewEcdsaAdaptorUtil()
-	adaptorSignature, proof, err := obj.Sign(msg, sk, adaptor)
+	adaptorSignature, err := EncryptEcdsaAdaptor(msg, sk, adaptor)
 	assert.NoError(t, err)
-	assert.Equal(t, "00cbe0859638c3600ea1872ed7a55b8182a251969f59d7d2da6bd4afedf25f5021a49956234cbbbbede8ca72e0113319c84921bf1224897a6abd89dc96b9c5b208", adaptorSignature.ToHex())
-	assert.Equal(t, "00b02472be1ba09f5675488e841a10878b38c798ca63eff3650c8e311e3e2ebe2e3b6fee5654580a91cc5149a71bf25bcbeae63dea3ac5ad157a0ab7373c3011d0fc2592a07f719c5fc1323f935569ecd010db62f045e965cc1d564eb42cce8d6d", proof.ToHex())
+	assert.Equal(t, "0287b498de89db75bf68e15836be75e42619cfe85a6bcea503ea23444597deae8c025ed1a6f5d7ce4a4d8132c824ed374353629d672fea7c5c459348f3b279463d5a8d6d61a6589bb4b99bbccc3c0cd288ec5826e42821326aa29d1ab0af3f344ff3a1c4e25ad6fe22e55786685f6266a2f57a771c33404829fbac39b5810fb52e3534070c08dcdb7be744cbde3cde979f9d79ecb9f155ecf3c4975bbc5935486f14", adaptorSignature.Signature)
 
-	isVerify, err := obj.Verify(adaptorSignature, proof, adaptor, msg, pubkey)
+	isVerify, err := adaptorSignature.Verify(msg, pubkey, adaptor)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 
-	ecSig, _, _, err := CfdGoDecodeSignatureFromDer(derSignature)
 	assert.NoError(t, err)
-	signature, err := obj.Adapt(adaptorSig2, secret)
+	adaptorSignature2 := NewAdaptorSignature(adaptorSig2)
+	signature, err := adaptorSignature2.Decrypt(secret)
 	assert.NoError(t, err)
 	assert.Equal(t, ecSig, signature.ToHex())
 
-	adaptorSecret, err := obj.ExtractSecret(adaptorSig2, signature, adaptor)
+	adaptorSecret, err := adaptorSignature2.Recover(signature, adaptor)
 	assert.NoError(t, err)
 	assert.Equal(t, secret.ToHex(), adaptorSecret.ToHex())
 
