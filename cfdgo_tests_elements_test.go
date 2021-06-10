@@ -2361,6 +2361,14 @@ func TestPegout(t *testing.T) {
 	// whitelist
 	pakEntry := negateMainchainPubkey + onlinePubkey
 	whitelist := pakEntry
+	mainchainNetwork := int(KCfdNetworkMainnet)
+	elementsNetwork := int(KCfdNetworkLiquidv1)
+
+	// pegout address
+	pegoutAddress, baseDescriptor, err := CfdGoGetPegoutAddress(mainchainNetwork, elementsNetwork, mainchainOutputDescriptor, bip32Counter, int(KCfdP2pkhAddress))
+	assert.NoError(t, err)
+	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddress)
+	assert.Equal(t, "pkh("+mainchainXpubkey+")", baseDescriptor)
 
 	// create pegout tx
 	genesisBlockHash := "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
@@ -2376,7 +2384,7 @@ func TestPegout(t *testing.T) {
 			"XBMr6srTXmWuHifFd8gs54xYfiCBsvrksA", "", asset)
 		assert.NoError(t, err)
 		address, err := AddPegoutOutput(pegoutTxHandle, asset, int64(1000000000),
-			int(KCfdNetworkMainnet), int(KCfdNetworkLiquidv1), genesisBlockHash, onlinePubkey, onlinePrivkey, mainchainOutputDescriptor, bip32Counter, whitelist)
+			mainchainNetwork, elementsNetwork, genesisBlockHash, onlinePubkey, onlinePrivkey, mainchainOutputDescriptor, bip32Counter, whitelist)
 		assert.NoError(t, err)
 		assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", address)
 
@@ -2386,6 +2394,15 @@ func TestPegout(t *testing.T) {
 		txHex, err := GetTransactionHex(pegoutTxHandle)
 		assert.NoError(t, err)
 		assert.Equal(t, "020000000001a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000fdffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c0017a914001d6db698e75a5a8af771730c4ab258af30546b870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca0000a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914efbced4774546c03a8554ce2da27c0300c9dd43b88ac2103700dcb030588ed828d85f645b48971de0d31e8c0244da46710d18681627f5a4a4101044e949dcf8ac2daac82a3e4999ee28e2711661793570c4daab34cd38d76a425d6bfe102f3fea8be12109925fad32c78b65afea4de1d17a826e7375d0e2d00660125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c84000000000000", txHex)
+
+		pegoutAddress, hasPegout, err := CfdGoGetPegoutAddressFromTransaction(elementsNetwork, txHex, uint32(1), mainchainNetwork)
+		assert.NoError(t, err)
+		assert.True(t, hasPegout)
+		assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddress)
+
+		_, hasPegout, err = CfdGoGetPegoutAddressFromTransaction(elementsNetwork, txHex, uint32(0), mainchainNetwork)
+		assert.NoError(t, err)
+		assert.False(t, hasPegout)
 	}
 
 	fmt.Printf("%s test done.\n", GetFuncName())
