@@ -6119,6 +6119,25 @@ func CfdGoGetPeginAddress(mainchainNetworkType int, fedpegScript string, hashTyp
 	return GetPeginAddress(mainchainNetworkType, fedpegScript, hashType, pubkey, redeemScript)
 }
 
+// GetPegoutAddress This function get a pegout address.
+func GetPegoutAddress(mainchainNetworkType, elementsNetworkType int, descriptorOrXpub string, bip32Counter uint32, addressType int) (pegoutAddress, baseDescriptor string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	bip32CounterPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&bip32Counter)))
+	ret := CfdGetPegoutAddress(handle, mainchainNetworkType, elementsNetworkType, descriptorOrXpub, bip32CounterPtr, addressType, &pegoutAddress, &baseDescriptor)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoGetPegoutAddress This function get a pegout address.
+func CfdGoGetPegoutAddress(mainchainNetworkType, elementsNetworkType int, descriptorOrXpub string, bip32Counter uint32, addressType int) (pegoutAddress, baseDescriptor string, err error) {
+	return GetPegoutAddress(mainchainNetworkType, elementsNetworkType, descriptorOrXpub, bip32Counter, addressType)
+}
+
 // AddPeginInput This function add a pegin input.
 func AddPeginInput(createTxHandle uintptr, txid string, vout uint32, amount int64, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof string) error {
 	handle, err := CfdGoCreateHandle()
@@ -6182,6 +6201,59 @@ func CfdGoAddPegoutOutput(txHex string, asset string, amount int64, mainchainNet
 		return "", "", err
 	}
 	return outputTxHex, mainchainAddress, err
+}
+
+// HasPegoutOutput This function check pegout output.
+func HasPegoutOutput(createTxHandle uintptr, index uint32) (hasPegout bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdHasPegoutConfidentialTxOut(handle, createTxHandle, indexPtr)
+	if ret == int(KCfdSuccess) {
+		hasPegout = true
+	} else {
+		hasPegout = false
+		if ret != (int)(KCfdNotFoundError) {
+			err = convertCfdError(ret, handle)
+		}
+	}
+	return hasPegout, err
+}
+
+// GetPegoutAddressFromTransaction This function is getting pegout address from tx.
+func GetPegoutAddressFromTransaction(createTxHandle uintptr, index uint32, mainchainNetwork int) (pegoutAddress string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetPegoutMainchainAddress(handle, createTxHandle, indexPtr, mainchainNetwork, &pegoutAddress)
+	err = convertCfdError(ret, handle)
+	return pegoutAddress, err
+}
+
+// CfdGoGetPegoutAddressFromTransaction This function get a pegout address from transaction.
+func CfdGoGetPegoutAddressFromTransaction(networkType int, txHex string, index uint32, mainchainNetwork int) (pegoutAddress string, isPegoutOutput bool, err error) {
+	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
+	if err != nil {
+		return "", false, err
+	}
+	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
+
+	isPegoutOutput, err = HasPegoutOutput(txHandle, index)
+	if err != nil {
+		return "", false, err
+	} else if !isPegoutOutput {
+		return "", false, nil
+	}
+	pegoutAddress, err = GetPegoutAddressFromTransaction(txHandle, index, mainchainNetwork)
+	return pegoutAddress, true, err
 }
 
 // UpdateTxInSequence This function set a sequence number.
