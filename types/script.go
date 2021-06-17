@@ -1,6 +1,10 @@
-package cfdgo
+package types
 
-import "encoding/hex"
+import (
+	"encoding/hex"
+
+	cfd "github.com/cryptogarageinc/cfd-go"
+)
 
 // Script This struct holds a script.
 type Script struct {
@@ -19,7 +23,7 @@ func NewScriptFromHex(hexStr string) (Script, error) {
 	var obj Script
 	_, osErr := hex.DecodeString(hexStr)
 	if osErr != nil {
-		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+		return obj, cfd.ConvertCfdErrorCode(int(cfd.KCfdIllegalArgumentError))
 	}
 	obj.hex = hexStr
 	return obj, nil
@@ -39,13 +43,13 @@ func NewScriptFromHexIgnoreError(hexStr string) *Script {
 // NewScriptFromAsm This function create a script from an asm string.
 func NewScriptFromAsm(scriptAsm string) (Script, error) {
 	var obj Script
-	hexStr, err := CfdGoConvertScriptAsmToHex(scriptAsm)
+	hexStr, err := cfd.CfdGoConvertScriptAsmToHex(scriptAsm)
 	if err != nil {
 		return obj, err
 	}
 	_, osErr := hex.DecodeString(hexStr)
 	if osErr != nil {
-		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+		return obj, cfd.ConvertCfdErrorCode(int(cfd.KCfdIllegalArgumentError))
 	}
 	obj.hex = hexStr
 	return obj, nil
@@ -54,13 +58,13 @@ func NewScriptFromAsm(scriptAsm string) (Script, error) {
 // NewScriptFromAsmList This function create a script from the asm string list.
 func NewScriptFromAsmList(scriptAsmList []string) (Script, error) {
 	var obj Script
-	hexStr, err := CfdGoCreateScript(scriptAsmList)
+	hexStr, err := cfd.CfdGoCreateScript(scriptAsmList)
 	if err != nil {
 		return obj, err
 	}
 	_, osErr := hex.DecodeString(hexStr)
 	if osErr != nil {
-		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+		return obj, cfd.ConvertCfdErrorCode(int(cfd.KCfdIllegalArgumentError))
 	}
 	obj.hex = hexStr
 	return obj, nil
@@ -87,5 +91,5 @@ func (obj *Script) IsEmpty() bool {
 
 // Parse This function return a parsing script.
 func (obj *Script) Parse() (scriptItems []string, err error) {
-	return CfdGoParseScript(obj.hex)
+	return cfd.CfdGoParseScript(obj.hex)
 }

@@ -1,11 +1,22 @@
-package cfdgo
+package tests
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 	"testing"
 
+	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/stretchr/testify/assert"
 )
+
+// GetFuncName
+func GetFuncName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	funcName := runtime.FuncForPC(pc).Name()
+	index := strings.LastIndex(funcName, ".")
+	return funcName[index+1:]
+}
 
 func TestBlindLargeTx(t *testing.T) {
 	fmt.Printf("%s test start.\n", GetFuncName())
@@ -31,20 +42,20 @@ func BlindLargeTx(t *testing.T) (err error) {
 	// assetAmt := int64(4940 + 2530000 + 5060 + 99939782 + 60218)  // 102540000
 	asset2Amt := int64(49500 + 25300)
 
-	_, txinList, txoutList, err := GetConfidentialTxData(txHex, false)
+	_, txinList, txoutList, err := cfd.GetConfidentialTxData(txHex, false)
 	if err != nil {
 		fmt.Printf("GetConfidentialTxData fail[%s]\n", err.Error())
 		return err
 	}
 
 	// blind
-	blindHandle, err := CfdGoInitializeBlindTx()
+	blindHandle, err := cfd.CfdGoInitializeBlindTx()
 	assert.NoError(t, err)
 	if err != nil {
 		fmt.Printf("CfdGoInitializeBlindTx fail[%s]\n", err.Error())
 		return err
 	}
-	defer CfdGoFreeBlindHandle(blindHandle)
+	defer cfd.CfdGoFreeBlindHandle(blindHandle)
 
 	emptyBlinder := "0000000000000000000000000000000000000000000000000000000000000000"
 	for i := 1; i <= maxTxin; i++ {
@@ -59,7 +70,7 @@ func BlindLargeTx(t *testing.T) (err error) {
 		if i == maxTxin-1 {
 			amt = int64(25600)
 		}
-		err = CfdGoAddBlindTxInData(blindHandle, txid, vout, useAsset, emptyBlinder, emptyBlinder, amt, "", "")
+		err = cfd.CfdGoAddBlindTxInData(blindHandle, txid, vout, useAsset, emptyBlinder, emptyBlinder, amt, "", "")
 		assert.NoError(t, err)
 		if err != nil {
 			fmt.Printf("CfdGoAddBlindTxInData fail[%s] idx[%d]\n", err.Error(), i)
@@ -74,7 +85,7 @@ func BlindLargeTx(t *testing.T) (err error) {
 			continue
 		}
 
-		err = CfdGoAddBlindTxOutData(blindHandle, uint32(i-1), nonce)
+		err = cfd.CfdGoAddBlindTxOutData(blindHandle, uint32(i-1), nonce)
 		assert.NoError(t, err)
 		if err != nil {
 			fmt.Printf("CfdGoAddBlindTxOutData fail[%s] idx[%d]\n", err.Error(), i)
@@ -82,7 +93,7 @@ func BlindLargeTx(t *testing.T) (err error) {
 		}
 	}
 
-	_, err = CfdGoFinalizeBlindTx(blindHandle, txHex)
+	_, err = cfd.CfdGoFinalizeBlindTx(blindHandle, txHex)
 	assert.NoError(t, err)
 	if err != nil {
 		fmt.Printf("CfdGoFinalizeBlindTx fail[%s]\n", err.Error())

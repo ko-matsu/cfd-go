@@ -1,6 +1,10 @@
-package cfdgo
+package types
 
-import "encoding/hex"
+import (
+	"encoding/hex"
+
+	cfd "github.com/cryptogarageinc/cfd-go"
+)
 
 // ByteData This struct holds a byte array.
 type ByteData struct {
@@ -19,7 +23,7 @@ func NewByteDataFromHex(hexStr string) (ByteData, error) {
 	var obj ByteData
 	_, osErr := hex.DecodeString(hexStr)
 	if osErr != nil {
-		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+		return obj, cfd.ConvertCfdErrorCode(int(cfd.KCfdIllegalArgumentError))
 	}
 	obj.hex = hexStr
 	return obj, nil

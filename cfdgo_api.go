@@ -1,7 +1,9 @@
 package cfdgo
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 	"unsafe"
 )
@@ -11,7 +13,7 @@ import (
  * param: retCode   return code from cfd
  * return: err      built-in error struct.
  */
-func convertCfdErrorCode(retCode int) (err error) {
+func ConvertCfdErrorCode(retCode int) (err error) {
 	switch retCode {
 	case (int)(KCfdSuccess):
 		return nil
@@ -53,9 +55,9 @@ func convertCfdError(retCode int, handle uintptr) (err error) {
 
 	var errorMsg string
 	if handle == uintptr(0) {
-		err = convertCfdErrorCode(retCode)
+		err = ConvertCfdErrorCode(retCode)
 	} else if ret := CfdGetLastErrorMessage(handle, &errorMsg); ret != (int)(KCfdSuccess) {
-		err = convertCfdErrorCode(retCode)
+		err = ConvertCfdErrorCode(retCode)
 	} else {
 		err = fmt.Errorf("CFD Error: message=[%s], code=[%d]", errorMsg, retCode)
 	}
@@ -169,7 +171,7 @@ func CfdGoCreateMultisigScript(networkType int, hashType int, pubkeys []string, 
 /**
  * Descriptor data struct.
  */
-type DescriptorData struct {
+type CfdDescriptorData struct {
 	// depth (0 - )
 	Depth uint32
 	// script type. (CfdDescriptorScriptType)
@@ -182,7 +184,7 @@ type DescriptorData struct {
 	HashType int
 	// redeem script. (for ScriptType KCfdDescriptorScriptSh or KCfdDescriptorScriptWsh)
 	RedeemScript string
-	// key type. (see DescriptorKeyData.KeyType)
+	// key type. (see CfdDescriptorKeyData.KeyType)
 	KeyType int
 	// pubkey
 	Pubkey string
@@ -203,7 +205,7 @@ type DescriptorData struct {
 /**
  * Descriptor key data struct.
  */
-type DescriptorKeyData struct {
+type CfdDescriptorKeyData struct {
 	// key type. (CfdDescriptorKeyType)
 	// - KCfdDescriptorKeyNull
 	// - KCfdDescriptorKeyPublic
@@ -231,7 +233,7 @@ type DescriptorKeyData struct {
  * return: multisigList        multisig key struct list
  * return: err                 error
  */
-func CfdGoParseDescriptorData(descriptor string, networkType int, bip32DerivationPath string) (data DescriptorData, descriptorDataList []DescriptorData, multisigList []DescriptorKeyData, err error) {
+func CfdGoParseDescriptorData(descriptor string, networkType int, bip32DerivationPath string) (data CfdDescriptorData, descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -262,9 +264,9 @@ func CfdGoParseDescriptorData(descriptor string, networkType int, bip32Derivatio
 	}
 
 	if ret == (int)(KCfdSuccess) {
-		descriptorDataList = make([]DescriptorData, maxIndex+1)
+		descriptorDataList = make([]CfdDescriptorData, maxIndex+1)
 		for i := uint32(0); i <= maxIndex; i++ {
-			var tempData DescriptorData
+			var tempData CfdDescriptorData
 			var maxNum uint32
 			maxNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxNum)))
 			depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(tempData.Depth))))
@@ -288,9 +290,9 @@ func CfdGoParseDescriptorData(descriptor string, networkType int, bip32Derivatio
 	}
 
 	if lastMultisigFlag && (ret == (int)(KCfdSuccess)) {
-		multisigList = make([]DescriptorKeyData, maxMultisigKeyNum)
+		multisigList = make([]CfdDescriptorKeyData, maxMultisigKeyNum)
 		for i := uint32(0); i < maxMultisigKeyNum; i++ {
-			var keyData DescriptorKeyData
+			var keyData CfdDescriptorKeyData
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
 			ret = CfdGetDescriptorMultisigKey(handle, descriptorHandle,
 				index, &keyData.KeyType, &keyData.Pubkey,
@@ -306,7 +308,7 @@ func CfdGoParseDescriptorData(descriptor string, networkType int, bip32Derivatio
 		return data, descriptorDataList, multisigList, err
 	} else {
 		err = convertCfdError(ret, handle)
-		return data, []DescriptorData{}, []DescriptorKeyData{}, err
+		return data, []CfdDescriptorData{}, []CfdDescriptorKeyData{}, err
 	}
 }
 
@@ -319,7 +321,7 @@ func CfdGoParseDescriptorData(descriptor string, networkType int, bip32Derivatio
  * return: multisigList        multisig key struct list
  * return: err                 error
  */
-func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPath string) (descriptorDataList []DescriptorData, multisigList []DescriptorKeyData, err error) {
+func CfdGoParseDescriptor(descriptor string, networkType int, bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
 	_, descriptorDataList, multisigList, err = CfdGoParseDescriptorData(descriptor, networkType, bip32DerivationPath)
 	return descriptorDataList, multisigList, err
 }
@@ -459,7 +461,32 @@ func CfdGoGetAddressInfo(address string) (data CfdAddressInfo, err error) {
 /**
  * UTXO struct.
  */
-type CfdUtxo UtxoData
+type CfdUtxo struct {
+	// utxo txid
+	Txid string
+	// utxo vout
+	Vout uint32
+	// amount
+	Amount int64
+	// asset
+	Asset string
+	// output descriptor
+	Descriptor string
+	// is issuance output
+	IsIssuance bool
+	// is blind issuance output
+	IsBlindIssuance bool
+	// is peg-in output
+	IsPegin bool
+	// peg-in bitcoin tx size (require when IsPegin is true)
+	PeginBtcTxSize uint32
+	// fedpegscript hex (require when IsPegin is true)
+	FedpegScript string
+	// scriptsig template hex (require script hash estimate fee)
+	ScriptSigTemplate string
+	// amount commitment hex
+	AmountCommitment string
+}
 
 /**
  * Selection target amount struct.
@@ -1432,7 +1459,14 @@ func CfdGoAddBlindTxOutData(blindHandle uintptr, index uint32, confidentialKey s
 /**
  * BlindRawTransaction option data struct.
  */
-type CfdBlindTxOption BlindTxOption
+type CfdBlindTxOption struct {
+	// blind minimum range value
+	MinimumRangeValue int64
+	// blind exponent
+	Exponent int64
+	// blind minimum bits
+	MinimumBits int64
+}
 
 /** NewCfdBlindTxOption
  * Create CfdBlindTxOption struct set default value.
@@ -1443,7 +1477,6 @@ func NewCfdBlindTxOption() CfdBlindTxOption {
 	option.MinimumRangeValue = int64(1)
 	option.Exponent = int64(0)
 	option.MinimumBits = int64(-1)
-	option.AppendDummyOutput = false
 	return option
 }
 
@@ -1606,7 +1639,14 @@ type CfdBlindInputData struct {
 /**
  * BlindRawTransaction option data struct.
  */
-type CfdBlindOutputData BlindOutputData
+type CfdBlindOutputData struct {
+	// txout index (-1: auto)
+	Index int
+	// confidential or not address
+	ConfidentialAddress string
+	// (optional) confidential key
+	ConfidentialKey string
+}
 
 /** CfdGoBlindRawTransaction
  * Execute blindrawtransaction.
@@ -2403,7 +2443,18 @@ func CfdGoGetParentExtkeyPathData(
 /**
  * Extkey data struct.
  */
-type CfdExtkeyData ExtkeyData
+type CfdExtkeyData struct {
+	// version
+	Version string
+	// parent fingerprint
+	Fingerprint string
+	// chain code
+	ChainCode string
+	// depth
+	Depth uint32
+	// child number
+	ChildNumber uint32
+}
 
 /**
  * Get extkey information.
@@ -4552,7 +4603,574 @@ func CfdGoGetTxOutIndexByHandle(txDataHandle uintptr, address string, directLock
 
 // v0.2 API ------------------------------------------------------------------
 
+// ByteData This struct holds a byte array.
+type ByteData struct {
+	hex string
+}
+
+// NewByteData This function create a bytedata from a byte array.
+func NewByteData(data []byte) ByteData {
+	var obj ByteData
+	obj.hex = hex.EncodeToString(data)
+	return obj
+}
+
+// NewByteDataFromHex This function create a bytedata from a hex string.
+func NewByteDataFromHex(hexStr string) (ByteData, error) {
+	var obj ByteData
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// NewByteDataFromHex This function create a bytedata from a hex string. On error, it returns nil.
+func NewByteDataFromHexIgnoreError(hexStr string) *ByteData {
+	var obj ByteData
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return nil
+	}
+	obj.hex = hexStr
+	return &obj
+}
+
+// ToHex This function return a hex string.
+func (obj *ByteData) ToHex() string {
+	return obj.hex
+}
+
+// ToHex This function return a byte array.
+func (obj *ByteData) ToSlice() []byte {
+	data, osErr := hex.DecodeString(obj.hex)
+	if osErr != nil {
+		return []byte{}
+	}
+	return data
+}
+
+// SigHashType This struct use for the sighashtype utility function.
+type SigHashType struct {
+	Type         int
+	AnyoneCanPay bool
+	Rangeproof   bool
+}
+
+// NewSigHashType This function return a SigHashType.
+func NewSigHashType(sighashType int) *SigHashType {
+	value := sighashType & 0x0f
+	anyoneCanPay := false
+	isRangeproof := false
+	if (sighashType & 0x80) != 0 {
+		anyoneCanPay = true
+	}
+	if (sighashType & 0x40) != 0 {
+		isRangeproof = true
+	}
+	return &SigHashType{
+		Type:         value,
+		AnyoneCanPay: anyoneCanPay,
+		Rangeproof:   isRangeproof,
+	}
+}
+
+// ToHex This function return a sighashtype byte value.
+func (obj *SigHashType) GetValue() int {
+	value := obj.Type
+	if (value & 0x80) != 0 {
+		// do nothing
+	} else if obj.AnyoneCanPay {
+		value |= 0x80
+	}
+	if (value & 0x40) != 0 {
+		// do nothing
+	} else if obj.Rangeproof {
+		value |= 0x40
+	}
+	return value
+}
+
+// EcdsaAdaptorUtil This struct use for the accessing to ecdsa-adaptor function.
+type EcdsaAdaptorUtil struct {
+}
+
+// NewEcdsaAdaptorUtil This function return a EcdsaAdaptorUtil.
+func NewEcdsaAdaptorUtil() *EcdsaAdaptorUtil {
+	return &EcdsaAdaptorUtil{}
+}
+
+// Sign This function return a ecdsa-adaptor's signature and proof.
+func (obj *EcdsaAdaptorUtil) Sign(msg, secretKey, adaptor ByteData) (adaptorSignature, adaptorProof ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var signature string
+	var proof string
+	ret := CfdSignEcdsaAdaptor(handle, msg.ToHex(), secretKey.ToHex(), adaptor.ToHex(), &signature, &proof)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		adaptorSignature = ByteData{hex: signature}
+		adaptorProof = ByteData{hex: proof}
+	}
+	return adaptorSignature, adaptorProof, err
+}
+
+// Adapt This function return a decrypted signature.
+func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (signature ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var ecSignature string
+	ret := CfdAdaptEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorSecret.ToHex(), &ecSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		signature = ByteData{hex: ecSignature}
+	}
+	return signature, err
+}
+
+// ExtractSecret This function return a adaptor secret.
+func (obj *EcdsaAdaptorUtil) ExtractSecret(adaptorSignature, signature, adaptor ByteData) (secret ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var adaptorSecret string
+	ret := CfdExtractEcdsaAdaptorSecret(handle, adaptorSignature.ToHex(), signature.ToHex(), adaptor.ToHex(), &adaptorSecret)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		secret = ByteData{hex: adaptorSecret}
+	}
+	return secret, err
+}
+
+// Verify This function verify a ecdsa-adaptor's signature.
+func (obj *EcdsaAdaptorUtil) Verify(adaptorSignature, adaptorProof, adaptor, msg, pubkey ByteData) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdVerifyEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorProof.ToHex(), adaptor.ToHex(), msg.ToHex(), pubkey.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
+
+// SchnorrUtil This struct use for the accessing to schnorr function.
+type SchnorrUtil struct {
+}
+
+// NewSchnorrUtil This function return a SchnorrUtil.
+func NewSchnorrUtil() *SchnorrUtil {
+	return &SchnorrUtil{}
+}
+
+// GetPubkeyFromPrivkey (deprecated) This function return a schnorr's pubkey. Please use GetSchnorrPubkeyFromPrivkey.
+func (obj *SchnorrUtil) GetPubkeyFromPrivkey(key ByteData) (pubkey ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	parity := false
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, err
+}
+
+// GetSchnorrPubkeyFromPrivkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetSchnorrPubkeyFromPrivkey(key ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// GetSchnorrPubkeyFromPubkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetSchnorrPubkeyFromPubkey(key ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPubkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// TweakAddKeyPair This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) TweakAddKeyPair(key, tweak ByteData) (pubkey ByteData, parity bool, privkey ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var tweakedPubkey string
+	var tweakedPrivkey string
+	ret := CfdSchnorrKeyPairTweakAdd(handle, key.ToHex(), tweak.ToHex(), &tweakedPubkey, &parity, &tweakedPrivkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: tweakedPubkey}
+		privkey = ByteData{hex: tweakedPrivkey}
+	}
+	return pubkey, parity, privkey, err
+}
+
+// TweakAddPubkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) TweakAddPubkey(key, tweak ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var tweakedPubkey string
+	ret := CfdSchnorrPubkeyTweakAdd(handle, key.ToHex(), tweak.ToHex(), &tweakedPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: tweakedPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// IsTweakedPubkey This function return a tweaked flag.
+func (obj *SchnorrUtil) IsTweakedPubkey(key ByteData, parity bool, basePubkey, tweak ByteData) (isTweaked bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdCheckTweakAddFromSchnorrPubkey(handle, key.ToHex(), parity, basePubkey.ToHex(), tweak.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isTweaked = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isTweaked = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isTweaked, err
+}
+
+// Sign This function return a schnorr's signature.
+func (obj *SchnorrUtil) Sign(msg, secretKey, auxRand ByteData) (signature ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrSignature string
+	ret := CfdSignSchnorr(handle, msg.ToHex(), secretKey.ToHex(), auxRand.ToHex(), &schnorrSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		signature = ByteData{hex: schnorrSignature}
+	}
+	return signature, err
+}
+
+// SignWithNonce This function return a schnorr's signature with nonce.
+func (obj *SchnorrUtil) SignWithNonce(msg, secretKey, nonce ByteData) (signature ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrSignature string
+	ret := CfdSignSchnorrWithNonce(handle, msg.ToHex(), secretKey.ToHex(), nonce.ToHex(), &schnorrSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		signature = ByteData{hex: schnorrSignature}
+	}
+	return signature, err
+}
+
+// ComputeSigPoint This function return a sig-point.
+func (obj *SchnorrUtil) ComputeSigPoint(msg, nonce, pubkey ByteData) (sigPoint ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var point string
+	ret := CfdComputeSchnorrSigPoint(handle, msg.ToHex(), nonce.ToHex(), pubkey.ToHex(), &point)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		sigPoint = ByteData{hex: point}
+	}
+	return sigPoint, err
+}
+
+// Verify This function verify a schnorr's signature.
+func (obj *SchnorrUtil) Verify(signature, msg, pubkey ByteData) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdVerifySchnorr(handle, signature.ToHex(), msg.ToHex(), pubkey.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
+
+// SplitSignature This function return schnorr nonce and schnorr privkey.
+func (obj *SchnorrUtil) SplitSignature(signature ByteData) (nonce, key ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrNonce string
+	var privkey string
+	ret := CfdSplitSchnorrSignature(handle, signature.ToHex(), &schnorrNonce, &privkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		nonce = ByteData{hex: schnorrNonce}
+		key = ByteData{hex: privkey}
+	}
+	return nonce, key, err
+}
+
+// AddSighashTypeInSignature This function return schnorr signature added sighashType.
+func (obj *SchnorrUtil) AddSighashTypeInSignature(signature *ByteData, sighashType *SigHashType) (addedSighash *ByteData, err error) {
+	if signature == nil || sighashType == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var newSignature string
+	ret := CfdAddSighashTypeInSchnorrSignature(handle, signature.ToHex(), sighashType.GetValue(), sighashType.AnyoneCanPay, &newSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		addedSighash = &ByteData{hex: newSignature}
+	}
+	return addedSighash, err
+}
+
 // v0.3 API ------------------------------------------------------------------
+
+// Script This struct holds a script.
+type Script struct {
+	hex string
+}
+
+// NewScript This function create a script from a byte array.
+func NewScript(data []byte) Script {
+	var obj Script
+	obj.hex = hex.EncodeToString(data)
+	return obj
+}
+
+// NewScriptFromHex This function create a script from a hex string.
+func NewScriptFromHex(hexStr string) (Script, error) {
+	var obj Script
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// NewScriptFromHex This function create a script from a hex string. On error, it returns nil.
+func NewScriptFromHexIgnoreError(hexStr string) *Script {
+	var obj Script
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return nil
+	}
+	obj.hex = hexStr
+	return &obj
+}
+
+// NewScriptFromAsm This function create a script from an asm string.
+func NewScriptFromAsm(scriptAsm string) (Script, error) {
+	var obj Script
+	hexStr, err := CfdGoConvertScriptAsmToHex(scriptAsm)
+	if err != nil {
+		return obj, err
+	}
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// NewScriptFromAsmList This function create a script from the asm string list.
+func NewScriptFromAsmList(scriptAsmList []string) (Script, error) {
+	var obj Script
+	hexStr, err := CfdGoCreateScript(scriptAsmList)
+	if err != nil {
+		return obj, err
+	}
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// ToHex This function return a hex string.
+func (obj *Script) ToHex() string {
+	return obj.hex
+}
+
+// ToHex This function return a byte array.
+func (obj *Script) ToSlice() []byte {
+	data, osErr := hex.DecodeString(obj.hex)
+	if osErr != nil {
+		return []byte{}
+	}
+	return data
+}
+
+// IsEmpty This function return a empty or not.
+func (obj *Script) IsEmpty() bool {
+	return len(obj.hex) == 0
+}
+
+// Parse This function return a parsing script.
+func (obj *Script) Parse() (scriptItems []string, err error) {
+	return CfdGoParseScript(obj.hex)
+}
+
+// Descriptor This struct use for the output descriptor.
+type Descriptor struct {
+	// Output Descriptor
+	OutputDescriptor string
+	// Network Type
+	Network int
+}
+
+// NewDescriptorFromAddress This function return a Descriptor from pubkey.
+func NewDescriptorFromPubkey(hashType int, pubkey string, networkType int) *Descriptor {
+	var desc string
+	if hashType == (int)(KCfdP2shP2wpkh) {
+		desc = "sh(wpkh(" + pubkey + "))"
+	} else if hashType == (int)(KCfdP2wpkh) {
+		desc = "wpkh(" + pubkey + ")"
+	} else {
+		desc = "pkh(" + pubkey + ")"
+	}
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptorFromMultisig This function return a Descriptor from multisig.
+func NewDescriptorFromMultisig(hashType int, pubkeys []string, requireNum, networkType int) *Descriptor {
+	var desc string
+	desc = desc + "multi(" + strconv.Itoa(requireNum) + "," + strings.Join(pubkeys, ",") + ")"
+	if hashType == (int)(KCfdP2shP2wsh) {
+		desc = "sh(wsh(" + desc + "))"
+	} else if hashType == (int)(KCfdP2wsh) {
+		desc = "wsh(" + desc + ")"
+	} else if hashType == (int)(KCfdP2sh) {
+		desc = "sh(" + desc + ")"
+	}
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptor This function return a Descriptor.
+func NewDescriptorFromString(descriptor string, networkType int) *Descriptor {
+	return &Descriptor{
+		OutputDescriptor: descriptor,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptorFromLockingScript This function return a Descriptor from locking script.
+func NewDescriptorFromLockingScript(lockingScript string, networkType int) *Descriptor {
+	desc := "raw(" + lockingScript + ")"
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// NewDescriptorFromAddress This function return a Descriptor from address.
+func NewDescriptorFromAddress(address string, networkType int) *Descriptor {
+	desc := "addr(" + address + ")"
+	return &Descriptor{
+		OutputDescriptor: desc,
+		Network:          networkType,
+	}
+}
+
+// Parse This function return a Descriptor parsing data.
+func (obj *Descriptor) Parse() (data CfdDescriptorData, descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	return CfdGoParseDescriptorData(obj.OutputDescriptor, obj.Network, "")
+}
+
+// ParseWithDerivationPath This function return a Descriptor parsing data.
+func (obj *Descriptor) ParseWithDerivationPath(bip32DerivationPath string) (data CfdDescriptorData, descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
+	return CfdGoParseDescriptorData(obj.OutputDescriptor, obj.Network, bip32DerivationPath)
+}
+
+// GetChecksum This function return a descriptor adding checksum.
+func (obj *Descriptor) GetChecksum() (descriptorAddedChecksum string, err error) {
+	return CfdGoGetDescriptorChecksum(obj.Network, obj.OutputDescriptor)
+}
 
 // tapscript API ---------------------------------------------------------------
 
@@ -4567,6 +5185,516 @@ func CfdGoCreateScriptTreeHandle(handle uintptr) (treeHandle uintptr, err error)
 func CfdGoFreeScriptTreeHandle(handle uintptr, treeHandle uintptr) error {
 	ret := CfdFreeTaprootScriptTreeHandle(handle, treeHandle)
 	return convertCfdError(ret, handle)
+}
+
+// internalCreateScriptTreeHandle This function is create cfd handle and script tree handle.
+func internalCreateScriptTreeHandle() (handle uintptr, treeHandle uintptr, err error) {
+	handle, err = CfdGoCreateHandle()
+	if err != nil {
+		return uintptr(0), uintptr(0), err
+	}
+
+	ret := CfdInitializeTaprootScriptTree(handle, &treeHandle)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		CfdGoFreeHandle(handle)
+		return uintptr(0), uintptr(0), err
+	}
+	return handle, treeHandle, err
+}
+
+// TapBranch This struct use for the taproot script tree branch.
+type TapBranch struct {
+	// Branch Hash
+	Hash ByteData
+	// TapScript
+	TapScript Script
+	// tree string
+	treeStr string
+	// target node string
+	targetNodeStr string
+}
+
+// internalLoadTapBranchFromStringByNodes This function has load branch by nodes.
+func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) error {
+	script := ""
+	node := ""
+	if tapscript != nil {
+		script = tapscript.ToHex()
+		node = targetNodes
+	}
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	ret := CfdSetScriptTreeFromString(handle, treeHandle, treeStr, script, leafVersionPtr, node)
+	return convertCfdError(ret, handle)
+}
+
+// internalGetTapBranchData This function return a TapBranch.
+func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) (branch *TapBranch, err error) {
+	script := ""
+	node := ""
+	if tapscript != nil {
+		script = tapscript.ToHex()
+		node = targetNodes
+	}
+
+	count := uint32(0)
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTapBranchCount(handle, treeHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	targetNodeStr := node
+	var hash string
+	var tempScript string
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	depth := uint8(0)
+	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
+	if count == uint32(0) { // single leaf
+		ret = CfdGetBaseTapLeaf(handle, treeHandle, leafVersionPtr, &tempScript, &hash)
+	} else { // top branch
+		index := uint8(0)
+		indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
+		ret = CfdGetTapBranchData(handle, treeHandle, indexPtr, true, &hash, leafVersionPtr, &tempScript, depthPtr)
+	}
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+
+	if len(script) != 0 && len(node) == 0 {
+		for idx := uint8(0); idx < uint8(count); idx++ {
+			var branchHash string
+			idxPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&idx)))
+			ret = CfdGetTapBranchData(handle, treeHandle, idxPtr, false, &branchHash, leafVersionPtr, &tempScript, depthPtr)
+			if err = convertCfdError(ret, handle); err != nil {
+				return nil, err
+			}
+			targetNodeStr += branchHash
+		}
+	}
+
+	branch = &TapBranch{
+		Hash:          ByteData{hex: hash},
+		TapScript:     Script{hex: script},
+		treeStr:       treeStr,
+		targetNodeStr: targetNodeStr,
+	}
+	return branch, nil
+}
+
+// NewTapBranchFromHash This function return a TapBranch.
+func NewTapBranchFromHash(hash *ByteData) (*TapBranch, error) {
+	if hash == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	if len(hash.hex) != 64 {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	emptyScript := Script{hex: ""}
+	treeStr := hash.ToHex()
+	return &TapBranch{
+		Hash:          *hash,
+		TapScript:     emptyScript,
+		treeStr:       treeStr,
+		targetNodeStr: "",
+	}, nil
+}
+
+// NewTapBranchFromTapScript This function return a TapBranch from tapscript.
+func NewTapBranchFromTapScript(tapscript *Script) (*TapBranch, error) {
+	if tapscript == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	ret := CfdSetInitialTapLeaf(handle, treeHandle, tapscript.ToHex(), leafVersionPtr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	var treeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &treeStr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	branch, err := internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "")
+	return branch, err
+}
+
+// NewTapBranchFromString This function return a TapBranch from tree string.
+func NewTapBranchFromString(treeStr string, tapscript *Script) (*TapBranch, error) {
+	branch, err := NewTapBranchFromStringByNodes(treeStr, tapscript, []string{})
+	return branch, err
+}
+
+// NewTapBranchFromStringByNodes This function return a TapBranch from tree string and nodes.
+func NewTapBranchFromStringByNodes(treeStr string, tapscript *Script, nodes []string) (*TapBranch, error) {
+	targetNodes := ""
+	if tapscript != nil && len(nodes) > 0 {
+		targetNodes = strings.Join(nodes, "")
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, treeStr, tapscript, targetNodes)
+	if err != nil {
+		return nil, err
+	}
+
+	return internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, targetNodes)
+}
+
+// NewTapBranchFromControlBlock This function return a TapBranch from control block.
+func NewTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Script) (branch *TapBranch, internalPubkey *ByteData, err error) {
+	if controlBlock == nil || tapscript == nil {
+		return nil, nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	internalPubkeyStr := ""
+	ret := CfdSetTapScriptByWitnessStack(handle, treeHandle, controlBlock.ToHex(), tapscript.ToHex(), &internalPubkeyStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, nil, err
+	}
+
+	var tempScript string
+	var hash string
+	leafVersion := uint8(0xc0)
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	index := uint8(0)
+	indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
+	depth := uint8(0)
+	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
+	ret = CfdGetTapBranchData(handle, treeHandle, indexPtr, true, &hash, leafVersionPtr, &tempScript, depthPtr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, nil, err
+	}
+
+	var treeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &treeStr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	branch, err = internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	internalPubkey = &ByteData{hex: internalPubkeyStr}
+	return branch, internalPubkey, nil
+}
+
+// GetTreeString This function return a tapbranch tree string.
+func (obj *TapBranch) GetTreeString() string {
+	return obj.treeStr
+}
+
+// AddBranchByTapScript This function is adding a tapscript.
+func (obj *TapBranch) AddBranchByTapScript(tapscript *Script) error {
+	if tapscript == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	treeStr := "tl(" + tapscript.ToHex() + ")"
+	return obj.AddBranchByString(treeStr)
+}
+
+// AddBranchByHash This function is adding a tapbranch hash.
+func (obj *TapBranch) AddBranchByHash(hash *ByteData) error {
+	if hash == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	return obj.AddBranchByString(hash.hex)
+}
+
+// AddBranchByBranch This function is adding a tapbranch.
+func (obj *TapBranch) AddBranchByBranch(branch *TapBranch) error {
+	if branch == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	return obj.AddBranchByString(branch.treeStr)
+}
+
+// AddBranchByString This function return a tapbranch string.
+func (obj *TapBranch) AddBranchByString(treeStr string) error {
+	addBranch, err := NewTapBranchFromString(treeStr, nil)
+	if err != nil {
+		return err
+	}
+
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return err
+	}
+
+	ret := CfdAddTapBranchByScriptTreeString(handle, treeHandle, treeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	var newTreeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &newTreeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	branch, err := internalGetTapBranchData(handle, treeHandle, newTreeStr, &obj.TapScript, obj.targetNodeStr)
+	if err == nil {
+		obj.Hash = branch.Hash
+		obj.treeStr = newTreeStr
+		obj.targetNodeStr = obj.targetNodeStr + addBranch.Hash.ToHex()
+	}
+	return err
+}
+
+// GetMaxBranchCount This function return a branch count.
+func (obj *TapBranch) GetMaxBranchCount() (count uint32, err error) {
+	count = uint32(0)
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return
+	}
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTapBranchCount(handle, treeHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// GetBranch This function return a tapbranch.
+func (obj *TapBranch) GetBranch(index uint8) (branch *TapBranch, err error) {
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return
+	}
+
+	var branchHandle uintptr
+	var hash string
+	indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTapBranchHandle(handle, treeHandle, indexPtr, &hash, &branchHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeScriptTreeHandle(handle, branchHandle)
+
+	var branchTreeStr string
+	ret = CfdGetTaprootScriptTreeSrting(handle, branchHandle, &branchTreeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+
+	return internalGetTapBranchData(handle, branchHandle, branchTreeStr, nil, "")
+}
+
+// GetControlNodeList This function return control node list.
+func (obj *TapBranch) GetControlNodeList() (nodeList []string, err error) {
+	nodeList = []string{}
+	if obj.TapScript.IsEmpty() {
+		return nodeList, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	if len(obj.targetNodeStr) == 0 {
+		return nodeList, nil
+	}
+	if (len(obj.targetNodeStr) % 64) != 0 {
+		return nodeList, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	offset := 0
+	endOffset := 0
+	count := len(obj.targetNodeStr) / 64
+	nodeList = make([]string, count)
+	for index := 0; index < count; index++ {
+		offset = 64 * index
+		endOffset = offset + 64
+		nodeList[index] = obj.targetNodeStr[offset:endOffset]
+	}
+	return nodeList, nil
+}
+
+// GetTweakedPubkey This function return a tweaked pubkey by tapscript tree.
+func (obj *TapBranch) GetTweakedPubkey(internalPubkey *ByteData) (pubkey *ByteData, tapLeafHash *ByteData, controlBlock *ByteData, err error) {
+	if internalPubkey == nil {
+		return nil, nil, nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	if obj.TapScript.IsEmpty() {
+		return nil, nil, nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	var branchHash string
+	var tapLeafHashStr string
+	var controlBlockStr string
+	ret := CfdGetTaprootScriptTreeHash(handle, treeHandle, internalPubkey.ToHex(), &branchHash, &tapLeafHashStr, &controlBlockStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, nil, nil, err
+	}
+
+	return &ByteData{hex: branchHash}, &ByteData{hex: tapLeafHashStr}, &ByteData{hex: controlBlockStr}, nil
+}
+
+// GetTweakedPrivkey This function return a tweaked privkey by tapscript tree.
+func (obj *TapBranch) GetTweakedPrivkey(internalPrivkey *ByteData) (privkey *ByteData, err error) {
+	if internalPrivkey == nil {
+		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	if obj.TapScript.IsEmpty() {
+		return nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+	}
+	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	if err != nil {
+		return nil, err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	var privkeyStr string
+	ret := CfdGetTaprootTweakedPrivkey(handle, treeHandle, internalPrivkey.ToHex(), &privkeyStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return nil, err
+	}
+
+	return &ByteData{hex: privkeyStr}, nil
+}
+
+// internalInitializeTransactionByHex This function return a transaction handle.
+func internalInitializeTransactionByHex(networkType int, txHex string) (createTxHandle uintptr, err error) {
+	createTxHandle = uintptr(0)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	version := 0
+	locktime := 0
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
+	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, txHex, &createTxHandle)
+	err = convertCfdError(ret, handle)
+	return createTxHandle, err
+}
+
+// internalFinalizeTransaction This function return a transacton hex.
+func internalFinalizeTransaction(createTxHandle uintptr) (txHex string, err error) {
+	txHex = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdFinalizeTransaction(handle, createTxHandle, &txHex)
+	err = convertCfdError(ret, handle)
+	return txHex, err
+}
+
+// GetTransactionHex This function return a transacton hex.
+func GetTransactionHex(createTxHandle uintptr) (txHex string, err error) {
+	return internalFinalizeTransaction(createTxHandle)
+}
+
+// SignWithPrivkeyByHandle This function has adding sign with prikey.
+func SignWithPrivkeyByHandle(createTxHandle uintptr, txid string, vout uint32, privkey string, sighashType *SigHashType, hasGrindR bool, auxRand, annex *ByteData) error {
+	if sighashType == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	auxRandStr := ""
+	annexStr := ""
+	if auxRand != nil {
+		auxRandStr = auxRand.hex
+	}
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddSignWithPrivkeyByHandle(handle, createTxHandle, txid, voutPtr, privkey, sighashType.GetValue(), sighashType.AnyoneCanPay, hasGrindR, auxRandStr, annexStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+// SetUtxoListByHandle This function has adding utxo list.
+func SetUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	for index := 0; index < len(txinUtxoList); index++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinUtxoList[index].Vout)))
+		satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txinUtxoList[index].Amount)))
+		ret := CfdSetTransactionUtxoData(handle, createTxHandle, txinUtxoList[index].Txid, voutPtr, satoshiAmountPtr, txinUtxoList[index].AmountCommitment, txinUtxoList[index].Descriptor, "", txinUtxoList[index].Asset, txinUtxoList[index].ScriptSigTemplate, false)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CfdGoAddTxSignWithPrivkeyByUtxoList This function add sign with prikey.
@@ -4586,6 +5714,47 @@ func CfdGoAddTxSignWithPrivkeyByUtxoList(networkType int, txHex string, txinUtxo
 		return
 	}
 	return internalFinalizeTransaction(txHandle)
+}
+
+// GetSighash This function return a sighash.
+func GetSighash(createTxHandle uintptr, txid string, vout uint32, sighashType *SigHashType, pubkey *ByteData, redeemScript *Script, tapLeafHash, annex *ByteData, codeSeparatorPosition *uint32) (sighash string, err error) {
+	sighash = ""
+	if sighashType == nil {
+		err = convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+		return
+	}
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	pubkeyStr := ""
+	scriptStr := ""
+	tapLeafHashStr := ""
+	annexStr := ""
+	codeSeparatorPos := uint32(0xffffffff)
+	if pubkey != nil {
+		pubkeyStr = pubkey.hex
+	}
+	if redeemScript != nil {
+		scriptStr = redeemScript.hex
+	}
+	if tapLeafHash != nil {
+		tapLeafHashStr = tapLeafHash.hex
+	}
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	if codeSeparatorPosition != nil {
+		codeSeparatorPos = *codeSeparatorPosition
+	}
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	codeSeparatorPosPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&codeSeparatorPos)))
+	ret := CfdCreateSighashByHandle(handle, createTxHandle, txid, voutPtr, sighashType.GetValue(), sighashType.AnyoneCanPay, pubkeyStr, scriptStr, tapLeafHashStr, codeSeparatorPosPtr, annexStr, &sighash)
+	err = convertCfdError(ret, handle)
+	return
 }
 
 // CfdGoGetSighash This function return a sighash.
@@ -4619,6 +5788,29 @@ func CfdGoGetSighashByTapScript(networkType int, txHex string, txinUtxoList []Cf
 	return CfdGoGetSighash(networkType, txHex, txinUtxoList, txid, vout, sighashType, nil, redeemScript, tapLeafHash, annex, codeSeparatorPosition)
 }
 
+// VerifySign This function return a verify sign results.
+func VerifySign(createTxHandle uintptr, txid string, vout uint32) (isVerify bool, reason string, err error) {
+	isVerify = false
+	reason = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return isVerify, reason, err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdVerifyTxSignByHandle(handle, createTxHandle, txid, voutPtr)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		CfdGetLastErrorMessage(handle, &reason)
+	} else {
+		err = convertCfdError(ret, handle)
+		CfdGetLastErrorMessage(handle, &reason)
+	}
+	return isVerify, reason, err
+}
+
 // CfdGoVerifySign This function return a verify sign results.
 func CfdGoVerifySign(networkType int, txHex string, txinUtxoList []CfdUtxo, txid string, vout uint32) (isVerify bool, reason string, err error) {
 	isVerify = false
@@ -4635,6 +5827,26 @@ func CfdGoVerifySign(networkType int, txHex string, txinUtxoList []CfdUtxo, txid
 	return VerifySign(txHandle, txid, vout)
 }
 
+// AddTaprootSchnorrSign This function add a taproot schnorr sign.
+func AddTaprootSchnorrSign(createTxHandle uintptr, txid string, vout uint32, signature *ByteData, annex *ByteData) error {
+	if signature == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	annexStr := ""
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddTaprootSignByHandle(handle, createTxHandle, txid, voutPtr, signature.hex, "", "", annexStr)
+	return convertCfdError(ret, handle)
+}
+
 // CfdGoAddTaprootSchnorrSign This function add a taproot schnorr sign.
 func CfdGoAddTaprootSchnorrSign(networkType int, txHex string, txid string, vout uint32, signature *ByteData, annex *ByteData) (outputTxHex string, err error) {
 	outputTxHex = ""
@@ -4648,6 +5860,35 @@ func CfdGoAddTaprootSchnorrSign(networkType int, txHex string, txid string, vout
 		return
 	}
 	return internalFinalizeTransaction(txHandle)
+}
+
+// AddTapScriptSign This function add a tapscript sign.
+func AddTapScriptSign(createTxHandle uintptr, txid string, vout uint32, signDataList []ByteData, tapscript *Script, controlBlock *ByteData, annex *ByteData) error {
+	if tapscript == nil || controlBlock == nil {
+		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	for index := 0; index < len(signDataList); index++ {
+		ret := CfdAddTxSignByHandle(handle, createTxHandle, txid, voutPtr, (int)(KCfdTaproot), signDataList[index].hex, false, 0, false, false)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	annexStr := ""
+	if annex != nil {
+		annexStr = annex.hex
+	}
+	ret := CfdAddTaprootSignByHandle(handle, createTxHandle, txid, voutPtr, "", tapscript.hex, controlBlock.hex, annexStr)
+	err = convertCfdError(ret, handle)
+	return err
 }
 
 // CfdGoAddTapScriptSign This function add a tapscript sign.
@@ -4693,6 +5934,95 @@ type CfdConfidentialTxOut struct {
 	Surjectionproof string
 	// rangeproof of value
 	Rangeproof string
+}
+
+// SplitTxOut This function set the split outputs.
+func SplitTxOut(createTxHandle uintptr, index uint32, txouts []CfdTxOut) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	splitTxHandle := uintptr(0)
+	ret := CfdCreateSplitTxOutHandle(handle, createTxHandle, &splitTxHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+	defer CfdFreeSplitTxOutHandle(handle, splitTxHandle)
+
+	for _, txout := range txouts {
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txout.Amount)))
+		ret := CfdAddSplitTxOutData(handle, splitTxHandle, amountPtr, txout.Address, txout.LockingScript, "")
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret = CfdSplitTxOut(handle, createTxHandle, splitTxHandle, indexPtr)
+	return convertCfdError(ret, handle)
+}
+
+// SplitConfidentialTxOut This function set the split outputs.
+func SplitConfidentialTxOut(createTxHandle uintptr, index uint32, txouts []CfdConfidentialTxOut) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	splitTxHandle := uintptr(0)
+	ret := CfdCreateSplitTxOutHandle(handle, createTxHandle, &splitTxHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+	defer CfdFreeSplitTxOutHandle(handle, splitTxHandle)
+
+	for _, txout := range txouts {
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txout.Amount)))
+		ret := CfdAddSplitTxOutData(handle, splitTxHandle, amountPtr, txout.Address, txout.LockingScript, txout.CommitmentNonce)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret = CfdSplitTxOut(handle, createTxHandle, splitTxHandle, indexPtr)
+	return convertCfdError(ret, handle)
+}
+
+// GetTxOutIndexes This function get txout index list.
+func GetTxOutIndexes(createTxHandle uintptr, address, directLockingScript string) (indexes []uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return indexes, err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	outputIndex := uint32(0)
+	outputIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&outputIndex)))
+	offset := uint32(0)
+	offsetPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&offset)))
+	ret := CfdGetTxOutIndexWithOffsetByHandle(handle, createTxHandle, offsetPtr, address, directLockingScript, outputIndexPtr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return indexes, err
+	}
+	indexes = append(indexes, outputIndex)
+	offset = outputIndex + 1
+
+	for {
+		offsetPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&offset)))
+		ret := CfdGetTxOutIndexWithOffsetByHandle(handle, createTxHandle, offsetPtr, address, directLockingScript, outputIndexPtr)
+		if ret == int(KCfdOutOfRangeError) {
+			break
+		} else if err = convertCfdError(ret, handle); err != nil {
+			return indexes, err
+		}
+		indexes = append(indexes, outputIndex)
+		offset = outputIndex + 1
+	}
+	return indexes, err
 }
 
 // CfdGoSplitTxOut This function set the split outputs.
@@ -4741,14 +6071,72 @@ func CfdGoGetTxOutIndexes(networkType int, txHex string, address, directLockingS
 	return GetTxOutIndexes(txHandle, address, directLockingScript)
 }
 
+// GetPeginAddress This function get a pegin address.
+func GetPeginAddress(mainchainNetworkType int, fedpegScript string, hashType int, pubkey, redeemScript string) (peginAddress, claimScript, tweakedFedpegScript string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetPeginAddress(handle, mainchainNetworkType, fedpegScript,
+		hashType, pubkey, redeemScript, &peginAddress, &claimScript, &tweakedFedpegScript)
+	err = convertCfdError(ret, handle)
+	return
+}
+
 // CfdGoGetPeginAddress This function get a pegin address.
 func CfdGoGetPeginAddress(mainchainNetworkType int, fedpegScript string, hashType int, pubkey, redeemScript string) (peginAddress, claimScript, tweakedFedpegScript string, err error) {
 	return GetPeginAddress(mainchainNetworkType, fedpegScript, hashType, pubkey, redeemScript)
 }
 
+// GetPegoutAddress This function get a pegout address.
+func GetPegoutAddress(mainchainNetworkType, elementsNetworkType int, descriptorOrXpub string, bip32Counter uint32, addressType int) (pegoutAddress, baseDescriptor string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	bip32CounterPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&bip32Counter)))
+	ret := CfdGetPegoutAddress(handle, mainchainNetworkType, elementsNetworkType, descriptorOrXpub, bip32CounterPtr, addressType, &pegoutAddress, &baseDescriptor)
+	err = convertCfdError(ret, handle)
+	return
+}
+
 // CfdGoGetPegoutAddress This function get a pegout address.
 func CfdGoGetPegoutAddress(mainchainNetworkType, elementsNetworkType int, descriptorOrXpub string, bip32Counter uint32, addressType int) (pegoutAddress, baseDescriptor string, err error) {
 	return GetPegoutAddress(mainchainNetworkType, elementsNetworkType, descriptorOrXpub, bip32Counter, addressType)
+}
+
+// AddPeginInput This function add a pegin input.
+func AddPeginInput(createTxHandle uintptr, txid string, vout uint32, amount int64, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
+	ret := CfdAddTxPeginInput(handle, createTxHandle, txid, voutPtr, amountPtr, asset, mainchainGenesisBlockHash, claimScript, mainchainTxHex, txoutProof)
+	return convertCfdError(ret, handle)
+}
+
+// AddPegoutOutput This function add a pegout output.
+func AddPegoutOutput(createTxHandle uintptr, asset string, amount int64, mainchainNetworkType, elementsNetworkType int, mainchainGenesisBlockHash, onlinePubkey, masterOnlineKey, mainchainOutputDescriptor string, bip32Counter uint32, whitelist string) (mainchainAddress string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	bip32CounterPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&bip32Counter)))
+	amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
+	ret := CfdAddTxPegoutOutput(handle, createTxHandle, asset, amountPtr,
+		mainchainNetworkType, elementsNetworkType, mainchainGenesisBlockHash, onlinePubkey, masterOnlineKey, mainchainOutputDescriptor, bip32CounterPtr, whitelist, &mainchainAddress)
+	err = convertCfdError(ret, handle)
+	return
 }
 
 // CfdGoAddPeginInput This function add a pegin input.
@@ -4786,6 +6174,41 @@ func CfdGoAddPegoutOutput(txHex string, asset string, amount int64, mainchainNet
 	return outputTxHex, mainchainAddress, err
 }
 
+// HasPegoutOutput This function check pegout output.
+func HasPegoutOutput(createTxHandle uintptr, index uint32) (hasPegout bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdHasPegoutConfidentialTxOut(handle, createTxHandle, indexPtr)
+	if ret == int(KCfdSuccess) {
+		hasPegout = true
+	} else {
+		hasPegout = false
+		if ret != (int)(KCfdNotFoundError) {
+			err = convertCfdError(ret, handle)
+		}
+	}
+	return hasPegout, err
+}
+
+// GetPegoutAddressFromTransaction This function is getting pegout address from tx.
+func GetPegoutAddressFromTransaction(createTxHandle uintptr, index uint32, mainchainNetwork int) (pegoutAddress string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetPegoutMainchainAddress(handle, createTxHandle, indexPtr, mainchainNetwork, &pegoutAddress)
+	err = convertCfdError(ret, handle)
+	return pegoutAddress, err
+}
+
 // CfdGoGetPegoutAddressFromTransaction This function get a pegout address from transaction.
 func CfdGoGetPegoutAddressFromTransaction(networkType int, txHex string, index uint32, mainchainNetwork int) (pegoutAddress string, isPegoutOutput bool, err error) {
 	txHandle, err := internalInitializeTransactionByHex(networkType, txHex)
@@ -4802,6 +6225,48 @@ func CfdGoGetPegoutAddressFromTransaction(networkType int, txHex string, index u
 	}
 	pegoutAddress, err = GetPegoutAddressFromTransaction(txHandle, index, mainchainNetwork)
 	return pegoutAddress, true, err
+}
+
+// UpdateTxInSequence This function set a sequence number.
+func UpdateTxInSequence(createTxHandle uintptr, txid string, vout uint32, sequence uint32) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdUpdateTxInSequence(handle, createTxHandle, txid, voutPtr, sequencePtr)
+	return convertCfdError(ret, handle)
+}
+
+// UpdateWitnessStack This function set a witness stack item.
+func UpdateWitnessStack(createTxHandle uintptr, txid string, vout uint32, witnessIndex uint32, data string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	witnessIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&witnessIndex)))
+	ret := CfdUpdateWitnessStack(handle, createTxHandle, int(KCfdTxWitnessStackNormal), txid, voutPtr, witnessIndexPtr, data)
+	return convertCfdError(ret, handle)
+}
+
+// UpdatePeginWitnessStack This function set a witness stack item.
+func UpdatePeginWitnessStack(createTxHandle uintptr, txid string, vout uint32, witnessIndex uint32, data string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	witnessIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&witnessIndex)))
+	ret := CfdUpdateWitnessStack(handle, createTxHandle, int(KCfdTxWitnessStackPegin), txid, voutPtr, witnessIndexPtr, data)
+	return convertCfdError(ret, handle)
 }
 
 // CfdGoUpdateTxInSequence This function set a sequence number.
@@ -4858,6 +6323,37 @@ func CfdGoUpdatePeginWitnessStack(txHex string, txid string, vout uint32, witnes
 	return outputTxHex, err
 }
 
+// SetReissueAsset This function set a reissuance information.
+func SetReissueAsset(createTxHandle uintptr, txid string, vout uint32, assetSatoshiAmount int64, blindingNonce string, entropy string, address string, directLockingScript string) (asset string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
+	ret := CfdSetReissueAsset(handle, createTxHandle, txid, voutPtr, satoshiPtr, blindingNonce, entropy, address, directLockingScript, &asset)
+	err = convertCfdError(ret, handle)
+	return asset, err
+}
+
+// SetIssueAsset This function set a issuance information.
+func SetIssueAsset(createTxHandle uintptr, txid string, vout uint32, contractHash string, assetSatoshiAmount int64, assetAddress, assetLockingScript string, tokenSatoshiAmount int64, tokenAddress, tokenLockingScript string, isBlindAsset bool) (entropy, asset, token string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	assetSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
+	tokenSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenSatoshiAmount)))
+	ret := CfdSetIssueAsset(handle, createTxHandle, txid, voutPtr, contractHash, assetSatoshiPtr, assetAddress, assetLockingScript, tokenSatoshiPtr, tokenAddress, tokenLockingScript, isBlindAsset, &entropy, &asset, &token)
+	err = convertCfdError(ret, handle)
+	return entropy, asset, token, err
+}
+
 // CfdGoSetRawIssueAsset This function set a issuance information.
 func CfdGoSetRawIssueAsset(txHex string, txid string, vout uint32, contractHash string, assetSatoshiAmount int64, assetAddress, assetLockingScript string, tokenSatoshiAmount int64, tokenAddress, tokenLockingScript string, isBlindAsset bool) (entropy, asset, token, outputTxHex string, err error) {
 	outputTxHex = ""
@@ -4876,6 +6372,173 @@ func CfdGoSetRawIssueAsset(txHex string, txid string, vout uint32, contractHash 
 		return "", "", "", "", err
 	}
 	return entropy, asset, token, outputTxHex, err
+}
+
+// BlockHeader block header information.
+type BlockHeader struct {
+	Version       uint32 // Version
+	PrevBlockHash string // previous block hash
+	MerkleRoot    string // merkleroot
+	Time          uint32 // block time
+	Bits          uint32 // bit flag
+	Nonce         uint32 // nonce
+}
+
+// InitializeTransactionByHex This function is open block handle.
+func InitializeBlockHandleByHex(networkType int, block string) (blockHandle uintptr, err error) {
+	blockHandle = uintptr(0)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdInitializeBlockHandle(handle, networkType, block, &blockHandle)
+	err = convertCfdError(ret, handle)
+	return blockHandle, err
+}
+
+// FreeBlockHandle This function is free block handle.
+func FreeBlockHandle(blockHandle uintptr) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdFreeBlockHandle(handle, blockHandle)
+	return convertCfdError(ret, handle)
+}
+
+// GetBlockHash This function get a block hash.
+func GetBlockHash(blockHandle uintptr) (blockHash string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetBlockHash(handle, blockHandle, &blockHash)
+	err = convertCfdError(ret, handle)
+	return blockHash, err
+}
+
+// GetBlockHeaderData This function get a block header data.
+func GetBlockHeaderData(blockHandle uintptr) (header *BlockHeader, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	blockHeader := BlockHeader{}
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Version)))
+	timePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Time)))
+	bitsPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Bits)))
+	noncePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&blockHeader.Nonce)))
+	ret := CfdGetBlockHeaderData(handle, blockHandle, versionPtr, &blockHeader.PrevBlockHash, &blockHeader.MerkleRoot, timePtr, bitsPtr, noncePtr)
+	err = convertCfdError(ret, handle)
+	header = &blockHeader
+	return header, err
+}
+
+// GetTransactionFromBlock This function get a transaction data.
+func GetTransactionFromBlock(blockHandle uintptr, txid string) (txHex string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetTransactionFromBlock(handle, blockHandle, txid, &txHex)
+	err = convertCfdError(ret, handle)
+	return txHex, err
+}
+
+// GetTxOutProof This function get a txoutproof.
+func GetTxOutProof(blockHandle uintptr, txid string) (txoutProof string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetTxOutProof(handle, blockHandle, txid, &txoutProof)
+	err = convertCfdError(ret, handle)
+	return txoutProof, err
+}
+
+// ExistTxidInBlock This function get a exist tx in a block.
+func ExistTxidInBlock(blockHandle uintptr, txid string) (exist bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdExistTxidInBlock(handle, blockHandle, txid)
+	if ret == int(KCfdSuccess) {
+		exist = true
+	} else {
+		exist = false
+		if ret != int(KCfdNotFoundError) {
+			err = convertCfdError(ret, handle)
+		}
+	}
+	return exist, err
+}
+
+// GetTxCountInBlock This function get a trasaction count in this block.
+func GetTxCountInBlock(blockHandle uintptr) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxCountInBlock(handle, blockHandle, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+// GetTxidFromBlock This function get a txid from block.
+func GetTxidFromBlock(blockHandle uintptr, offset uint32) (txid string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	offsetPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&offset)))
+	ret := CfdGetTxidFromBlock(handle, blockHandle, offsetPtr, &txid)
+	err = convertCfdError(ret, handle)
+	return txid, err
+}
+
+// GetTxidListFromBlock This function get txid list from block.
+func GetTxidListFromBlock(blockHandle uintptr) (txidList []string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	count, err := GetTxCountInBlock(blockHandle)
+	if err != nil {
+		return nil, err
+	}
+	txidList = make([]string, count)
+
+	for index := uint32(0); index < count; index++ {
+		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+		ret := CfdGetTxidFromBlock(handle, blockHandle, indexPtr, &txidList[index])
+		err = convertCfdError(ret, handle)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return txidList, err
 }
 
 // CfdGoGetBlockHeaderData This function get a block header data.
@@ -4952,3 +6615,511 @@ func CfdGoExistTxidInBlock(networkType int, block, txid string) (exist bool, err
 }
 
 // refine API ------------------------------------------------------------------
+
+/**
+ * TransactionData data struct.
+ */
+type TransactionData struct {
+	// txid
+	Txid string
+	// witness txid
+	Wtxid string
+	// witness hash
+	WitHash string
+	// size
+	Size uint32
+	// virtual size
+	Vsize uint32
+	// weight
+	Weight uint32
+	// version
+	Version uint32
+	// locktime
+	LockTime uint32
+}
+
+// InitializeTransaction : initialize createrawtransaction with version & locktime.
+// param: networkType      nettype string. (mainnet/testnet/regtest)
+// param: version          transaction version.
+// param: locktime         transaction locking time.
+// return: createTxHandle  handle of createrawtransaction.
+// return: err             error
+func InitializeTransaction(networkType int, version uint32, locktime uint32) (createTxHandle uintptr, err error) {
+	createTxHandle = uintptr(0)
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
+	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, "", &createTxHandle)
+	err = convertCfdError(ret, handle)
+	return createTxHandle, err
+}
+
+// InitializeTransactionByHex : initialize createrawtransaction with hex.
+// param: networkType      nettype string. (mainnet/testnet/regtest)
+// param: txHex            transaction hex.
+// return: createTxHandle  handle of createrawtransaction.
+// return: err             error
+func InitializeTransactionByHex(networkType int, txHex string) (createTxHandle uintptr, err error) {
+	return internalInitializeTransactionByHex(networkType, txHex)
+}
+
+// AddTransactionInput : add createrawtransaction input data. (bitcoin, elements)
+// param: createTxHandle   handle of createrawtransaction.
+// param: txid             txid of utxo.
+// param: vout             vout of utxo.
+// param: sequence         sequence number.
+// return: err             error
+func AddTransactionInput(createTxHandle uintptr, txid string, vout uint32, sequence uint32) (err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdAddTransactionInput(handle, createTxHandle, txid, voutPtr, sequencePtr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+// AddTransactionInput : add createrawtransaction output data. (bitcoin, elements)
+// param: createTxHandle   handle of createrawtransaction.
+// param: amount           satoshi amount.
+// param: address          address.
+// param: lockingScript    locking script. (ignore address)
+// param: asset            target asset. (only elements)
+// return: err             error
+func AddTransactionOutput(createTxHandle uintptr, amount int64, address string, lockingScript string, asset string) (err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
+	ret := CfdAddTransactionOutput(handle, createTxHandle, amountPtr, address, lockingScript, asset)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+// FinalizeTransaction : finalize createrawtransaction. (bitcoin, elements)
+// param: createTxHandle   handle of createrawtransaction.
+// return: txHex           transaction hex.
+// return: err             error
+func FinalizeTransaction(createTxHandle uintptr) (txHex string, err error) {
+	return internalFinalizeTransaction(createTxHandle)
+}
+
+// FreeTransactionHandle : free createrawtransaction handle.
+// param: createTxHandle   handle of createrawtransaction.
+func FreeTransactionHandle(createTxHandle uintptr) {
+	CfdFreeTransactionHandle(uintptr(0), createTxHandle)
+}
+
+// OutPoint : utxo outpoint struct.
+type OutPoint struct {
+	// txid
+	Txid string
+	// vout
+	Vout uint32
+}
+
+// ScriptWitness : witness stack.
+type ScriptWitness struct {
+	// witness stack by hex.
+	Stack []string
+}
+
+// TxIn : transaction input.
+type TxIn struct {
+	// utxo outpoint.
+	OutPoint OutPoint
+	// sequence number.
+	Sequence uint32
+	// script sig.
+	ScriptSig string
+	// witness stack.
+	WitnessStack ScriptWitness
+}
+
+// TxOut : transaction output.
+type TxOut struct {
+	// satoshi amount.
+	Amount int64
+	// locking script.
+	LockingScript string
+	// address (if locking script is usual hashtype.)
+	Address string
+}
+
+// IssuanceData : confidential transaction issuance input.
+type IssuanceData struct {
+	Entropy     string
+	Nonce       string
+	AssetAmount int64
+	AssetValue  string
+	TokenAmount int64
+	TokenValue  string
+}
+
+// ConfidentialTxIn : confidential transaction input.
+type ConfidentialTxIn struct {
+	OutPoint                 OutPoint
+	Sequence                 uint32
+	ScriptSig                string
+	Issuance                 IssuanceData
+	WitnessStack             ScriptWitness
+	PeginWitness             ScriptWitness
+	IssuanceAmountRangeproof string
+	InflationKeysRangeproof  string
+}
+
+// ConfidentialTxOut : confidential transaction output.
+type ConfidentialTxOut struct {
+	// satoshi amount (unblind value)
+	Amount int64
+	// asset (or commitment asset)
+	Asset string
+	// locking script
+	LockingScript string
+	// address or confidential address. (if locking script is usual hashtype.)
+	Address string
+	// commitment value
+	CommitmentValue string
+	// commitment nonce
+	CommitmentNonce string
+	// surjectionprooof of asset
+	Surjectionproof string
+	// rangeproof of value
+	Rangeproof string
+}
+
+// CreateConfidentialTx : create confidential transaction.
+// param: version       transaction version.
+// param: locktime      transaction locking time.
+// param: txinList      transaction input list.
+// param: txoutList     transaction output list.
+// return: outputTxHex  transaction hex.
+// return: err          error
+func CreateConfidentialTx(version uint32, locktime uint32, txinList []ConfidentialTxIn, txoutList []ConfidentialTxOut) (outputTxHex string, err error) {
+	outputTxHex = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var createTxHandle uintptr
+	networkType := int(KCfdNetworkLiquidv1)
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
+	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, "", &createTxHandle)
+	if err = convertCfdError(ret, handle); err != nil {
+		return
+	}
+	defer CfdFreeTransactionHandle(handle, createTxHandle)
+
+	for i := 0; i < len(txinList); i++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].OutPoint.Vout)))
+		sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].Sequence)))
+		ret = CfdAddTransactionInput(handle, createTxHandle, txinList[i].OutPoint.Txid, voutPtr, sequencePtr)
+		if ret != int(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	for i := 0; i < len(txoutList); i++ {
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txoutList[i].Amount)))
+		if txoutList[i].Address == "" {
+			ret = CfdAddTransactionOutput(handle, createTxHandle, amountPtr, "", txoutList[i].LockingScript, txoutList[i].Asset)
+		} else {
+			ret = CfdAddTransactionOutput(handle, createTxHandle, amountPtr, txoutList[i].Address, "", txoutList[i].Asset)
+		}
+		if ret != int(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	ret = CfdFinalizeTransaction(handle, createTxHandle, &outputTxHex)
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
+}
+
+// AppendConfidentialTx : append confidential transaction.
+// param: txHex         transaction hex.
+// param: txinList      transaction input list.
+// param: txoutList     transaction output list.
+// return: outputTxHex  transaction hex.
+// return: err          error
+func AppendConfidentialTx(txHex string, txinList []ConfidentialTxIn, txoutList []ConfidentialTxOut) (outputTxHex string, err error) {
+	outputTxHex = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	networkType := int(KCfdNetworkLiquidv1)
+	createTxHandle := uintptr(0)
+	version := 0
+	locktime := 0
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
+	ret := CfdInitializeTransaction(handle, networkType, versionPtr, locktimePtr, txHex, &createTxHandle)
+	if ret != int(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	defer CfdFreeTransactionHandle(handle, createTxHandle)
+
+	for i := 0; i < len(txinList); i++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].OutPoint.Vout)))
+		sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].Sequence)))
+		ret = CfdAddTransactionInput(handle, createTxHandle, txinList[i].OutPoint.Txid, voutPtr, sequencePtr)
+		if ret != int(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	for i := 0; i < len(txoutList); i++ {
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txoutList[i].Amount)))
+		if txoutList[i].Address == "" {
+			ret = CfdAddTransactionOutput(handle, createTxHandle, amountPtr, "", txoutList[i].LockingScript, txoutList[i].Asset)
+		} else {
+			ret = CfdAddTransactionOutput(handle, createTxHandle, amountPtr, txoutList[i].Address, "", txoutList[i].Asset)
+		}
+		if ret != int(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	ret = CfdFinalizeTransaction(handle, createTxHandle, &outputTxHex)
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
+}
+
+func GetBitcoinTransactionData(txHex string, hasWitness bool) (data TransactionData, txinList []TxIn, txoutList []TxOut, err error) {
+	data, txinList, txoutList, err = GetTransactionDataAll(txHex, hasWitness, false, int(KCfdNetworkMainnet))
+	return
+}
+
+func GetTransactionDataAll(txHex string, hasWitness bool, hasAddress bool, networkType int) (data TransactionData, txinList []TxIn, txoutList []TxOut, err error) {
+	handle, err := CfdGoInitializeTxDataHandle(networkType, txHex)
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeTxDataHandle(handle)
+
+	tempData, err := CfdGoGetTxInfoByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txinCount, err := CfdGoGetTxInCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txoutCount, err := CfdGoGetTxOutCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+
+	tempTxins := make([]TxIn, txinCount)
+	for i := uint32(0); i < txinCount; i++ {
+		txid, vout, sequence, scriptSig, err := CfdGoGetTxInByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+
+		tempTxins[i].OutPoint.Txid = txid
+		tempTxins[i].OutPoint.Vout = vout
+		tempTxins[i].Sequence = sequence
+		tempTxins[i].ScriptSig = scriptSig
+		if hasWitness {
+			wCount, err := CfdGoGetTxInWitnessCountByHandle(handle, 0, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			wList := make([]string, txinCount)
+			for j := uint32(0); j < wCount; j++ {
+				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
+				if err != nil {
+					return data, txinList, txoutList, err
+				}
+				wList[j] = stackData
+			}
+			tempTxins[i].WitnessStack.Stack = wList
+		}
+	}
+
+	tempTxouts := make([]TxOut, txoutCount)
+	for i := uint32(0); i < txoutCount; i++ {
+		satoshiAmount, lockingScript, _, err := CfdGoGetTxOutByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+		tempTxouts[i].Amount = satoshiAmount
+		tempTxouts[i].LockingScript = lockingScript
+		if hasAddress {
+			addr, err := CfdGoGetAddressFromLockingScript(lockingScript, networkType)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Address = addr
+		}
+	}
+
+	data.Txid = tempData.Txid
+	data.Wtxid = tempData.Wtxid
+	data.Size = tempData.Size
+	data.Vsize = tempData.Vsize
+	data.Weight = tempData.Weight
+	data.Version = tempData.Version
+	data.LockTime = tempData.LockTime
+	txinList = tempTxins
+	txoutList = tempTxouts
+	return data, txinList, txoutList, nil
+}
+
+func GetConfidentialTxData(txHex string, hasWitness bool) (data TransactionData, txinList []ConfidentialTxIn, txoutList []ConfidentialTxOut, err error) {
+	data, txinList, txoutList, err = GetConfidentialTxDataAll(txHex, hasWitness, false, int(KCfdNetworkLiquidv1))
+	return
+}
+
+func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, networkType int) (data TransactionData, txinList []ConfidentialTxIn, txoutList []ConfidentialTxOut, err error) {
+	handle, err := CfdGoInitializeTxDataHandle(networkType, txHex)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	defer CfdGoFreeTxDataHandle(handle)
+
+	tempData, err := CfdGoGetConfidentialTxDataByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txinCount, err := CfdGoGetTxInCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+	txoutCount, err := CfdGoGetTxOutCountByHandle(handle)
+	if err != nil {
+		return data, txinList, txoutList, err
+	}
+
+	tempTxins := make([]ConfidentialTxIn, txinCount)
+	for i := uint32(0); i < txinCount; i++ {
+		txid, vout, sequence, scriptSig, err := CfdGoGetTxInByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+
+		entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err := CfdGoGetTxInIssuanceInfoByHandle(handle, i)
+		if err != nil {
+			return data, txinList, txoutList, err
+		}
+
+		tempTxins[i].OutPoint.Txid = txid
+		tempTxins[i].OutPoint.Vout = vout
+		tempTxins[i].Sequence = sequence
+		tempTxins[i].ScriptSig = scriptSig
+		if len(assetValue) > 2 {
+			tempTxins[i].Issuance.Entropy = entropy
+			tempTxins[i].Issuance.Nonce = nonce
+			tempTxins[i].Issuance.AssetAmount = assetAmount
+			tempTxins[i].Issuance.AssetValue = assetValue
+			tempTxins[i].Issuance.TokenAmount = tokenAmount
+			tempTxins[i].Issuance.TokenValue = tokenValue
+			if hasWitness {
+				tempTxins[i].IssuanceAmountRangeproof = assetRangeproof
+				tempTxins[i].InflationKeysRangeproof = tokenRangeproof
+			}
+		}
+
+		if hasWitness {
+			wCount, err := CfdGoGetTxInWitnessCountByHandle(handle, 0, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			wList := make([]string, txinCount)
+			for j := uint32(0); j < wCount; j++ {
+				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
+				if err != nil {
+					return data, txinList, txoutList, err
+				}
+				wList[j] = stackData
+			}
+			tempTxins[i].WitnessStack.Stack = wList
+
+			pCount, err := CfdGoGetTxInWitnessCountByHandle(handle, 1, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			pList := make([]string, pCount)
+			for j := uint32(0); j < wCount; j++ {
+				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 1, i, j)
+				if err != nil {
+					return data, txinList, txoutList, err
+				}
+				wList[j] = stackData
+			}
+			tempTxins[i].PeginWitness.Stack = pList
+		}
+	}
+
+	tempTxouts := make([]ConfidentialTxOut, txoutCount)
+	for i := uint32(0); i < txoutCount; i++ {
+		var lockingScript string
+
+		if hasWitness {
+			asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, err := CfdGoGetConfidentialTxOutByHandle(handle, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Amount = satoshiAmount
+			tempTxouts[i].Asset = asset
+			tempTxouts[i].CommitmentValue = valueCommitment
+			tempTxouts[i].CommitmentNonce = nonce
+			tempTxouts[i].LockingScript = lockingScript
+			tempTxouts[i].Surjectionproof = surjectionProof
+			tempTxouts[i].Rangeproof = rangeproof
+		} else {
+			asset, satoshiAmount, valueCommitment, nonce, lockingScript, err := CfdGoGetConfidentialTxOutSimpleByHandle(handle, i)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Amount = satoshiAmount
+			tempTxouts[i].Asset = asset
+			tempTxouts[i].CommitmentValue = valueCommitment
+			tempTxouts[i].CommitmentNonce = nonce
+			tempTxouts[i].LockingScript = lockingScript
+		}
+		if hasAddress {
+			addr, err := CfdGoGetAddressFromLockingScript(lockingScript, networkType)
+			if err != nil {
+				return data, txinList, txoutList, err
+			}
+			tempTxouts[i].Address = addr
+		}
+	}
+
+	data.Txid = tempData.Txid
+	data.Wtxid = tempData.Wtxid
+	data.WitHash = tempData.WitHash
+	data.Size = tempData.Size
+	data.Vsize = tempData.Vsize
+	data.Weight = tempData.Weight
+	data.Version = tempData.Version
+	data.LockTime = tempData.LockTime
+	txinList = tempTxins
+	txoutList = tempTxouts
+	return data, txinList, txoutList, nil
+}

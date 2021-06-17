@@ -1,0 +1,117 @@
+package types
+
+import (
+	"strings"
+
+	cfd "github.com/cryptogarageinc/cfd-go"
+)
+
+type NetworkType int
+
+const (
+	// NetworkType
+	Unknown NetworkType = iota
+	Mainnet
+	Testnet
+	Regtest
+	LiquidV1
+	ElementsRegtest
+)
+
+// NewNetworkTypeByString ...
+func NewNetworkTypeByString(networkType string) NetworkType {
+	switch strings.ToLower(networkType) {
+	case "mainnet":
+		return Mainnet
+	case "testnet":
+		return Testnet
+	case "regtest":
+		return Regtest
+	case "liquidv1":
+		return LiquidV1
+	case "liquidv1test", "liquidregtest", "elementsregtest":
+		return ElementsRegtest
+	default:
+		return Unknown
+	}
+}
+
+// NewNetworkType ...
+func NewNetworkType(cfdNetworkType int) NetworkType {
+	switch cfdNetworkType {
+	case int(cfd.KCfdNetworkMainnet):
+		return Mainnet
+	case int(cfd.KCfdNetworkTestnet):
+		return Testnet
+	case int(cfd.KCfdNetworkRegtest):
+		return Regtest
+	case int(cfd.KCfdNetworkLiquidv1):
+		return LiquidV1
+	case int(cfd.KCfdNetworkElementsRegtest):
+		return ElementsRegtest
+	default:
+		return Unknown
+	}
+}
+
+// ToCfdValue ...
+func (n NetworkType) ToCfdValue() int {
+	switch n {
+	case Mainnet:
+		return int(cfd.KCfdNetworkMainnet)
+	case Testnet:
+		return int(cfd.KCfdNetworkTestnet)
+	case Regtest:
+		return int(cfd.KCfdNetworkRegtest)
+	case LiquidV1:
+		return int(cfd.KCfdNetworkLiquidv1)
+	case ElementsRegtest:
+		return int(cfd.KCfdNetworkElementsRegtest)
+	default:
+		return int(cfd.KCfdNetworkMainnet)
+	}
+}
+
+// Valid ...
+func (n NetworkType) Valid() bool {
+	switch n {
+	case Mainnet, Testnet, Regtest, LiquidV1, ElementsRegtest:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsBitcoin ...
+func (n NetworkType) IsBitcoin() bool {
+	switch n {
+	case Mainnet, Testnet, Regtest:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsElements ...
+func (n NetworkType) IsElements() bool {
+	switch n {
+	case LiquidV1, ElementsRegtest:
+		return true
+	default:
+		return false
+	}
+}
+
+// ToBitcoinType ...
+func (n NetworkType) ToBitcoinType() NetworkType {
+	switch n {
+	case Mainnet, Testnet, Regtest:
+		return n
+	case LiquidV1:
+		return Mainnet
+	case ElementsRegtest:
+		return Regtest
+	default:
+		return Unknown
+	}
+}
