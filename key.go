@@ -11,6 +11,10 @@ type Pubkey struct {
 	Hex string
 }
 
+type PubkeyApi interface {
+	VerifyEcSignature(sighash, signature string) (isVerify bool, err error)
+}
+
 // Privkey ...
 type Privkey struct {
 	Hex                string
@@ -42,6 +46,15 @@ type ExtkeyData struct {
 	Depth uint32
 	// child number
 	ChildNumber uint32
+}
+
+// -------------------------------------
+// implement Pubkey
+// -------------------------------------
+
+// VerifyEcSignature ...
+func (p *Pubkey) VerifyEcSignature(sighash, signature string) (isVerify bool, err error) {
+	return CfdGoVerifyEcSignature(sighash, p.Hex, signature)
 }
 
 // -------------------------------------

@@ -47,6 +47,10 @@ type AddressUtil struct {
 	Network *NetworkType
 }
 
+// ConfidentialAddressUtil ...
+type ConfidentialAddressUtil struct {
+}
+
 // -------------------------------------
 // Data struct
 // -------------------------------------
@@ -261,6 +265,28 @@ func (n AddressType) ToCfdValue() int {
 	}
 }
 
+// ToHashType ...
+func (n AddressType) ToHashType() HashType {
+	switch n {
+	case P2pkhAddress:
+		return P2pkh
+	case P2shAddress:
+		return P2sh
+	case P2wpkhAddress:
+		return P2wpkh
+	case P2wshAddress:
+		return P2wsh
+	case P2shP2wpkhAddress:
+		return P2shP2wpkh
+	case P2shP2wshAddress:
+		return P2shP2wsh
+	case TaprootAddress:
+		return Taproot
+	default:
+		return UnknownType
+	}
+}
+
 // -------------------------------------
 // HashType
 // -------------------------------------
@@ -335,21 +361,79 @@ func (n HashType) ToCfdValue() int {
 // AddressUtil
 // -------------------------------------
 
-// Valid ...
-func (u *AddressUtil) Valid() error {
-	if u.Network == nil {
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		netType := cfdConfig.Network
-		u.Network = &netType
+// ParseAddress ...
+func (u *AddressUtil) ParseAddress(addressString string) (address *Address, err error) {
+	data, err := CfdGoGetAddressInfo(addressString)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	return &Address{
+		Address: addressString,
+		Network: NewNetworkType(data.NetworkType),
+		Type:    NewAddressTypeByHashType(data.HashType),
+	}, nil
+}
+
+// CreateByPubkey ...
+func (u *AddressUtil) CreateByPubkey(pubkey *Pubkey, addressType AddressType) (address *Address, err error) {
+	if err = u.validConfig(); err != nil {
+		return nil, err
+	}
+	addr, _, _, err := CfdGoCreateAddress(addressType.ToHashType().ToCfdValue(), pubkey.Hex, "", u.Network.ToCfdValue())
+	if err != nil {
+		return nil, err
+	}
+	return &Address{
+		Address: addr,
+		Network: *u.Network,
+		Type:    addressType,
+	}, nil
+}
+
+// CreateByScript ...
+func (u *AddressUtil) CreateByScript(redeemScript *Script, addressType AddressType) (address *Address, err error) {
+	if err = u.validConfig(); err != nil {
+		return nil, err
+	}
+	addr, _, _, err := CfdGoCreateAddress(addressType.ToHashType().ToCfdValue(), "", redeemScript.ToHex(), u.Network.ToCfdValue())
+	if err != nil {
+		return nil, err
+	}
+	return &Address{
+		Address: addr,
+		Network: *u.Network,
+		Type:    addressType,
+	}, nil
+}
+
+// CreateMultisigAddress ...
+func (u *AddressUtil) CreateMultisigAddress(pubkeys *[]Pubkey, requireNum uint32, addressType AddressType) (address *Address, redeemScript *Script, err error) {
+	if err = u.validConfig(); err != nil {
+		return nil, nil, err
+	}
+	pubkeyList := make([]string, len(*pubkeys))
+	for i := 0; i < len(*pubkeys); i++ {
+		pubkeyList[i] = (*pubkeys)[i].Hex
+	}
+	addr, script, witnessScript, err := CfdGoCreateMultisigScript(u.Network.ToCfdValue(), addressType.ToHashType().ToCfdValue(), pubkeyList, requireNum)
+	if err != nil {
+		return nil, nil, err
+	}
+	if addressType == P2shAddress {
+		redeemScript = &Script{hex: script}
+	} else {
+		redeemScript = &Script{hex: witnessScript}
+	}
+	return &Address{
+		Address: addr,
+		Network: *u.Network,
+		Type:    addressType,
+	}, redeemScript, nil
 }
 
 // GetPeginAddressByPubkey ...
 func (u *AddressUtil) GetPeginAddressByPubkey(addressType AddressType, fedpegScript, pubkey string) (peginAddress *Address, claimScript *Script, err error) {
-	if err = u.Valid(); err != nil {
+	if err = u.validConfig(); err != nil {
 		return nil, nil, err
 	}
 
@@ -370,13 +454,8 @@ func (u *AddressUtil) GetPeginAddressByPubkey(addressType AddressType, fedpegScr
 
 // GetPegoutAddress ...
 func (u *AddressUtil) GetPegoutAddress(addressType AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *Address, baseDescriptor *string, err error) {
-	if u.Network == nil {
-		if !cfdConfig.Network.Valid() {
-			err = fmt.Errorf("CFD Error: NetworkType not set")
-			return nil, nil, err
-		}
-		netType := cfdConfig.Network
-		u.Network = &netType
+	if err = u.validConfig(); err != nil {
+		return nil, nil, err
 	}
 
 	addr, desc, err := GetPegoutAddress(u.Network.ToBitcoinType().ToCfdValue(), u.Network.ToCfdValue(), descriptorOrXpub, bip32Counter, addressType.ToCfdValue())
@@ -392,13 +471,65 @@ func (u *AddressUtil) GetPegoutAddress(addressType AddressType, descriptorOrXpub
 	return pegoutAddress, baseDescriptor, nil
 }
 
-// ParseAddress ...
-func (u *AddressUtil) ParseAddress(addressString string) (address *Address, err error) {
+// validConfig ...
+func (u *AddressUtil) validConfig() error {
+	if u.Network == nil {
+		if !cfdConfig.Network.Valid() {
+			return fmt.Errorf("CFD Error: NetworkType not set")
+		}
+		netType := cfdConfig.Network
+		u.Network = &netType
+	}
+	return nil
+}
+
+// -------------------------------------
+// ConfidentialAddressUtil
+// -------------------------------------
+
+// Create ...
+func (u *ConfidentialAddressUtil) Create(addressString string, confidentialKey *Pubkey) (address *ConfidentialAddress, err error) {
 	data, err := CfdGoGetAddressInfo(addressString)
 	if err != nil {
 		return nil, err
 	}
-	return &Address{
+	addr := ""
+	if confidentialKey != nil {
+		addr, err = CfdGoCreateConfidentialAddress(addressString, confidentialKey.Hex)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &ConfidentialAddress{
+		ConfidentialAddress: addr,
+		Address:             addressString,
+		Network:             NewNetworkType(data.NetworkType),
+		Type:                NewAddressTypeByHashType(data.HashType),
+		ConfidentialKey:     confidentialKey,
+	}, nil
+}
+
+// ParseAddress ...
+func (u *ConfidentialAddressUtil) Parse(addressString string) (address *ConfidentialAddress, err error) {
+	addr, key, network, err := CfdGoParseConfidentialAddress(addressString)
+	if err == nil {
+		data, err := CfdGoGetAddressInfo(addr)
+		if err != nil {
+			return nil, err
+		}
+		return &ConfidentialAddress{
+			ConfidentialAddress: addressString,
+			Address:             addr,
+			Network:             NewNetworkType(network),
+			Type:                NewAddressTypeByHashType(data.HashType),
+			ConfidentialKey:     &Pubkey{Hex: key},
+		}, nil
+	}
+	data, err := CfdGoGetAddressInfo(addressString)
+	if err != nil {
+		return nil, err
+	}
+	return &ConfidentialAddress{
 		Address: addressString,
 		Network: NewNetworkType(data.NetworkType),
 		Type:    NewAddressTypeByHashType(data.HashType),
