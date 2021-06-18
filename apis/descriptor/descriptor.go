@@ -16,13 +16,13 @@ import (
 // -------------------------------------
 
 // Descriptor This struct use for the output descriptor.
-type DescriptorUtil struct {
+type DescriptorApiImpl struct {
 	// Network Type
 	Network *types.NetworkType
 }
 
 // NewDescriptorFromAddress This function return a Descriptor from pubkey.
-func (d *DescriptorUtil) NewDescriptorFromPubkey(hashType types.HashType, pubkey *types.Pubkey) *types.Descriptor {
+func (d *DescriptorApiImpl) NewDescriptorFromPubkey(hashType types.HashType, pubkey *types.Pubkey) *types.Descriptor {
 	var desc string
 	if hashType == types.P2shP2wpkh {
 		desc = "sh(wpkh(" + pubkey.Hex + "))"
@@ -37,7 +37,7 @@ func (d *DescriptorUtil) NewDescriptorFromPubkey(hashType types.HashType, pubkey
 }
 
 // NewDescriptorFromMultisig This function return a Descriptor from multisig.
-func (d *DescriptorUtil) NewDescriptorFromMultisig(hashType types.HashType, pubkeys []string, requireNum int) *types.Descriptor {
+func (d *DescriptorApiImpl) NewDescriptorFromMultisig(hashType types.HashType, pubkeys []string, requireNum int) *types.Descriptor {
 	var desc string
 	desc = desc + "multi(" + strconv.Itoa(requireNum) + "," + strings.Join(pubkeys, ",") + ")"
 	if hashType == types.P2shP2wsh {
@@ -53,14 +53,14 @@ func (d *DescriptorUtil) NewDescriptorFromMultisig(hashType types.HashType, pubk
 }
 
 // NewDescriptor This function return a Descriptor.
-func (d *DescriptorUtil) NewDescriptorFromString(descriptor string) *types.Descriptor {
+func (d *DescriptorApiImpl) NewDescriptorFromString(descriptor string) *types.Descriptor {
 	return &types.Descriptor{
 		OutputDescriptor: descriptor,
 	}
 }
 
 // NewDescriptorFromLockingScript This function return a Descriptor from locking script.
-func (d *DescriptorUtil) NewDescriptorFromLockingScript(lockingScript string) *types.Descriptor {
+func (d *DescriptorApiImpl) NewDescriptorFromLockingScript(lockingScript string) *types.Descriptor {
 	desc := "raw(" + lockingScript + ")"
 	return &types.Descriptor{
 		OutputDescriptor: desc,
@@ -68,14 +68,14 @@ func (d *DescriptorUtil) NewDescriptorFromLockingScript(lockingScript string) *t
 }
 
 // NewDescriptorFromAddress This function return a Descriptor from address.
-func (d *DescriptorUtil) NewDescriptorFromAddress(address string) *types.Descriptor {
+func (d *DescriptorApiImpl) NewDescriptorFromAddress(address string) *types.Descriptor {
 	desc := "addr(" + address + ")"
 	return &types.Descriptor{
 		OutputDescriptor: desc,
 	}
 }
 
-func (d *DescriptorUtil) validConfig() error {
+func (d *DescriptorApiImpl) validConfig() error {
 	if d.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
@@ -88,7 +88,7 @@ func (d *DescriptorUtil) validConfig() error {
 }
 
 // Parse This function return a Descriptor parsing data.
-func (d *DescriptorUtil) Parse(descriptor *types.Descriptor) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {
+func (d *DescriptorApiImpl) Parse(descriptor *types.Descriptor) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {
 	if err = d.validConfig(); err != nil {
 		return data, descriptorDataList, multisigList, err
 	}
@@ -100,7 +100,7 @@ func (d *DescriptorUtil) Parse(descriptor *types.Descriptor) (data *types.Descri
 }
 
 // ParseWithDerivationPath This function return a Descriptor parsing data.
-func (d *DescriptorUtil) ParseWithDerivationPath(descriptor *types.Descriptor, bip32DerivationPath string) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {
+func (d *DescriptorApiImpl) ParseWithDerivationPath(descriptor *types.Descriptor, bip32DerivationPath string) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {
 	if err = d.validConfig(); err != nil {
 		return data, descriptorDataList, multisigList, err
 	}
@@ -112,7 +112,7 @@ func (d *DescriptorUtil) ParseWithDerivationPath(descriptor *types.Descriptor, b
 }
 
 // GetChecksum This function return a descriptor adding checksum.
-func (d *DescriptorUtil) GetChecksum(descriptor *types.Descriptor) (descriptorAddedChecksum string, err error) {
+func (d *DescriptorApiImpl) GetChecksum(descriptor *types.Descriptor) (descriptorAddedChecksum string, err error) {
 	if err = d.validConfig(); err != nil {
 		return "", err
 	}

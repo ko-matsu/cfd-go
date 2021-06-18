@@ -21,21 +21,21 @@ type AddressApi interface {
 	GetPegoutAddress(addressType types.AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *types.Address, baseDescriptor *string, err error)
 }
 
-func NewAddressApi() AddressApi {
-	return &AddressUtil{}
+func NewAddressApi() *AddressApiImpl {
+	return &AddressApiImpl{}
 }
 
 // -------------------------------------
-// AddressUtil
+// AddressApiImpl
 // -------------------------------------
 
-// AddressUtil ...
-type AddressUtil struct {
+// AddressApiImpl ...
+type AddressApiImpl struct {
 	Network *types.NetworkType
 }
 
 // ParseAddress ...
-func (u *AddressUtil) ParseAddress(addressString string) (address *types.Address, err error) {
+func (u *AddressApiImpl) ParseAddress(addressString string) (address *types.Address, err error) {
 	data, err := cfd.CfdGoGetAddressInfo(addressString)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (u *AddressUtil) ParseAddress(addressString string) (address *types.Address
 }
 
 // CreateByPubkey ...
-func (u *AddressUtil) CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error) {
+func (u *AddressApiImpl) CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (u *AddressUtil) CreateByPubkey(pubkey *types.Pubkey, addressType types.Add
 }
 
 // CreateByScript ...
-func (u *AddressUtil) CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error) {
+func (u *AddressApiImpl) CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (u *AddressUtil) CreateByScript(redeemScript *types.Script, addressType typ
 }
 
 // CreateMultisigAddress ...
-func (u *AddressUtil) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error) {
+func (u *AddressApiImpl) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, nil, err
 	}
@@ -105,7 +105,7 @@ func (u *AddressUtil) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum 
 }
 
 // GetPeginAddressByPubkey ...
-func (u *AddressUtil) GetPeginAddressByPubkey(addressType types.AddressType, fedpegScript, pubkey string) (peginAddress *types.Address, claimScript *types.Script, err error) {
+func (u *AddressApiImpl) GetPeginAddressByPubkey(addressType types.AddressType, fedpegScript, pubkey string) (peginAddress *types.Address, claimScript *types.Script, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, nil, err
 	}
@@ -124,7 +124,7 @@ func (u *AddressUtil) GetPeginAddressByPubkey(addressType types.AddressType, fed
 }
 
 // GetPegoutAddress ...
-func (u *AddressUtil) GetPegoutAddress(addressType types.AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *types.Address, baseDescriptor *string, err error) {
+func (u *AddressApiImpl) GetPegoutAddress(addressType types.AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *types.Address, baseDescriptor *string, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, nil, err
 	}
@@ -143,7 +143,7 @@ func (u *AddressUtil) GetPegoutAddress(addressType types.AddressType, descriptor
 }
 
 // validConfig ...
-func (u *AddressUtil) validConfig() error {
+func (u *AddressApiImpl) validConfig() error {
 	if u.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {

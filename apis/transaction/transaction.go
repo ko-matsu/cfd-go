@@ -122,7 +122,7 @@ func (t *TransactionUtil) AddPubkeySignByDescriptor(tx *types.Transaction, outpo
 	if err = t.validConfig(); err != nil {
 		return err
 	}
-	descUtil := descriptor.DescriptorUtil{Network: t.Network}
+	descUtil := descriptor.DescriptorApiImpl{Network: t.Network}
 	data, _, _, err := descUtil.Parse(outputDescriptor)
 	if err != nil {
 		return err

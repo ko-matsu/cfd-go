@@ -17,15 +17,19 @@ type PubkeyApi interface {
 }
 
 //
-type PubkeyUtil struct {
+type PubkeyApiImpl struct {
 }
 
 //
-type PrivkeyUtil struct {
+type PrivkeyApiImpl struct {
+}
+
+func NewPrivkeyApi() *PrivkeyApiImpl {
+	return &PrivkeyApiImpl{}
 }
 
 //
-type HdWalletUtil struct {
+type HdWalletApiImpl struct {
 	Network *types.NetworkType
 }
 
@@ -40,7 +44,7 @@ type ExtPrivkey struct {
 // -------------------------------------
 
 // VerifyEcSignature ...
-func (p *PubkeyUtil) VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error) {
+func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error) {
 	return cfd.CfdGoVerifyEcSignature(sighash, pubkey.Hex, signature)
 }
 
@@ -63,7 +67,7 @@ func NewPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {
 }
 
 // GetPubkey ...
-func (k *PrivkeyUtil) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error) {
+func (k *PrivkeyApiImpl) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error) {
 	hex, err := cfd.CfdGoGetPubkeyFromPrivkey(privkey.Hex, "", privkey.IsCompressedPubkey)
 	if err != nil {
 		return nil, err
@@ -72,7 +76,7 @@ func (k *PrivkeyUtil) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, e
 }
 
 // CreateEcSignature ...
-func (k *PrivkeyUtil) CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error) {
+func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error) {
 	sig, err := cfd.CfdGoCalculateEcSignature(sighash.ToHex(), privkey.Hex, "", privkey.Network.ToCfdValue(), true)
 	if err != nil {
 		return nil, err
@@ -93,7 +97,7 @@ func (k *PrivkeyUtil) CreateEcSignature(privkey *types.Privkey, sighash *types.B
 // -------------------------------------
 
 // validConfig ...
-func (k *HdWalletUtil) validConfig() error {
+func (k *HdWalletApiImpl) validConfig() error {
 	if k.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
@@ -106,7 +110,7 @@ func (k *HdWalletUtil) validConfig() error {
 }
 
 // GetPubkey ...
-func (k *HdWalletUtil) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error) {
+func (k *HdWalletApiImpl) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
@@ -118,7 +122,7 @@ func (k *HdWalletUtil) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubk
 }
 
 // GetData ...
-func (k *HdWalletUtil) GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error) {
+func (k *HdWalletApiImpl) GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}

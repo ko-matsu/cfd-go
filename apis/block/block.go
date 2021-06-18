@@ -20,21 +20,21 @@ type BlockApi interface {
 	ExistTxid(block *types.Block, txid string) (exist bool, err error)
 }
 
-func NewBlockApi() BlockApi {
-	return &BlockUtil{}
+func NewBlockApi() *BlockApiImpl {
+	return &BlockApiImpl{}
 }
 
 // -------------------------------------
-// BlockUtil
+// BlockApiImpl
 // -------------------------------------
 
-// BlockUtil The bitcoin block utility.
-type BlockUtil struct {
+// BlockApiImpl The bitcoin block utility.
+type BlockApiImpl struct {
 	Network *types.NetworkType
 }
 
 // GetHeaderData ...
-func (b *BlockUtil) GetHeaderData(block *types.Block) (blockHash string, header *types.BlockHeader, err error) {
+func (b *BlockApiImpl) GetHeaderData(block *types.Block) (blockHash string, header *types.BlockHeader, err error) {
 	if err = b.validConfig(); err != nil {
 		return "", nil, err
 	}
@@ -53,7 +53,7 @@ func (b *BlockUtil) GetHeaderData(block *types.Block) (blockHash string, header 
 }
 
 // GetTxCount ...
-func (b *BlockUtil) GetTxCount(block *types.Block) (count uint32, err error) {
+func (b *BlockApiImpl) GetTxCount(block *types.Block) (count uint32, err error) {
 	if err = b.validConfig(); err != nil {
 		return 0, err
 	}
@@ -61,7 +61,7 @@ func (b *BlockUtil) GetTxCount(block *types.Block) (count uint32, err error) {
 }
 
 // GetTxidList ...
-func (b *BlockUtil) GetTxidList(block *types.Block) (txidList []string, err error) {
+func (b *BlockApiImpl) GetTxidList(block *types.Block) (txidList []string, err error) {
 	if err = b.validConfig(); err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (b *BlockUtil) GetTxidList(block *types.Block) (txidList []string, err erro
 }
 
 // GetTransactionData ...
-func (b *BlockUtil) GetTransactionData(block *types.Block, txid string) (tx *types.Transaction, txoutProof *types.ByteData, err error) {
+func (b *BlockApiImpl) GetTransactionData(block *types.Block, txid string) (tx *types.Transaction, txoutProof *types.ByteData, err error) {
 	if err = b.validConfig(); err != nil {
 		return nil, nil, err
 	}
@@ -83,7 +83,7 @@ func (b *BlockUtil) GetTransactionData(block *types.Block, txid string) (tx *typ
 }
 
 // ExistTxid ...
-func (b *BlockUtil) ExistTxid(block *types.Block, txid string) (exist bool, err error) {
+func (b *BlockApiImpl) ExistTxid(block *types.Block, txid string) (exist bool, err error) {
 	if err = b.validConfig(); err != nil {
 		return false, err
 	}
@@ -91,7 +91,7 @@ func (b *BlockUtil) ExistTxid(block *types.Block, txid string) (exist bool, err 
 }
 
 // validConfig ...
-func (b *BlockUtil) validConfig() error {
+func (b *BlockApiImpl) validConfig() error {
 	if b.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {

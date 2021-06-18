@@ -31,12 +31,12 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
 	privkey, err := key.NewPrivkeyFromWif("cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp")
 	assert.NoError(t, err)
-	keyUtil := &key.PrivkeyUtil{}
+	keyUtil := key.NewPrivkeyApi()
 	pubkey, err := keyUtil.GetPubkey(privkey)
 	assert.NoError(t, err)
 
 	// create pegin address
-	addrUtil := address.AddressUtil{Network: &network}
+	addrUtil := address.AddressApiImpl{Network: &network}
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
 	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddr.Address)
@@ -152,7 +152,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 		OutputDescriptor: peginUtxos[0].Descriptor,
 		Network:          &network,
 	}
-	privkeyUtil := &key.PrivkeyUtil{}
+	privkeyUtil := key.NewPrivkeyApi()
 	signature, err := privkeyUtil.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
 	assert.NoError(t, err)
 
@@ -191,7 +191,7 @@ func TestCreatePegoutTx(t *testing.T) {
 	whitelist := pakEntry
 
 	// pegout address
-	addrUtil := address.AddressUtil{Network: &network}
+	addrUtil := address.AddressApiImpl{Network: &network}
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddr.Address)
@@ -257,12 +257,12 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
 	privkey, err := key.NewPrivkeyFromWif("cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp")
 	assert.NoError(t, err)
-	privkeyUtil := &key.PrivkeyUtil{}
+	privkeyUtil := key.NewPrivkeyApi()
 	pubkey, err := privkeyUtil.GetPubkey(privkey)
 	assert.NoError(t, err)
 
 	// create pegin address
-	addrUtil := address.AddressUtil{}
+	addrUtil := address.AddressApiImpl{}
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
 	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddr.Address)
@@ -410,7 +410,7 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	whitelist := pakEntry
 
 	// pegout address
-	addrUtil := address.AddressUtil{}
+	addrUtil := address.AddressApiImpl{}
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddr.Address)

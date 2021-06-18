@@ -14,20 +14,20 @@ type ConfidentialAddressApi interface {
 	Parse(addressString string) (address *types.ConfidentialAddress, err error)
 }
 
-func NewConfidentialAddressApi() ConfidentialAddressApi {
-	return &ConfidentialAddressUtil{}
+func NewConfidentialAddressApi() *ConfidentialAddressApiImpl {
+	return &ConfidentialAddressApiImpl{}
 }
 
 // -------------------------------------
-// ConfidentialAddressUtil
+// ConfidentialAddressApiImpl
 // -------------------------------------
 
-// ConfidentialAddressUtil ...
-type ConfidentialAddressUtil struct {
+// ConfidentialAddressApiImpl ...
+type ConfidentialAddressApiImpl struct {
 }
 
 // Create ...
-func (u *ConfidentialAddressUtil) Create(addressString string, confidentialKey *types.Pubkey) (address *types.ConfidentialAddress, err error) {
+func (u *ConfidentialAddressApiImpl) Create(addressString string, confidentialKey *types.Pubkey) (address *types.ConfidentialAddress, err error) {
 	data, err := cfd.CfdGoGetAddressInfo(addressString)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (u *ConfidentialAddressUtil) Create(addressString string, confidentialKey *
 }
 
 // ParseAddress ...
-func (u *ConfidentialAddressUtil) Parse(addressString string) (address *types.ConfidentialAddress, err error) {
+func (u *ConfidentialAddressApiImpl) Parse(addressString string) (address *types.ConfidentialAddress, err error) {
 	addr, key, network, err := cfd.CfdGoParseConfidentialAddress(addressString)
 	if err == nil {
 		data, err := cfd.CfdGoGetAddressInfo(addr)

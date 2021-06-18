@@ -177,7 +177,7 @@ func (t *ConfidentialTxUtil) AddPubkeySignByDescriptor(tx *types.ConfidentialTx,
 	if err = t.validConfig(); err != nil {
 		return err
 	}
-	descUtil := descriptor.DescriptorUtil{Network: t.Network}
+	descUtil := descriptor.DescriptorApiImpl{Network: t.Network}
 	data, _, _, err := descUtil.Parse(outputDescriptor)
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (t *ConfidentialTxUtil) GetPegoutAddress(tx *types.ConfidentialTx, index ui
 		return nil, false, err
 	}
 	btcNetwork := t.Network.ToBitcoinType()
-	addrUtil := address.AddressUtil{Network: &btcNetwork}
+	addrUtil := address.AddressApiImpl{Network: &btcNetwork}
 	pegoutAddress, err = addrUtil.ParseAddress(addr)
 	if err != nil {
 		return nil, false, err
@@ -263,7 +263,7 @@ func (t *ConfidentialTxUtil) GetSighash(tx *types.ConfidentialTx, outpoint *type
 		return nil, err
 	}
 	cfdNetType := t.Network.ToCfdValue()
-	descUtil := descriptor.DescriptorUtil{Network: t.Network}
+	descUtil := descriptor.DescriptorApiImpl{Network: t.Network}
 	var script *cfd.Script
 	var pubkey *cfd.ByteData
 	for _, utxo := range *utxoList {
