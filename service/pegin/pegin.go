@@ -10,7 +10,16 @@ import (
 )
 
 // wrap and validation APIs
-type PeginApi interface {
+type Pegin interface {
+	// GetPubkeyFromExtPubkey ...
+	GetPubkeyFromExtPubkey(
+		extPubkey *types.ExtPubkey,
+		bip32Path string,
+	) (
+		pubkey *types.Pubkey,
+		derivedExtPubkey *types.ExtPubkey,
+		err error,
+	)
 	// CreatePeginAddress ...
 	CreatePeginAddress(
 		addressType types.AddressType,
@@ -20,6 +29,7 @@ type PeginApi interface {
 	) (
 		peginAddress *types.Address,
 		claimScript *types.Script,
+		pubkey *types.Pubkey,
 		err error,
 	)
 	// CreatePeginTransaction ...
@@ -28,44 +38,74 @@ type PeginApi interface {
 		peginData *types.InputPeginData,
 		utxoList *[]types.ElementsUtxoData,
 		sendList []types.InputConfidentialTxOut,
-		changeData *types.InputConfidentialTxOut,
+		changeAddress *string,
 		option *types.FundRawTxOption,
 	) (tx *types.ConfidentialTx, err error)
+	// VerifyPubkeySignature
+	VerifyPubkeySignature(
+		proposalTx *types.Transaction,
+		utxoList *types.ElementsUtxoData,
+		signature *types.ByteData,
+	) (isVerify bool, err error)
+	// VerifyPeginPubkeySignature
+	VerifyPeginPubkeySignature(
+		proposalTx *types.Transaction,
+		extPubkey *types.ExtPubkey,
+		bip32Path string,
+		signature *types.ByteData,
+	) (isVerify bool, err error)
 }
 
-func NewPeginApi() PeginApi {
-	return &PeginUtil{}
+func NewPeginService() *PeginService {
+	return &PeginService{}
 }
 
 // -------------------------------------
 // PeginUtil
 // -------------------------------------
 
-type PeginUtil struct {
+type PeginService struct {
 	Network *types.NetworkType
 }
 
-func (p *PeginUtil) validConfig() error {
+func (p *PeginService) validConfig() error {
 	if p.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
 			return fmt.Errorf("CFD Error: NetworkType not set")
 		}
-		if cfdConfig.Network.IsElements() {
-			netType := cfdConfig.Network.ToBitcoinType()
-			p.Network = &netType
-		} else {
-			netType := cfdConfig.Network
-			p.Network = &netType
-		}
+		netType := cfdConfig.Network
+		p.Network = &netType
 	}
-	if !p.Network.IsBitcoin() {
-		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
+	if !p.Network.IsElements() {
+		return fmt.Errorf("CFD Error: NetworkType is not elements")
 	}
 	return nil
 }
 
-func (p *PeginUtil) CreatePeginAddress(
+func (p *PeginService) GetPubkeyFromExtPubkey(
+	extPubkey *types.ExtPubkey,
+	bip32Path string,
+) (
+	pubkey *types.Pubkey,
+	derivedExtPubkey *types.ExtPubkey,
+	err error,
+) {
+	if err = p.validConfig(); err != nil {
+		return nil, nil, err
+	}
+	deriveKey, err := cfd.CfdGoCreateExtkeyFromParentPath(extPubkey.Key, bip32Path, p.Network.ToCfdValue(), int(cfd.KCfdExtPubkey))
+	if err != nil {
+		return nil, nil, err
+	}
+	pubkeyHex, err := cfd.CfdGoGetPubkeyFromExtkey(deriveKey, p.Network.ToCfdValue())
+	if err != nil {
+		return nil, nil, err
+	}
+	return &types.Pubkey{Hex: pubkeyHex}, &types.ExtPubkey{Key: deriveKey}, nil
+}
+
+func (p *PeginService) CreatePeginAddress(
 	addressType types.AddressType,
 	extPubkey *types.ExtPubkey,
 	bip32Path string,
@@ -73,29 +113,34 @@ func (p *PeginUtil) CreatePeginAddress(
 ) (
 	peginAddress *types.Address,
 	claimScript *types.Script,
+	pubkey *types.Pubkey,
 	err error,
 ) {
 	if err = p.validConfig(); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	addrApi := address.NewAddressApi()
 	deriveKey, err := cfd.CfdGoCreateExtkeyFromParentPath(extPubkey.Key, bip32Path, p.Network.ToCfdValue(), int(cfd.KCfdExtPubkey))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	pubkey, err := cfd.CfdGoGetPubkeyFromExtkey(deriveKey, p.Network.ToCfdValue())
+	pubkeyHex, err := cfd.CfdGoGetPubkeyFromExtkey(deriveKey, p.Network.ToCfdValue())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return addrApi.GetPeginAddressByPubkey(addressType, fedpegScript.ToHex(), pubkey)
+	addrApi := address.NewAddressApi()
+	peginAddress, claimScript, err = addrApi.GetPeginAddressByPubkey(addressType, fedpegScript.ToHex(), pubkeyHex)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return peginAddress, claimScript, &types.Pubkey{Hex: pubkeyHex}, nil
 }
 
-func (p *PeginUtil) CreatePeginTransaction(
+func (p *PeginService) CreatePeginTransaction(
 	peginOutPoint *types.OutPoint,
 	peginData *types.InputPeginData,
 	utxoList *[]types.ElementsUtxoData,
 	sendList []types.InputConfidentialTxOut,
-	changeData *types.InputConfidentialTxOut,
+	changeAddress *string,
 	option *types.FundRawTxOption,
 ) (tx *types.ConfidentialTx, err error) {
 	// FIXME implements
@@ -104,4 +149,24 @@ func (p *PeginUtil) CreatePeginTransaction(
 	// 3. fundrawtransaction
 	// 4. blind
 	return nil, nil
+}
+
+func (p *PeginService) VerifyPubkeySignature(
+	proposalTx *types.Transaction,
+	utxoList *types.ElementsUtxoData,
+	signature *types.ByteData,
+) (isVerify bool, err error) {
+	// 1. pegin: auto-get amount etc.
+	// 2. other utxo: normal verify
+	return false, nil
+}
+
+func (p *PeginService) VerifyPeginPubkeySignature(
+	proposalTx *types.Transaction,
+	extPubkey *types.ExtPubkey,
+	bip32Path string,
+	signature *types.ByteData,
+) (isVerify bool, err error) {
+	// 1. pegin: auto-get amount etc.
+	return false, nil
 }
