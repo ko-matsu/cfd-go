@@ -19,24 +19,24 @@ const (
 type ConfidentialTxApi interface {
 }
 
-func NewConfidentialTxApi() ConfidentialTxApi {
-	return &ConfidentialTxUtil{}
+func NewConfidentialTxApi() *ConfidentialTxApiImpl {
+	return &ConfidentialTxApiImpl{}
 }
 
 // -------------------------------------
 // API struct
 // -------------------------------------
 
-// ConfidentialTxUtil Create confidential transaction utility.
-type ConfidentialTxUtil struct {
+// ConfidentialTxApiImpl Create confidential transaction utility.
+type ConfidentialTxApiImpl struct {
 	Network *types.NetworkType
 }
 
 // -------------------------------------
-// ConfidentialTxUtil
+// ConfidentialTxApiImpl
 // -------------------------------------
 
-func (u *ConfidentialTxUtil) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
+func (u *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (u *ConfidentialTxUtil) Create(version uint32, locktime uint32, txinList *[
 	return &types.ConfidentialTx{Hex: txHex}, nil
 }
 
-func (u *ConfidentialTxUtil) validConfig() error {
+func (u *ConfidentialTxApiImpl) validConfig() error {
 	if u.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
@@ -76,7 +76,7 @@ func (u *ConfidentialTxUtil) validConfig() error {
 // ConfidentialTx
 // -------------------------------------
 
-func (t *ConfidentialTxUtil) Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
+func (t *ConfidentialTxApiImpl) Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
 	if err := t.validConfig(); err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (t *ConfidentialTxUtil) Add(tx *types.ConfidentialTx, txinList *[]types.Inp
 //}
 
 // Blind ...
-func (t *ConfidentialTxUtil) Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error {
+func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error {
 	lbtcAsset, _ := getDefaultBitcoinData()
 
 	var err error
@@ -154,7 +154,7 @@ func (t *ConfidentialTxUtil) Blind(tx *types.ConfidentialTx, txinList []types.Bl
 }
 
 // AddPubkeySign ...
-func (t *ConfidentialTxUtil) AddPubkeySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error {
+func (t *ConfidentialTxApiImpl) AddPubkeySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error {
 	if err := t.validConfig(); err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func (t *ConfidentialTxUtil) AddPubkeySign(tx *types.ConfidentialTx, outpoint *t
 }
 
 // AddPubkeySignByDescriptor ...
-func (t *ConfidentialTxUtil) AddPubkeySignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error {
+func (t *ConfidentialTxApiImpl) AddPubkeySignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error {
 	var err error
 	if err = t.validConfig(); err != nil {
 		return err
@@ -207,7 +207,7 @@ func (t *ConfidentialTxUtil) AddPubkeySignByDescriptor(tx *types.ConfidentialTx,
 }
 
 // VerifySign ...
-func (t *ConfidentialTxUtil) VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error) {
+func (t *ConfidentialTxApiImpl) VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error) {
 	if err := t.validConfig(); err != nil {
 		return false, "", err
 	}
@@ -222,7 +222,7 @@ func (t *ConfidentialTxUtil) VerifySign(tx *types.ConfidentialTx, outpoint *type
 }
 
 // GetTxid ...
-func (t *ConfidentialTxUtil) GetTxid(tx *types.ConfidentialTx) string {
+func (t *ConfidentialTxApiImpl) GetTxid(tx *types.ConfidentialTx) string {
 	if err := t.validConfig(); err != nil {
 		return ""
 	}
@@ -240,7 +240,7 @@ func (t *ConfidentialTxUtil) GetTxid(tx *types.ConfidentialTx) string {
 }
 
 // GetPegoutAddress ...
-func (t *ConfidentialTxUtil) GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error) {
+func (t *ConfidentialTxApiImpl) GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error) {
 	if err := t.validConfig(); err != nil {
 		return nil, false, err
 	}
@@ -258,7 +258,7 @@ func (t *ConfidentialTxUtil) GetPegoutAddress(tx *types.ConfidentialTx, index ui
 }
 
 // GetSighash ...
-func (t *ConfidentialTxUtil) GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.UtxoData) (sighash *types.ByteData, err error) {
+func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.UtxoData) (sighash *types.ByteData, err error) {
 	if err := t.validConfig(); err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func convertListData(cfdData *cfd.TransactionData, cfdTxinList []cfd.Confidentia
 }
 
 // GetAll ...
-func (t *ConfidentialTxUtil) GetAll(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
+func (t *ConfidentialTxApiImpl) GetAll(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
 	if err := t.validConfig(); err != nil {
 		return data, txinList, txoutList, err
 	}

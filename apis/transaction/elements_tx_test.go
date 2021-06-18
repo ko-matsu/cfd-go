@@ -47,7 +47,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
 	btcNetwork := network.ToBitcoinType()
-	btcTxUtil := TransactionUtil{Network: &btcNetwork}
+	btcTxUtil := TransactionApiImpl{Network: &btcNetwork}
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
@@ -87,7 +87,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
 
 	// create pegin tx
-	txUtil := ConfidentialTxUtil{Network: &network}
+	txUtil := ConfidentialTxApiImpl{Network: &network}
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
@@ -198,7 +198,7 @@ func TestCreatePegoutTx(t *testing.T) {
 	assert.Equal(t, "pkh("+mainchainXpubkey+")", *baseDescriptor)
 
 	// create pegout tx
-	txUtil := ConfidentialTxUtil{Network: &network}
+	txUtil := ConfidentialTxApiImpl{Network: &network}
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{
 		{
@@ -272,7 +272,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	amount := int64(100000000)
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
-	btcTxUtil := TransactionUtil{}
+	btcTxUtil := TransactionApiImpl{}
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
@@ -313,7 +313,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
 
 	// create pegin tx
-	txUtil := ConfidentialTxUtil{}
+	txUtil := ConfidentialTxApiImpl{}
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
@@ -417,7 +417,7 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	assert.Equal(t, "pkh("+mainchainXpubkey+")", *baseDescriptor)
 
 	// create pegout tx
-	txUtil := ConfidentialTxUtil{}
+	txUtil := ConfidentialTxApiImpl{}
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{
 		{

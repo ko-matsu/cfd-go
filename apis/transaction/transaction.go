@@ -14,7 +14,7 @@ import (
 // API struct
 // -------------------------------------
 
-type TransactionUtil struct {
+type TransactionApiImpl struct {
 	Network *types.NetworkType
 }
 
@@ -23,10 +23,10 @@ type TransactionUtil struct {
 // -------------------------------------
 
 // -------------------------------------
-// implement TransactionUtil
+// implement TransactionApiImpl
 // -------------------------------------
 
-func (u *TransactionUtil) validConfig() error {
+func (u *TransactionApiImpl) validConfig() error {
 	if u.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
@@ -46,7 +46,7 @@ func (u *TransactionUtil) validConfig() error {
 	return nil
 }
 
-func (u *TransactionUtil) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
+func (u *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (u *TransactionUtil) Create(version uint32, locktime uint32, txinList *[]ty
 // implement Transaction
 // -------------------------------------
 
-func (t *TransactionUtil) Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
+func (t *TransactionApiImpl) Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
 	if err := t.validConfig(); err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (t *TransactionUtil) Add(tx *types.Transaction, txinList *[]types.InputTxIn
 }
 
 // AddPubkeySign ...
-func (t *TransactionUtil) AddPubkeySign(tx *types.Transaction, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error {
+func (t *TransactionApiImpl) AddPubkeySign(tx *types.Transaction, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error {
 	if err := t.validConfig(); err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (t *TransactionUtil) AddPubkeySign(tx *types.Transaction, outpoint *types.O
 }
 
 // AddPubkeySignByDescriptor ...
-func (t *TransactionUtil) AddPubkeySignByDescriptor(tx *types.Transaction, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error {
+func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error {
 	var err error
 	if err = t.validConfig(); err != nil {
 		return err
@@ -152,7 +152,7 @@ func (t *TransactionUtil) AddPubkeySignByDescriptor(tx *types.Transaction, outpo
 }
 
 // SignWithPrivkey ...
-func (t *TransactionUtil) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList *[]types.UtxoData) error {
+func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList *[]types.UtxoData) error {
 	if err := t.validConfig(); err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (t *TransactionUtil) SignWithPrivkey(tx *types.Transaction, outpoint *types
 }
 
 // VerifySign ...
-func (t *TransactionUtil) VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error) {
+func (t *TransactionApiImpl) VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error) {
 	if err := t.validConfig(); err != nil {
 		return false, "", err
 	}
@@ -178,7 +178,7 @@ func (t *TransactionUtil) VerifySign(tx *types.Transaction, outpoint *types.OutP
 	return cfd.CfdGoVerifySign(t.Network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
 }
 
-func (t *TransactionUtil) GetTxid(tx *types.Transaction) string {
+func (t *TransactionApiImpl) GetTxid(tx *types.Transaction) string {
 	if err := t.validConfig(); err != nil {
 		return ""
 	}
