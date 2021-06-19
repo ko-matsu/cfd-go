@@ -115,3 +115,9 @@ func (n NetworkType) ToBitcoinType() NetworkType {
 		return Unknown
 	}
 }
+
+// ToBitcoinTypePointer ...
+func (n NetworkType) ToBitcoinTypePointer() *NetworkType {
+	network := n.ToBitcoinType()
+	return &network
+}

@@ -1,5 +1,10 @@
 package types
 
+const (
+	CommitmentDataSize    = 33
+	CommitmentHexDataSize = 66
+)
+
 // ConfidentialTx ...
 type ConfidentialTx struct {
 	Hex string
@@ -110,6 +115,7 @@ type ElementsUtxoData struct {
 	AssetBlindFactor  string   // Asset BlindFactor
 	Amount            int64    // satoshi value
 	ValueBlindFactor  string   // Value BlindFactor
+	AmountCommitment  string   // Amount commitment
 	Descriptor        string   // output descriptor
 	ScriptSigTemplate string   // scriptsig template hex (require script hash estimate fee)
 	IssuanceKey       *IssuanceBlindingKey
@@ -149,5 +155,64 @@ func NewBlindTxOption() BlindTxOption {
 	option.Exponent = int64(0)
 	option.MinimumBits = int64(-1)
 	option.AppendDummyOutput = false
+	return option
+}
+
+func NewCfdFundRawTxOption(networkType NetworkType) FundRawTxOption {
+	option := FundRawTxOption{}
+	if networkType.IsElements() {
+		option.FeeAsset = "0000000000000000000000000000000000000000000000000000000000000000"
+		option.IsBlindTx = true
+		option.EffectiveFeeRate = float64(0.15)
+		option.LongTermFeeRate = float64(-1.0)
+		option.DustFeeRate = float64(-1.0)
+		option.KnapsackMinChange = int64(-1)
+		option.Exponent = int64(0)
+		option.MinimumBits = int64(-1)
+	} else {
+		option.EffectiveFeeRate = float64(20.0)
+		option.LongTermFeeRate = float64(-1.0)
+		option.DustFeeRate = float64(-1.0)
+		option.KnapsackMinChange = int64(-1)
+	}
+	return option
+}
+
+// FIXME move to pegin.go types
+
+// PeginTxOption ...
+type PeginTxOption struct {
+	// fee asset
+	FeeAsset string
+	// use blind tx
+	IsBlindTx bool
+	// effective feerate
+	EffectiveFeeRate float64
+	// longterm feerate
+	LongTermFeeRate float64
+	// dust feerate
+	DustFeeRate float64
+	// knapsack min change value. knapsack logic's threshold. Recommended value is 1.
+	KnapsackMinChange int64
+	// blind minimum range value
+	MinimumRangeValue int64
+	// blind exponent. default is 0.
+	Exponent int64
+	// blind minimum bits. default is -1 (cfd-go auto).
+	MinimumBits int64
+}
+
+// NewPeginTxOption ...
+func NewPeginTxOption() PeginTxOption {
+	option := PeginTxOption{}
+	option.FeeAsset = "0000000000000000000000000000000000000000000000000000000000000000"
+	option.IsBlindTx = true
+	option.EffectiveFeeRate = float64(0.15)
+	option.LongTermFeeRate = float64(-1.0)
+	option.DustFeeRate = float64(-1.0)
+	option.KnapsackMinChange = int64(-1)
+	option.MinimumRangeValue = int64(1)
+	option.Exponent = int64(0)
+	option.MinimumBits = int64(-1)
 	return option
 }

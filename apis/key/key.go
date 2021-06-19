@@ -8,13 +8,57 @@ import (
 	"github.com/cryptogarageinc/cfd-go/types"
 )
 
-// -------------------------------------
-// struct
-// -------------------------------------
+// FIXME split file
 
 type PubkeyApi interface {
 	VerifyEcSignature(sighash, signature string) (isVerify bool, err error)
 }
+
+type PrivkeyApi interface {
+	GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error)
+	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
+	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
+}
+
+type ExtPubkeyApi interface {
+	GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error)
+	GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error)
+}
+
+type ExtPrivkeyApi interface {
+	GetPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.Pubkey, err error)
+	GetPrivkey(extPrivkey *types.ExtPrivkey) (privkey *types.Privkey, err error)
+	GetExtPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.ExtPubkey, err error)
+	GetExtPrivkeyByPath(extPrivkey *types.ExtPrivkey, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error)
+	GetData(extPrivkey *types.ExtPrivkey) (data *types.ExtkeyData, err error)
+}
+
+type HdWalletApi interface {
+}
+
+func NewPubkeyApi() *PubkeyApiImpl {
+	return &PubkeyApiImpl{}
+}
+
+func NewPrivkeyApi() *PrivkeyApiImpl {
+	return &PrivkeyApiImpl{}
+}
+
+func NewExtPubkeyApi() *ExtPubkeyApiImpl {
+	return &ExtPubkeyApiImpl{}
+}
+
+func NewExtPrivkeyApi() *ExtPrivkeyApiImpl {
+	return &ExtPrivkeyApiImpl{}
+}
+
+func NewHdWalletApiImpl() *HdWalletApiImpl {
+	return &HdWalletApiImpl{}
+}
+
+// -------------------------------------
+// struct
+// -------------------------------------
 
 //
 type PubkeyApiImpl struct {
@@ -22,20 +66,21 @@ type PubkeyApiImpl struct {
 
 //
 type PrivkeyApiImpl struct {
+	Network *types.NetworkType
 }
 
-func NewPrivkeyApi() *PrivkeyApiImpl {
-	return &PrivkeyApiImpl{}
+//
+type ExtPubkeyApiImpl struct {
+	Network *types.NetworkType
+}
+
+//
+type ExtPrivkeyApiImpl struct {
+	Network *types.NetworkType
 }
 
 //
 type HdWalletApiImpl struct {
-	Network *types.NetworkType
-}
-
-// ExtPrivkey xpriv
-type ExtPrivkey struct {
-	Key     string
 	Network *types.NetworkType
 }
 
@@ -52,16 +97,20 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 // implement Privkey
 // -------------------------------------
 
-// NewPrivkeyFromWif ...
-func NewPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {
+// GetPrivkeyFromWif ...
+func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {
 	hex, network, isCompressed, err := cfd.CfdGoParsePrivkeyWif(wif)
 	if err != nil {
 		return nil, err
 	}
+	networkType := types.NewNetworkType(network)
+	if k.Network != nil && k.Network.ToBitcoinType() != networkType {
+		return nil, fmt.Errorf("CFD Error: Unmatch wif network type")
+	}
 	return &types.Privkey{
 		Wif:                wif,
 		Hex:                hex,
-		Network:            types.NewNetworkType(network),
+		Network:            networkType,
 		IsCompressedPubkey: isCompressed,
 	}, nil
 }
@@ -96,21 +145,8 @@ func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *type
 // implement ExtPubkey
 // -------------------------------------
 
-// validConfig ...
-func (k *HdWalletApiImpl) validConfig() error {
-	if k.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		network := cfdConfig.Network.ToBitcoinType()
-		k.Network = &network
-	}
-	return nil
-}
-
 // GetPubkey ...
-func (k *HdWalletApiImpl) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error) {
+func (k *ExtPubkeyApiImpl) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
@@ -122,19 +158,15 @@ func (k *HdWalletApiImpl) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.P
 }
 
 // GetData ...
-func (k *HdWalletApiImpl) GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error) {
+func (k *ExtPubkeyApiImpl) GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
 	return getExtkeyInformationInternal(extPubkey.Key)
 }
 
-// -------------------------------------
-// implement ExtPrivkey
-// -------------------------------------
-
 // validConfig ...
-func (k *ExtPrivkey) validConfig() error {
+func (k *ExtPubkeyApiImpl) validConfig() error {
 	if k.Network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
@@ -146,12 +178,16 @@ func (k *ExtPrivkey) validConfig() error {
 	return nil
 }
 
+// -------------------------------------
+// implement ExtPrivkey
+// -------------------------------------
+
 // GetPubkey ...
-func (k *ExtPrivkey) GetPubkey() (pubkey *types.Pubkey, err error) {
+func (k *ExtPrivkeyApiImpl) GetPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.Pubkey, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
-	hex, err := cfd.CfdGoGetPubkeyFromExtkey(k.Key, k.Network.ToBitcoinType().ToCfdValue())
+	hex, err := cfd.CfdGoGetPubkeyFromExtkey(extPrivkey.Key, k.Network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, err
 	}
@@ -159,11 +195,11 @@ func (k *ExtPrivkey) GetPubkey() (pubkey *types.Pubkey, err error) {
 }
 
 // GetPrivkey
-func (k *ExtPrivkey) GetPrivkey() (privkey *types.Privkey, err error) {
+func (k *ExtPrivkeyApiImpl) GetPrivkey(extPrivkey *types.ExtPrivkey) (privkey *types.Privkey, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
-	hex, wif, err := cfd.CfdGoGetPrivkeyFromExtkey(k.Key, k.Network.ToBitcoinType().ToCfdValue())
+	hex, wif, err := cfd.CfdGoGetPrivkeyFromExtkey(extPrivkey.Key, k.Network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, err
 	}
@@ -175,24 +211,48 @@ func (k *ExtPrivkey) GetPrivkey() (privkey *types.Privkey, err error) {
 	}, nil
 }
 
-// GetPrivkey
-func (k *ExtPrivkey) GetExtPubkey() (pubkey *types.ExtPubkey, err error) {
+// GetExtPubkey
+func (k *ExtPrivkeyApiImpl) GetExtPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.ExtPubkey, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
-	key, err := cfd.CfdGoCreateExtPubkey(k.Key, k.Network.ToBitcoinType().ToCfdValue())
+	key, err := cfd.CfdGoCreateExtPubkey(extPrivkey.Key, k.Network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, err
 	}
 	return &types.ExtPubkey{Key: key}, nil
 }
 
-// GetData ...
-func (k *ExtPrivkey) GetData() (data *types.ExtkeyData, err error) {
+func (k *ExtPrivkeyApiImpl) GetExtPrivkeyByPath(extPrivkey *types.ExtPrivkey, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error) {
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
-	return getExtkeyInformationInternal(k.Key)
+	key, err := cfd.CfdGoCreateExtkeyFromParentPath(extPrivkey.Key, bip32Path, k.Network.ToBitcoinType().ToCfdValue(), int(cfd.KCfdExtPrivkey))
+	if err != nil {
+		return nil, err
+	}
+	return &types.ExtPrivkey{Key: key}, nil
+}
+
+// GetData ...
+func (k *ExtPrivkeyApiImpl) GetData(extPrivkey *types.ExtPrivkey) (data *types.ExtkeyData, err error) {
+	if err = k.validConfig(); err != nil {
+		return nil, err
+	}
+	return getExtkeyInformationInternal(extPrivkey.Key)
+}
+
+// validConfig ...
+func (k *ExtPrivkeyApiImpl) validConfig() error {
+	if k.Network == nil {
+		cfdConfig := config.GetCurrentCfdConfig()
+		if !cfdConfig.Network.Valid() {
+			return fmt.Errorf("CFD Error: NetworkType not set")
+		}
+		network := cfdConfig.Network.ToBitcoinType()
+		k.Network = &network
+	}
+	return nil
 }
 
 // internal --------------------------------------------------------------------

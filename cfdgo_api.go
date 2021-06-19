@@ -7049,7 +7049,7 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 			if err != nil {
 				return data, txinList, txoutList, err
 			}
-			wList := make([]string, txinCount)
+			wList := make([]string, wCount)
 			for j := uint32(0); j < wCount; j++ {
 				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 0, i, j)
 				if err != nil {
@@ -7064,12 +7064,12 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 				return data, txinList, txoutList, err
 			}
 			pList := make([]string, pCount)
-			for j := uint32(0); j < wCount; j++ {
+			for j := uint32(0); j < pCount; j++ {
 				stackData, err := CfdGoGetTxInWitnessByHandle(handle, 1, i, j)
 				if err != nil {
 					return data, txinList, txoutList, err
 				}
-				wList[j] = stackData
+				pList[j] = stackData
 			}
 			tempTxins[i].PeginWitness.Stack = pList
 		}

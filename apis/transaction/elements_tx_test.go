@@ -29,7 +29,8 @@ func TestCreateClaimPeginTx(t *testing.T) {
 
 	// fedpeg script
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
-	privkey, err := key.NewPrivkeyFromWif("cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp")
+	keyApi := &key.PrivkeyApiImpl{}
+	privkey, err := keyApi.GetPrivkeyFromWif("cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp")
 	assert.NoError(t, err)
 	keyUtil := key.NewPrivkeyApi()
 	pubkey, err := keyUtil.GetPubkey(privkey)
@@ -75,7 +76,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 			Descriptor: "wpkh(02fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8)",
 		},
 	}
-	utxoPrivkey, err := key.NewPrivkeyFromWif("cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH")
+	utxoPrivkey, err := keyApi.GetPrivkeyFromWif("cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH")
 	assert.NoError(t, err)
 	err = btcTxUtil.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, &utxos)
 	assert.NoError(t, err)
@@ -255,10 +256,10 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 
 	// fedpeg script
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
-	privkey, err := key.NewPrivkeyFromWif("cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp")
+	keyApi := &key.PrivkeyApiImpl{}
+	privkey, err := keyApi.GetPrivkeyFromWif("cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp")
 	assert.NoError(t, err)
-	privkeyUtil := key.NewPrivkeyApi()
-	pubkey, err := privkeyUtil.GetPubkey(privkey)
+	pubkey, err := keyApi.GetPubkey(privkey)
 	assert.NoError(t, err)
 
 	// create pegin address
@@ -300,7 +301,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 			Descriptor: "wpkh(02fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8)",
 		},
 	}
-	utxoPrivkey, err := key.NewPrivkeyFromWif("cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH")
+	utxoPrivkey, err := keyApi.GetPrivkeyFromWif("cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH")
 	assert.NoError(t, err)
 	err = btcTxUtil.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, &utxos)
 	assert.NoError(t, err)
@@ -370,7 +371,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
 	assert.NoError(t, err)
 	desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
-	signature, err := privkeyUtil.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
+	signature, err := keyApi.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
 	assert.NoError(t, err)
 
 	// add sign

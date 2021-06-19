@@ -1,5 +1,6 @@
 package types
 
+import "fmt"
 
 const (
 	SequenceLockTimeFinal     uint32 = 0xffffffff
@@ -10,7 +11,6 @@ const (
 type Transaction struct {
 	Hex string
 }
-
 
 // OutPoint : utxo outpoint struct.
 type OutPoint struct {
@@ -108,3 +108,15 @@ type InputTxOut struct {
 	Address       string // address or confidential address. (if locking script is usual hashtype.)
 }
 
+// String This function return outpoint's string.
+func (o OutPoint) String() string {
+	return fmt.Sprintf("%s,%d", o.Txid, o.Vout)
+}
+
+// String This function return outpoint's string.
+func (o OutPoint) Equal(target OutPoint) bool {
+	if (o.Txid == target.Txid) && (o.Vout == target.Vout) {
+		return true
+	}
+	return false
+}

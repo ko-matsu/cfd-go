@@ -11,39 +11,30 @@ import (
 )
 
 // -------------------------------------
-// API struct
+// API
+// -------------------------------------
+
+type TransactionApi interface {
+	Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error)
+	Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error
+	AddPubkeySign(tx *types.Transaction, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
+	AddPubkeySignByDescriptor(tx *types.Transaction, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error
+	SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList *[]types.UtxoData) error
+	VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error)
+	GetTxid(tx *types.Transaction) string
+	GetTxOut(tx *types.Transaction, vout uint32) (txout *types.TxOut, err error)
+}
+
+func NewTransactionApi() *TransactionApiImpl {
+	return &TransactionApiImpl{}
+}
+
+// -------------------------------------
+// TransactionApiImpl
 // -------------------------------------
 
 type TransactionApiImpl struct {
 	Network *types.NetworkType
-}
-
-// -------------------------------------
-// Data struct
-// -------------------------------------
-
-// -------------------------------------
-// implement TransactionApiImpl
-// -------------------------------------
-
-func (u *TransactionApiImpl) validConfig() error {
-	if u.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		if cfdConfig.Network.IsElements() {
-			netType := cfdConfig.Network.ToBitcoinType()
-			u.Network = &netType
-		} else {
-			netType := cfdConfig.Network
-			u.Network = &netType
-		}
-	}
-	if !u.Network.IsBitcoin() {
-		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
-	}
-	return nil
 }
 
 func (u *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
@@ -66,10 +57,6 @@ func (u *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[
 	}
 	return &types.Transaction{Hex: txHex}, nil
 }
-
-// -------------------------------------
-// implement Transaction
-// -------------------------------------
 
 func (t *TransactionApiImpl) Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
 	if err := t.validConfig(); err != nil {
@@ -193,6 +180,50 @@ func (t *TransactionApiImpl) GetTxid(tx *types.Transaction) string {
 		return ""
 	}
 	return data.Txid
+}
+
+func (t *TransactionApiImpl) GetTxOut(tx *types.Transaction, vout uint32) (txout *types.TxOut, err error) {
+	if err := t.validConfig(); err != nil {
+		return nil, err
+	}
+	handle, err := cfd.CfdGoInitializeTxDataHandle(t.Network.ToCfdValue(), tx.Hex)
+	if err != nil {
+		return
+	}
+	defer cfd.CfdGoFreeTxDataHandle(handle)
+
+	var output types.TxOut
+	satoshiAmount, lockingScript, _, err := cfd.CfdGoGetTxOutByHandle(handle, vout)
+	if err != nil {
+		return nil, err
+	}
+	output.Amount = satoshiAmount
+	output.LockingScript = lockingScript
+	addr, tempErr := cfd.CfdGoGetAddressFromLockingScript(lockingScript, t.Network.ToCfdValue())
+	if tempErr == nil {
+		output.Address = addr
+	}
+	return &output, nil
+}
+
+func (u *TransactionApiImpl) validConfig() error {
+	if u.Network == nil {
+		cfdConfig := config.GetCurrentCfdConfig()
+		if !cfdConfig.Network.Valid() {
+			return fmt.Errorf("CFD Error: NetworkType not set")
+		}
+		if cfdConfig.Network.IsElements() {
+			netType := cfdConfig.Network.ToBitcoinType()
+			u.Network = &netType
+		} else {
+			netType := cfdConfig.Network
+			u.Network = &netType
+		}
+	}
+	if !u.Network.IsBitcoin() {
+		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
+	}
+	return nil
 }
 
 // addConidentialTx ...
