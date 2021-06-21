@@ -168,7 +168,7 @@ func (p *PeginService) CreatePeginTransaction(
 	}
 
 	// validation sendList
-	blindOutputCount, hasAppendDummyOutput, amount, err := validateTxOutList(&sendList, p.Network, changeAddr)
+	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxOutList(&sendList, changeAddr)
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegin sendList validation error")
 	}
@@ -191,6 +191,7 @@ func (p *PeginService) CreatePeginTransaction(
 
 	// 2. add txout by output if single output.
 	if hasAppendDummyOutput {
+		// TODO Is this really a necessary process? I feel like it should be integrated with the subsequent process.
 		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.Network)
 		if err != nil {
 			return nil, errors.Wrap(err, "Pegin append dummy output error")
@@ -210,7 +211,7 @@ func (p *PeginService) CreatePeginTransaction(
 	fundTxInList[0].IsPegin = true
 	fundTxInList[0].PeginBtcTxSize = uint32(len(peginData.BitcoinTransaction) / 2)
 	fundTxInList[0].FedpegScript = peginData.ClaimScript
-	fundTxInList[0].Descriptor = "wpkh(02" + assetId + ")" // dummy
+	fundTxInList[0].Descriptor = "wpkh(02" + assetId + ")" // dummy for calc fee
 
 	utxoListLen := 0
 	if utxoList != nil {
@@ -260,7 +261,7 @@ func (p *PeginService) CreatePeginTransaction(
 	}
 
 	// 4. check to need append dummy output
-	if !hasAppendDummyOutput && (outputCount == 2) { // 2 = output + fee
+	if option.IsBlindTx && !hasAppendDummyOutput && (outputCount == 2) { // 2 = output + fee
 		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.Network)
 		if err != nil {
 			return nil, errors.Wrap(err, "Pegin append dummy output error")
@@ -278,30 +279,32 @@ func (p *PeginService) CreatePeginTransaction(
 	}
 
 	// 5. blind
-	blindInputList := make([]types.BlindInputData, len(inputs))
-	for i, txin := range inputs {
-		blindInputList[i].OutPoint = txin.OutPoint
-		if txin.OutPoint.Equal(*peginOutPoint) {
-			blindInputList[i].Amount = peginAmount
-			blindInputList[i].Asset = assetId
-		} else {
-			utxo, ok := utxoMap[txin.OutPoint]
-			if !ok {
-				return nil, fmt.Errorf("CFD Error: Internal error")
+	if option.IsBlindTx {
+		blindInputList := make([]types.BlindInputData, len(inputs))
+		for i, txin := range inputs {
+			blindInputList[i].OutPoint = txin.OutPoint
+			if txin.OutPoint.Equal(*peginOutPoint) {
+				blindInputList[i].Amount = peginAmount
+				blindInputList[i].Asset = assetId
+			} else {
+				utxo, ok := utxoMap[txin.OutPoint]
+				if !ok {
+					return nil, fmt.Errorf("CFD Error: Internal error")
+				}
+				blindInputList[i].Amount = utxo.Amount
+				blindInputList[i].Asset = utxo.Asset
+				blindInputList[i].ValueBlindFactor = utxo.ValueBlindFactor
+				blindInputList[i].AssetBlindFactor = utxo.AssetBlindFactor
 			}
-			blindInputList[i].Amount = utxo.Amount
-			blindInputList[i].Asset = utxo.Asset
-			blindInputList[i].ValueBlindFactor = utxo.ValueBlindFactor
-			blindInputList[i].AssetBlindFactor = utxo.AssetBlindFactor
 		}
-	}
-	blindOption := types.NewBlindTxOption()
-	blindOption.MinimumRangeValue = option.MinimumRangeValue
-	blindOption.Exponent = option.Exponent
-	blindOption.MinimumBits = option.MinimumBits
-	err = txApi.Blind(tx, blindInputList, nil, &blindOption)
-	if err != nil {
-		return nil, errors.Wrap(err, "Pegin Blind error")
+		blindOption := types.NewBlindTxOption()
+		blindOption.MinimumRangeValue = option.MinimumRangeValue
+		blindOption.Exponent = option.Exponent
+		blindOption.MinimumBits = option.MinimumBits
+		err = txApi.Blind(tx, blindInputList, nil, &blindOption)
+		if err != nil {
+			return nil, errors.Wrap(err, "Pegin Blind error")
+		}
 	}
 	return tx, nil
 }
@@ -315,7 +318,7 @@ func (p *PeginService) VerifyPubkeySignature(
 	if err = p.validConfig(); err != nil {
 		return false, err
 	}
-	// FIXME implements
+	// FIXME add validation
 	txApi := transaction.ConfidentialTxApiImpl{Network: p.Network}
 	descApi := descriptor.DescriptorApiImpl{Network: p.Network}
 	pubkeyApi := key.NewPubkeyApi()
@@ -422,7 +425,7 @@ func validateDerivedExtPubkey(extPubkey *types.ExtPubkey) error {
 	return nil
 }
 
-func validateTxOutList(sendList *[]types.InputConfidentialTxOut, network *types.NetworkType, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
+func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
 	caApi := address.ConfidentialAddressApiImpl{}
 	blindOutputCount = uint32(0)
 	unblindOutputCount := uint32(0)
@@ -451,7 +454,7 @@ func validateTxOutList(sendList *[]types.InputConfidentialTxOut, network *types.
 			addrInfo, err := caApi.Parse(txout.Address)
 			if err != nil {
 				return 0, false, 0, errors.Wrapf(err, "Pegin sendList address check error(n: %d)", index)
-			} else if addrInfo.Network != *network {
+			} else if addrInfo.Network != *p.Network {
 				return 0, false, 0, errors.Wrapf(err, "Pegin sendList address network check error(n: %d)", index)
 			} else if len(addrInfo.ConfidentialAddress) > 0 {
 				blindOutputCount += 1
@@ -482,6 +485,9 @@ func validateTxOutList(sendList *[]types.InputConfidentialTxOut, network *types.
 		unblindOutputCount += 1
 	} else {
 		blindOutputCount += 1
+		if blindOutputCount == 1 {
+			hasAppendDummyOutput = true
+		}
 	}
 
 	if feeCount > 1 {

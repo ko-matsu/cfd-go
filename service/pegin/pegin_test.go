@@ -115,22 +115,24 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		ClaimScript:        claimScript.ToHex(),
 		TxOutProof:         txoutProof,
 	}
-	dummyUtxos := []types.ElementsUtxoData{
-		{
-			OutPoint: types.OutPoint{
-				Txid: "0e5fd4e860d999b30b268ed583dfcfe805c395f8290d8307f6617fdc3f029de3",
-				Vout: 0,
+	/*
+		dummyUtxos := []types.ElementsUtxoData{
+			{
+				OutPoint: types.OutPoint{
+					Txid: "0e5fd4e860d999b30b268ed583dfcfe805c395f8290d8307f6617fdc3f029de3",
+					Vout: 0,
+				},
+				Asset:      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+				Amount:     10000,
+				Descriptor: "wpkh(" + utxoPubkey.Hex + ")",
 			},
-			Asset:      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-			Amount:     10000,
-			Descriptor: "wpkh(" + utxoPubkey.Hex + ")",
-		},
-	}
+		}
+	*/
 	outputAddr := "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex"
 	sendList := []types.InputConfidentialTxOut{}
 	option := types.NewPeginTxOption()
 	option.KnapsackMinChange = 0
-	tx, err := peginApi.CreatePeginTransaction(&peginOutPoint, &peginInputData, &dummyUtxos, sendList, &outputAddr, &option)
+	tx, err := peginApi.CreatePeginTransaction(&peginOutPoint, &peginInputData, nil, sendList, &outputAddr, &option)
 	assert.NoError(t, err)
 
 	// output check
@@ -177,7 +179,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify (after sign)
-	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, peginAmount, &peginUtxos)
+	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, &peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)

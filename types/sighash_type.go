@@ -1,6 +1,5 @@
 package types
 
-
 // SigHashType This struct use for the sighashtype utility function.
 type SigHashType struct {
 	Type         int
@@ -46,4 +45,3 @@ var SigHashTypeDefault SigHashType = *NewSigHashType(0)
 var SigHashTypeAll SigHashType = *NewSigHashType(1)
 var SigHashTypeNone SigHashType = *NewSigHashType(2)
 var SigHashTypeSingle SigHashType = *NewSigHashType(3)
-

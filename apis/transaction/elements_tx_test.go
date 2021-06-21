@@ -162,7 +162,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, peginAmount, &peginUtxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, &peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
@@ -379,7 +379,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, peginAmount, &peginUtxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, &peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
