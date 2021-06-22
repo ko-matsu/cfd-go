@@ -148,13 +148,8 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// create sighash
-	peginUtxos := []types.UtxoData{
-		{
-			Txid:       peginUtxoData.OutPoint.Txid,
-			Vout:       peginUtxoData.OutPoint.Vout,
-			Amount:     peginUtxoData.Amount,
-			Descriptor: peginUtxoData.Descriptor,
-		},
+	peginUtxos := []types.ElementsUtxoData{
+		*peginUtxoData,
 	}
 	desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
 	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)

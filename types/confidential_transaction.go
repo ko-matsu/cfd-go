@@ -1,5 +1,9 @@
 package types
 
+import (
+	cfd "github.com/cryptogarageinc/cfd-go"
+)
+
 const (
 	CommitmentDataSize    = 33
 	CommitmentHexDataSize = 66
@@ -110,18 +114,24 @@ type FundRawTxOption struct {
 	MinimumBits int64
 }
 
+type PeginUtxoData struct {
+	BitcoinTransaction string
+	ClaimScript        string
+}
+
 type ElementsUtxoData struct {
-	OutPoint          OutPoint // OutPoint
-	Asset             string   // Asset
-	AssetBlindFactor  string   // Asset BlindFactor
-	Amount            int64    // satoshi value
-	ValueBlindFactor  string   // Value BlindFactor
-	AmountCommitment  string   // Amount commitment
-	Descriptor        string   // output descriptor
-	ScriptSigTemplate string   // scriptsig template hex (require script hash estimate fee)
-	IssuanceKey       *IssuanceBlindingKey
-	IsIssuance        bool // is issuance output
-	IsBlindIssuance   bool // is blind issuance output
+	OutPoint          OutPoint             // OutPoint
+	Asset             string               // Asset
+	AssetBlindFactor  string               // Asset BlindFactor
+	Amount            int64                // satoshi value
+	ValueBlindFactor  string               // Value BlindFactor
+	AmountCommitment  string               // Amount commitment
+	Descriptor        string               // output descriptor
+	ScriptSigTemplate string               // scriptsig template hex (require script hash estimate fee)
+	IssuanceKey       *IssuanceBlindingKey // issuance key
+	IsIssuance        bool                 // is issuance output
+	IsBlindIssuance   bool                 // is blind issuance output
+	PeginData         *PeginUtxoData       // pegin data
 }
 
 // BlindInputData ...
@@ -261,4 +271,28 @@ func (u ElementsUtxoData) HasBlindUtxo() bool {
 		return true
 	}
 	return false
+}
+
+func (u ElementsUtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
+	utxo := cfd.CfdUtxo{
+		Txid:              u.OutPoint.Txid,
+		Vout:              u.OutPoint.Vout,
+		Amount:            u.Amount,
+		Asset:             u.Asset,
+		Descriptor:        u.Descriptor,
+		AmountCommitment:  u.AmountCommitment,
+		IsIssuance:        u.IsIssuance,
+		IsBlindIssuance:   u.IsBlindIssuance,
+		ScriptSigTemplate: u.ScriptSigTemplate,
+	}
+	if (u.IssuanceKey != nil) && (len(u.IssuanceKey.AssetBlindingKey) == 64) {
+		utxo.IsIssuance = true
+		utxo.IsBlindIssuance = true
+	}
+	if u.PeginData != nil {
+		utxo.IsPegin = true
+		utxo.PeginBtcTxSize = uint32(len(u.PeginData.BitcoinTransaction) / 2)
+		utxo.FedpegScript = u.PeginData.ClaimScript
+	}
+	return utxo
 }

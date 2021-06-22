@@ -17,22 +17,30 @@ const (
 	EmptyBlinder string = types.EmptyBlinder
 )
 
+// ConfidentialTxApi This interface defines the API to operate Elements Confidential Transaction.
 type ConfidentialTxApi interface {
 	// WithConfig This function set a configuration.
 	WithConfig(conf config.CfdConfig) (obj *ConfidentialTxApiImpl, err error)
+	// Create This function create the elements transaction.
 	Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error)
+	// Add This function add the inputs and outputs.
 	Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error
+	// Blind This function change to the blinded transaction.
 	Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error
+	// AddPubkeySign This function add the pubkey hash sign.
 	AddPubkeySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
+	// AddPubkeySign This function add the pubkey hash sign by output descriptor.
 	AddPubkeySignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error
-	VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error)
+	VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.ElementsUtxoData) (isVerify bool, reason string, err error)
+	FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error)
 	GetTxid(tx *types.ConfidentialTx) string
 	GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error)
-	GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.UtxoData) (sighash *types.ByteData, err error)
+	GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.ElementsUtxoData) (sighash *types.ByteData, err error)
 	GetAll(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error)
 	GetTxIn(txHex string, outpoint *types.OutPoint) (txin *types.ConfidentialTxIn, err error)
 }
 
+// NewConfidentialTxApi This function returns a struct that implements ConfidentialTxApi.
 func NewConfidentialTxApi() *ConfidentialTxApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := ConfidentialTxApiImpl{}
@@ -290,18 +298,22 @@ func (t *ConfidentialTxApiImpl) AddPubkeySignByDescriptor(tx *types.Confidential
 }
 
 // VerifySign ...
-func (t *ConfidentialTxApiImpl) VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error) {
+func (t *ConfidentialTxApiImpl) VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.ElementsUtxoData) (isVerify bool, reason string, err error) {
 	if err := t.validConfig(); err != nil {
 		return false, "", err
 	}
 	lbtcAsset, _ := t.getDefaultBitcoinData()
-	utxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(txinUtxoList))
-	for i, utxo := range *utxoList {
-		if len(utxo.Asset) == 0 {
-			(*utxoList)[i].Asset = lbtcAsset
+	utxoList := []cfd.CfdUtxo{}
+	if txinUtxoList != nil {
+		utxoList = make([]cfd.CfdUtxo, len(*txinUtxoList))
+		for i, utxo := range *txinUtxoList {
+			utxoList[i] = utxo.ConvertToCfdUtxo()
+			if len(utxo.Asset) == 0 {
+				utxoList[i].Asset = lbtcAsset
+			}
 		}
 	}
-	return cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
+	return cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, utxoList, outpoint.Txid, outpoint.Vout)
 }
 
 // GetTxid ...
@@ -344,9 +356,12 @@ func (t *ConfidentialTxApiImpl) GetPegoutAddress(tx *types.ConfidentialTx, index
 }
 
 // GetSighash ...
-func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.UtxoData) (sighash *types.ByteData, err error) {
+func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.ElementsUtxoData) (sighash *types.ByteData, err error) {
 	if err := t.validConfig(); err != nil {
 		return nil, err
+	}
+	if utxoList == nil {
+		return nil, fmt.Errorf("CFD Error: utxoList is nil")
 	}
 	cfdNetType := t.network.ToCfdValue()
 	descUtil, err := descriptor.NewDescriptorApi().WithConfig(*t.getConfig())
@@ -355,8 +370,15 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 	}
 	var script *cfd.Script
 	var pubkey *cfd.ByteData
-	for _, utxo := range *utxoList {
-		if utxo.Txid == outpoint.Txid && utxo.Vout == outpoint.Vout {
+
+	lbtcAsset, _ := t.getDefaultBitcoinData()
+	txinUtxoList := make([]cfd.CfdUtxo, len(*utxoList))
+	for i, utxo := range *utxoList {
+		txinUtxoList[i] = utxo.ConvertToCfdUtxo()
+		if len(utxo.Asset) == 0 {
+			txinUtxoList[i].Asset = lbtcAsset
+		}
+		if utxo.OutPoint.Equal(*outpoint) {
 			desc := descUtil.NewDescriptorFromString(utxo.Descriptor)
 			if desc == nil {
 				return nil, fmt.Errorf("CFD Error: Invalid descriptor string")
@@ -391,29 +413,47 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 			break
 		}
 	}
-	lbtcAsset, _ := t.getDefaultBitcoinData()
-	txinUtxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(utxoList))
-	for i, utxo := range *txinUtxoList {
-		if len(utxo.Asset) == 0 {
-			(*txinUtxoList)[i].Asset = lbtcAsset
-		}
-	}
 	cfdSighashType := cfd.SigHashType{
 		Type:         sighashType.Type,
 		AnyoneCanPay: sighashType.AnyoneCanPay,
 		Rangeproof:   sighashType.Rangeproof,
 	}
-	sighashHex, err := cfd.CfdGoGetSighash(cfdNetType, tx.Hex, *txinUtxoList, outpoint.Txid, outpoint.Vout, &cfdSighashType, pubkey, script, nil, nil, nil)
+	sighashHex, err := cfd.CfdGoGetSighash(cfdNetType, tx.Hex, txinUtxoList, outpoint.Txid, outpoint.Vout, &cfdSighashType, pubkey, script, nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 	return types.NewByteDataFromHexIgnoreError(sighashHex), nil
 }
 
+func (t *ConfidentialTxApiImpl) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error) {
+	if err := t.validConfig(); err != nil {
+		return nil, err
+	}
+	utxoMap := make(map[types.OutPoint]*types.ElementsUtxoData, len(*utxoList))
+	for _, utxo := range *utxoList {
+		utxoMap[utxo.OutPoint] = &utxo
+	}
+
+	_, cfdTxins, _, err := cfd.GetConfidentialTxData(tx.Hex, false)
+	if err != nil {
+		return nil, err
+	}
+	txinUtxos := make([]types.ElementsUtxoData, len(cfdTxins))
+	for i, txin := range cfdTxins {
+		outpoint := types.OutPoint{Txid: txin.OutPoint.Txid, Vout: txin.OutPoint.Vout}
+		utxo, ok := utxoMap[outpoint]
+		if !ok {
+			return nil, fmt.Errorf("CFD Error: txin is not found on utxoList")
+		}
+		txinUtxos[i] = *utxo
+	}
+	return txinUtxos, nil
+}
+
 // GetAll ...
 func (t *ConfidentialTxApiImpl) GetAll(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
 	if err := t.validConfig(); err != nil {
-		return data, txinList, txoutList, err
+		return nil, nil, nil, err
 	}
 	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxData(tx.Hex, hasWitness)
 	if err != nil {

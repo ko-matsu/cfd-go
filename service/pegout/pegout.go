@@ -453,16 +453,7 @@ func (p *PegoutService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
 	sighashType := types.NewSigHashType(cfdSighashType)
-	utxoList := []types.UtxoData{
-		{
-			Txid:             utxoData.OutPoint.Txid,
-			Vout:             utxoData.OutPoint.Vout,
-			Amount:           utxoData.Amount,
-			AmountCommitment: utxoData.AmountCommitment,
-			Descriptor:       utxoData.Descriptor,
-			Asset:            utxoData.Asset,
-		},
-	}
+	utxoList := []types.ElementsUtxoData{*utxoData}
 	sighash, err := txApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout decode signature error")

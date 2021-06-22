@@ -116,16 +116,8 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	assert.Equal(t, pegoutAddr.Address, pegoutAddress.Address)
 
 	// get sighash
-	signUtxos := []types.UtxoData{
-		{
-			Txid:             utxos[0].OutPoint.Txid,
-			Vout:             utxos[0].OutPoint.Vout,
-			Amount:           utxos[0].Amount,
-			Asset:            utxos[0].Asset,
-			Descriptor:       utxos[0].Descriptor,
-			AmountCommitment: utxos[0].AmountCommitment,
-		},
-	}
+	signUtxos, err := txApi.FilterUtxoByTxInList(tx, &utxos)
+	assert.NoError(t, err)
 	utxoDesc := &types.Descriptor{OutputDescriptor: signUtxos[0].Descriptor}
 	sighash, err := txApi.GetSighash(tx, &utxos[0].OutPoint, types.SigHashTypeAll, &signUtxos)
 	assert.NoError(t, err)
@@ -251,16 +243,8 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 	assert.Equal(t, pegoutAddr.Address, pegoutAddress.Address)
 
 	// get sighash
-	signUtxos := []types.UtxoData{
-		{
-			Txid:             utxos[0].OutPoint.Txid,
-			Vout:             utxos[0].OutPoint.Vout,
-			Amount:           utxos[0].Amount,
-			Asset:            utxos[0].Asset,
-			Descriptor:       utxos[0].Descriptor,
-			AmountCommitment: utxos[0].AmountCommitment,
-		},
-	}
+	signUtxos, err := txApi.FilterUtxoByTxInList(tx, &utxos)
+	assert.NoError(t, err)
 	utxoDesc := &types.Descriptor{OutputDescriptor: signUtxos[0].Descriptor}
 	sighash, err := txApi.GetSighash(tx, &utxos[0].OutPoint, types.SigHashTypeAll, &signUtxos)
 	assert.NoError(t, err)
@@ -395,16 +379,8 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	assert.Equal(t, pegoutAddr.Address, pegoutAddress.Address)
 
 	// get sighash
-	signUtxos := []types.UtxoData{
-		{
-			Txid:             utxos[0].OutPoint.Txid,
-			Vout:             utxos[0].OutPoint.Vout,
-			Amount:           utxos[0].Amount,
-			Asset:            utxos[0].Asset,
-			Descriptor:       utxos[0].Descriptor,
-			AmountCommitment: utxos[0].AmountCommitment,
-		},
-	}
+	signUtxos, err := txApi.FilterUtxoByTxInList(tx, &utxos)
+	assert.NoError(t, err)
 	utxoDesc := &types.Descriptor{OutputDescriptor: signUtxos[0].Descriptor}
 	sighash, err := txApi.GetSighash(tx, &utxos[0].OutPoint, types.SigHashTypeAll, &signUtxos)
 	assert.NoError(t, err)

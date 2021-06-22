@@ -145,10 +145,12 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.Equal(t, 3, len(outList))
 
 	// sign
-	peginUtxos := []types.UtxoData{
+	peginUtxos := []types.ElementsUtxoData{
 		{
-			Txid:       peginOutPoint.Txid,
-			Vout:       peginOutPoint.Vout,
+			OutPoint: types.OutPoint{
+				Txid: peginOutPoint.Txid,
+				Vout: peginOutPoint.Vout,
+			},
 			Amount:     peginAmount,
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},
@@ -368,10 +370,12 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Equal(t, 3, len(outList))
 
 	// create signature
-	peginUtxos := []types.UtxoData{
+	peginUtxos := []types.ElementsUtxoData{
 		{
-			Txid:       peginOutPoint.Txid,
-			Vout:       peginOutPoint.Vout,
+			OutPoint: types.OutPoint{
+				Txid: peginOutPoint.Txid,
+				Vout: peginOutPoint.Vout,
+			},
 			Amount:     peginAmount,
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},
