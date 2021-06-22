@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
-	config "github.com/cryptogarageinc/cfd-go/config"
+	"github.com/cryptogarageinc/cfd-go/config"
 	types "github.com/cryptogarageinc/cfd-go/types"
 )
 
@@ -13,6 +13,8 @@ import (
 // -------------------------------------
 
 type BlockApi interface {
+	// WithConfig This function set a configuration.
+	WithConfig(conf config.CfdConfig) (obj *BlockApiImpl, err error)
 	GetHeaderData(block *types.Block) (blockHash string, header *types.BlockHeader, err error)
 	GetTxCount(block *types.Block) (count uint32, err error)
 	GetTxidList(block *types.Block) (txidList []string, err error)
@@ -21,7 +23,13 @@ type BlockApi interface {
 }
 
 func NewBlockApi() *BlockApiImpl {
-	return &BlockApiImpl{}
+	cfdConfig := config.GetCurrentCfdConfig()
+	api := BlockApiImpl{}
+	if cfdConfig.Network.Valid() {
+		network := cfdConfig.Network.ToBitcoinType()
+		api.network = &network
+	}
+	return &api
 }
 
 // -------------------------------------
@@ -30,7 +38,17 @@ func NewBlockApi() *BlockApiImpl {
 
 // BlockApiImpl The bitcoin block utility.
 type BlockApiImpl struct {
-	Network *types.NetworkType
+	network *types.NetworkType
+}
+
+// WithConfig This function set a configuration.
+func (p *BlockApiImpl) WithConfig(conf config.CfdConfig) (obj *BlockApiImpl, err error) {
+	if !conf.Network.Valid() {
+		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+	}
+	network := conf.Network.ToBitcoinType()
+	p.network = &network
+	return p, nil
 }
 
 // GetHeaderData ...
@@ -38,7 +56,7 @@ func (b *BlockApiImpl) GetHeaderData(block *types.Block) (blockHash string, head
 	if err = b.validConfig(); err != nil {
 		return "", nil, err
 	}
-	hash, cfdHeader, err := cfd.CfdGoGetBlockHeaderData(b.Network.ToCfdValue(), block.Hex)
+	hash, cfdHeader, err := cfd.CfdGoGetBlockHeaderData(b.network.ToCfdValue(), block.Hex)
 	if err != nil {
 		return "", nil, err
 	}
@@ -57,7 +75,7 @@ func (b *BlockApiImpl) GetTxCount(block *types.Block) (count uint32, err error) 
 	if err = b.validConfig(); err != nil {
 		return 0, err
 	}
-	return cfd.CfdGoGetTxCountInBlock(b.Network.ToCfdValue(), block.Hex)
+	return cfd.CfdGoGetTxCountInBlock(b.network.ToCfdValue(), block.Hex)
 }
 
 // GetTxidList ...
@@ -65,7 +83,7 @@ func (b *BlockApiImpl) GetTxidList(block *types.Block) (txidList []string, err e
 	if err = b.validConfig(); err != nil {
 		return nil, err
 	}
-	return cfd.CfdGoGetTxidListFromBlock(b.Network.ToCfdValue(), block.Hex)
+	return cfd.CfdGoGetTxidListFromBlock(b.network.ToCfdValue(), block.Hex)
 }
 
 // GetTransactionData ...
@@ -73,7 +91,7 @@ func (b *BlockApiImpl) GetTransactionData(block *types.Block, txid string) (tx *
 	if err = b.validConfig(); err != nil {
 		return nil, nil, err
 	}
-	txHex, proof, err := cfd.CfdGoGetTransactionDataFromBlock(b.Network.ToCfdValue(), block.Hex, txid)
+	txHex, proof, err := cfd.CfdGoGetTransactionDataFromBlock(b.network.ToCfdValue(), block.Hex, txid)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -87,25 +105,14 @@ func (b *BlockApiImpl) ExistTxid(block *types.Block, txid string) (exist bool, e
 	if err = b.validConfig(); err != nil {
 		return false, err
 	}
-	return cfd.CfdGoExistTxidInBlock(b.Network.ToCfdValue(), block.Hex, txid)
+	return cfd.CfdGoExistTxidInBlock(b.network.ToCfdValue(), block.Hex, txid)
 }
 
 // validConfig ...
 func (b *BlockApiImpl) validConfig() error {
-	if b.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		if cfdConfig.Network.IsElements() {
-			netType := cfdConfig.Network.ToBitcoinType()
-			b.Network = &netType
-		} else {
-			netType := cfdConfig.Network
-			b.Network = &netType
-		}
-	}
-	if !b.Network.IsBitcoin() {
+	if b.network == nil {
+		return fmt.Errorf("CFD Error: NetworkType not set")
+	} else if !b.network.IsBitcoin() {
 		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
 	}
 	return nil

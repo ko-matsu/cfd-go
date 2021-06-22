@@ -13,6 +13,8 @@ import (
 // -------------------------------------
 
 type AddressApi interface {
+	// WithConfig This function set a configuration.
+	WithConfig(conf config.CfdConfig) (obj *AddressApiImpl, err error)
 	ParseAddress(addressString string) (address *types.Address, err error)
 	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
 	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
@@ -22,7 +24,13 @@ type AddressApi interface {
 }
 
 func NewAddressApi() *AddressApiImpl {
-	return &AddressApiImpl{}
+	cfdConfig := config.GetCurrentCfdConfig()
+	api := AddressApiImpl{}
+	if cfdConfig.Network.Valid() {
+		network := cfdConfig.Network
+		api.network = &network
+	}
+	return &api
 }
 
 // -------------------------------------
@@ -31,7 +39,17 @@ func NewAddressApi() *AddressApiImpl {
 
 // AddressApiImpl ...
 type AddressApiImpl struct {
-	Network *types.NetworkType
+	network *types.NetworkType
+}
+
+// WithConfig This function set a configuration.
+func (p *AddressApiImpl) WithConfig(conf config.CfdConfig) (obj *AddressApiImpl, err error) {
+	if !conf.Network.Valid() {
+		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+	}
+	network := conf.Network
+	p.network = &network
+	return p, nil
 }
 
 // ParseAddress ...
@@ -52,13 +70,13 @@ func (u *AddressApiImpl) CreateByPubkey(pubkey *types.Pubkey, addressType types.
 	if err = u.validConfig(); err != nil {
 		return nil, err
 	}
-	addr, _, _, err := cfd.CfdGoCreateAddress(addressType.ToHashType().ToCfdValue(), pubkey.Hex, "", u.Network.ToCfdValue())
+	addr, _, _, err := cfd.CfdGoCreateAddress(addressType.ToHashType().ToCfdValue(), pubkey.Hex, "", u.network.ToCfdValue())
 	if err != nil {
 		return nil, err
 	}
 	return &types.Address{
 		Address: addr,
-		Network: *u.Network,
+		Network: *u.network,
 		Type:    addressType,
 	}, nil
 }
@@ -68,13 +86,13 @@ func (u *AddressApiImpl) CreateByScript(redeemScript *types.Script, addressType 
 	if err = u.validConfig(); err != nil {
 		return nil, err
 	}
-	addr, _, _, err := cfd.CfdGoCreateAddress(addressType.ToHashType().ToCfdValue(), "", redeemScript.ToHex(), u.Network.ToCfdValue())
+	addr, _, _, err := cfd.CfdGoCreateAddress(addressType.ToHashType().ToCfdValue(), "", redeemScript.ToHex(), u.network.ToCfdValue())
 	if err != nil {
 		return nil, err
 	}
 	return &types.Address{
 		Address: addr,
-		Network: *u.Network,
+		Network: *u.network,
 		Type:    addressType,
 	}, nil
 }
@@ -88,7 +106,7 @@ func (u *AddressApiImpl) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireN
 	for i := 0; i < len(*pubkeys); i++ {
 		pubkeyList[i] = (*pubkeys)[i].Hex
 	}
-	addr, script, witnessScript, err := cfd.CfdGoCreateMultisigScript(u.Network.ToCfdValue(), addressType.ToHashType().ToCfdValue(), pubkeyList, requireNum)
+	addr, script, witnessScript, err := cfd.CfdGoCreateMultisigScript(u.network.ToCfdValue(), addressType.ToHashType().ToCfdValue(), pubkeyList, requireNum)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -99,7 +117,7 @@ func (u *AddressApiImpl) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireN
 	}
 	return &types.Address{
 		Address: addr,
-		Network: *u.Network,
+		Network: *u.network,
 		Type:    addressType,
 	}, redeemScript, nil
 }
@@ -110,13 +128,13 @@ func (u *AddressApiImpl) GetPeginAddressByPubkey(addressType types.AddressType, 
 		return nil, nil, err
 	}
 
-	addr, script, _, err := cfd.GetPeginAddress(u.Network.ToBitcoinType().ToCfdValue(), fedpegScript, addressType.ToCfdValue(), pubkey, "")
+	addr, script, _, err := cfd.GetPeginAddress(u.network.ToBitcoinType().ToCfdValue(), fedpegScript, addressType.ToCfdValue(), pubkey, "")
 	if err != nil {
 		return nil, nil, err
 	}
 	peginAddress = &types.Address{
 		Address: addr,
-		Network: u.Network.ToBitcoinType(),
+		Network: u.network.ToBitcoinType(),
 		Type:    addressType,
 	}
 	claimScript = types.NewScriptFromHexIgnoreError(script)
@@ -127,15 +145,17 @@ func (u *AddressApiImpl) GetPeginAddressByPubkey(addressType types.AddressType, 
 func (u *AddressApiImpl) GetPegoutAddress(addressType types.AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *types.Address, baseDescriptor *string, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, nil, err
+	} else if !u.network.IsElements() {
+		return nil, nil, fmt.Errorf("CFD Error: GetPegoutAddress need elements network type")
 	}
 
-	addr, desc, err := cfd.GetPegoutAddress(u.Network.ToBitcoinType().ToCfdValue(), u.Network.ToCfdValue(), descriptorOrXpub, bip32Counter, addressType.ToCfdValue())
+	addr, desc, err := cfd.GetPegoutAddress(u.network.ToBitcoinType().ToCfdValue(), u.network.ToCfdValue(), descriptorOrXpub, bip32Counter, addressType.ToCfdValue())
 	if err != nil {
 		return nil, nil, err
 	}
 	pegoutAddress = &types.Address{
 		Address: addr,
-		Network: u.Network.ToBitcoinType(),
+		Network: u.network.ToBitcoinType(),
 		Type:    addressType,
 	}
 	baseDescriptor = &desc
@@ -144,13 +164,13 @@ func (u *AddressApiImpl) GetPegoutAddress(addressType types.AddressType, descrip
 
 // validConfig ...
 func (u *AddressApiImpl) validConfig() error {
-	if u.Network == nil {
+	if u.network == nil {
 		cfdConfig := config.GetCurrentCfdConfig()
 		if !cfdConfig.Network.Valid() {
 			return fmt.Errorf("CFD Error: NetworkType not set")
 		}
 		netType := cfdConfig.Network
-		u.Network = &netType
+		u.network = &netType
 	}
 	return nil
 }

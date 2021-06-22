@@ -11,6 +11,16 @@ import (
 	"github.com/cryptogarageinc/cfd-go/types"
 )
 
+func NewDescriptorApi() *DescriptorApiImpl {
+	cfdConfig := config.GetCurrentCfdConfig()
+	api := DescriptorApiImpl{}
+	if cfdConfig.Network.Valid() {
+		network := cfdConfig.Network
+		api.network = &network
+	}
+	return &api
+}
+
 // -------------------------------------
 // Descriptor
 // -------------------------------------
@@ -18,7 +28,17 @@ import (
 // Descriptor This struct use for the output descriptor.
 type DescriptorApiImpl struct {
 	// Network Type
-	Network *types.NetworkType
+	network *types.NetworkType
+}
+
+// WithConfig This function set a configuration.
+func (p *DescriptorApiImpl) WithConfig(conf config.CfdConfig) (obj *DescriptorApiImpl, err error) {
+	if !conf.Network.Valid() {
+		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+	}
+	network := conf.Network.ToBitcoinType()
+	p.network = &network
+	return p, nil
 }
 
 // NewDescriptorFromAddress This function return a Descriptor from pubkey.
@@ -76,13 +96,8 @@ func (d *DescriptorApiImpl) NewDescriptorFromAddress(address string) *types.Desc
 }
 
 func (d *DescriptorApiImpl) validConfig() error {
-	if d.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		netType := cfdConfig.Network
-		d.Network = &netType
+	if d.network == nil {
+		return fmt.Errorf("CFD Error: NetworkType not set")
 	}
 	return nil
 }
@@ -92,7 +107,7 @@ func (d *DescriptorApiImpl) Parse(descriptor *types.Descriptor) (data *types.Des
 	if err = d.validConfig(); err != nil {
 		return data, descriptorDataList, multisigList, err
 	}
-	cfdData, cfdDescDataList, cfdMultisigs, err := cfd.CfdGoParseDescriptorData(descriptor.OutputDescriptor, d.Network.ToCfdValue(), "")
+	cfdData, cfdDescDataList, cfdMultisigs, err := cfd.CfdGoParseDescriptorData(descriptor.OutputDescriptor, d.network.ToCfdValue(), "")
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -104,7 +119,7 @@ func (d *DescriptorApiImpl) ParseWithDerivationPath(descriptor *types.Descriptor
 	if err = d.validConfig(); err != nil {
 		return data, descriptorDataList, multisigList, err
 	}
-	cfdData, cfdDescDataList, cfdMultisigs, err := cfd.CfdGoParseDescriptorData(descriptor.OutputDescriptor, d.Network.ToCfdValue(), bip32DerivationPath)
+	cfdData, cfdDescDataList, cfdMultisigs, err := cfd.CfdGoParseDescriptorData(descriptor.OutputDescriptor, d.network.ToCfdValue(), bip32DerivationPath)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -116,7 +131,7 @@ func (d *DescriptorApiImpl) GetChecksum(descriptor *types.Descriptor) (descripto
 	if err = d.validConfig(); err != nil {
 		return "", err
 	}
-	return cfd.CfdGoGetDescriptorChecksum(d.Network.ToCfdValue(), descriptor.OutputDescriptor)
+	return cfd.CfdGoGetDescriptorChecksum(d.network.ToCfdValue(), descriptor.OutputDescriptor)
 }
 
 func convertFromCfd(cfdData *cfd.CfdDescriptorData, cfdDescriptorDataList []cfd.CfdDescriptorData, cfdMultisigList []cfd.CfdDescriptorKeyData) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {

@@ -15,6 +15,8 @@ import (
 // -------------------------------------
 
 type TransactionApi interface {
+	// WithConfig This function set a configuration.
+	WithConfig(conf config.CfdConfig) (obj *TransactionApiImpl, err error)
 	Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error)
 	Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error
 	AddPubkeySign(tx *types.Transaction, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
@@ -26,7 +28,13 @@ type TransactionApi interface {
 }
 
 func NewTransactionApi() *TransactionApiImpl {
-	return &TransactionApiImpl{}
+	cfdConfig := config.GetCurrentCfdConfig()
+	api := TransactionApiImpl{}
+	if cfdConfig.Network.Valid() {
+		network := cfdConfig.Network.ToBitcoinType()
+		api.network = &network
+	}
+	return &api
 }
 
 // -------------------------------------
@@ -34,14 +42,24 @@ func NewTransactionApi() *TransactionApiImpl {
 // -------------------------------------
 
 type TransactionApiImpl struct {
-	Network *types.NetworkType
+	network *types.NetworkType
 }
 
-func (u *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
-	if err = u.validConfig(); err != nil {
+// WithConfig This function set a configuration.
+func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig) (obj *TransactionApiImpl, err error) {
+	if !conf.Network.Valid() {
+		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+	}
+	network := conf.Network.ToBitcoinType()
+	p.network = &network
+	return p, nil
+}
+
+func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
+	if err = t.validConfig(); err != nil {
 		return nil, err
 	}
-	txHandle, err := cfd.InitializeTransaction(u.Network.ToCfdValue(), version, locktime)
+	txHandle, err := cfd.InitializeTransaction(t.network.ToCfdValue(), version, locktime)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +80,7 @@ func (t *TransactionApiImpl) Add(tx *types.Transaction, txinList *[]types.InputT
 	if err := t.validConfig(); err != nil {
 		return err
 	}
-	txHandle, err := cfd.InitializeTransactionByHex(t.Network.ToCfdValue(), tx.Hex)
+	txHandle, err := cfd.InitializeTransactionByHex(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return err
 	}
@@ -96,7 +114,7 @@ func (t *TransactionApiImpl) AddPubkeySign(tx *types.Transaction, outpoint *type
 		SighashType:         int(cfd.KCfdSigHashAll),
 		SighashAnyoneCanPay: false,
 	}
-	txHex, err := cfd.CfdGoAddTxPubkeyHashSign(t.Network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), pubkey.Hex, signParam)
+	txHex, err := cfd.CfdGoAddTxPubkeyHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), pubkey.Hex, signParam)
 	if err == nil {
 		tx.Hex = txHex
 	}
@@ -109,7 +127,10 @@ func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, ou
 	if err = t.validConfig(); err != nil {
 		return err
 	}
-	descUtil := descriptor.DescriptorApiImpl{Network: t.Network}
+	descUtil, err := descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network})
+	if err != nil {
+		return err
+	}
 	data, _, _, err := descUtil.Parse(outputDescriptor)
 	if err != nil {
 		return err
@@ -123,12 +144,12 @@ func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, ou
 	if data.KeyType == int(cfd.KCfdDescriptorKeyPublic) {
 		pubkey.Hex = data.Pubkey
 	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.Network.ToBitcoinType().ToCfdValue())
+		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.network.ToBitcoinType().ToCfdValue())
 		if err != nil {
 			return err
 		}
 	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32Priv) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.Network.ToBitcoinType().ToCfdValue())
+		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.network.ToBitcoinType().ToCfdValue())
 		if err != nil {
 			return err
 		}
@@ -149,7 +170,7 @@ func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *ty
 		Rangeproof:   sighashType.Rangeproof,
 	}
 	txinUtxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(utxoList))
-	txHex, err := cfd.CfdGoAddTxSignWithPrivkeyByUtxoList(t.Network.ToCfdValue(), tx.Hex, *txinUtxoList, outpoint.Txid, outpoint.Vout, privkey.Hex, &cfdSighashType, true, nil, nil)
+	txHex, err := cfd.CfdGoAddTxSignWithPrivkeyByUtxoList(t.network.ToCfdValue(), tx.Hex, *txinUtxoList, outpoint.Txid, outpoint.Vout, privkey.Hex, &cfdSighashType, true, nil, nil)
 	if err == nil {
 		tx.Hex = txHex
 	}
@@ -162,14 +183,14 @@ func (t *TransactionApiImpl) VerifySign(tx *types.Transaction, outpoint *types.O
 		return false, "", err
 	}
 	utxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(txinUtxoList))
-	return cfd.CfdGoVerifySign(t.Network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
+	return cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
 }
 
 func (t *TransactionApiImpl) GetTxid(tx *types.Transaction) string {
 	if err := t.validConfig(); err != nil {
 		return ""
 	}
-	handle, err := cfd.CfdGoInitializeTxDataHandle(t.Network.ToCfdValue(), tx.Hex)
+	handle, err := cfd.CfdGoInitializeTxDataHandle(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return ""
 	}
@@ -186,7 +207,7 @@ func (t *TransactionApiImpl) GetTxOut(tx *types.Transaction, vout uint32) (txout
 	if err := t.validConfig(); err != nil {
 		return nil, err
 	}
-	handle, err := cfd.CfdGoInitializeTxDataHandle(t.Network.ToCfdValue(), tx.Hex)
+	handle, err := cfd.CfdGoInitializeTxDataHandle(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return
 	}
@@ -199,28 +220,17 @@ func (t *TransactionApiImpl) GetTxOut(tx *types.Transaction, vout uint32) (txout
 	}
 	output.Amount = satoshiAmount
 	output.LockingScript = lockingScript
-	addr, tempErr := cfd.CfdGoGetAddressFromLockingScript(lockingScript, t.Network.ToCfdValue())
+	addr, tempErr := cfd.CfdGoGetAddressFromLockingScript(lockingScript, t.network.ToCfdValue())
 	if tempErr == nil {
 		output.Address = addr
 	}
 	return &output, nil
 }
 
-func (u *TransactionApiImpl) validConfig() error {
-	if u.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		if cfdConfig.Network.IsElements() {
-			netType := cfdConfig.Network.ToBitcoinType()
-			u.Network = &netType
-		} else {
-			netType := cfdConfig.Network
-			u.Network = &netType
-		}
-	}
-	if !u.Network.IsBitcoin() {
+func (t *TransactionApiImpl) validConfig() error {
+	if t.network == nil {
+		return fmt.Errorf("CFD Error: NetworkType not set")
+	} else if !t.network.IsBitcoin() {
 		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
 	}
 	return nil

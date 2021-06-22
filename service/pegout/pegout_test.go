@@ -290,10 +290,15 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 
 func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	config.SetCfdConfig(config.CfdConfig{
+		Network:                 types.ElementsRegtest,
+		BitcoinGenesisBlockHash: "000088f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+		BitcoinAssetId:          "0000f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+	})
+	curConfig := config.CfdConfig{
 		Network:                 types.NewNetworkTypeByString("liquidv1"),
 		BitcoinGenesisBlockHash: "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-	})
+	}
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
@@ -301,6 +306,14 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	privkeyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
 	pegoutApi := (Pegout)(NewPegoutService())
+	xprvApi, err := xprvApi.WithConfig(curConfig)
+	assert.NoError(t, err)
+	privkeyApi, err = privkeyApi.WithConfig(curConfig)
+	assert.NoError(t, err)
+	txApi, err = txApi.WithConfig(curConfig)
+	assert.NoError(t, err)
+	pegoutApi, err = pegoutApi.WithConfig(curConfig)
+	assert.NoError(t, err)
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7

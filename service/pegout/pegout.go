@@ -15,6 +15,8 @@ import (
 
 // Pegout This interface defines the API used by the pegout function.
 type Pegout interface {
+	// WithConfig This function set a configuration.
+	WithConfig(conf config.CfdConfig) (obj *PegoutService, err error)
 	// CreateOnlinePrivateKey This function generate random private key for online key.
 	CreateOnlinePrivateKey() (privkey *types.Privkey, err error)
 	// CreatePakEntry This function create the PAK-Entry.
@@ -46,7 +48,30 @@ type Pegout interface {
 
 // NewPegoutService This function returns an object that defines the API for Pegout.
 func NewPegoutService() *PegoutService {
-	return &PegoutService{}
+	cfdConfig := config.GetCurrentCfdConfig()
+	service := PegoutService{}
+	if cfdConfig.Network.Valid() {
+		network := cfdConfig.Network
+		// At this point, we do not check if the network is Elements or not.
+		service.network = &network
+	}
+	if len(cfdConfig.BitcoinAssetId) == 64 {
+		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinAssetId)
+		if err != nil {
+			// unuse
+		} else {
+			service.bitcoinAssetId = &tempBytes
+		}
+	}
+	if len(cfdConfig.BitcoinGenesisBlockHash) == 64 {
+		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinGenesisBlockHash)
+		if err != nil {
+			// unuse
+		} else {
+			service.bitcoinGenesisBlockHash = &tempBytes
+		}
+	}
+	return &service
 }
 
 // -------------------------------------
@@ -55,7 +80,41 @@ func NewPegoutService() *PegoutService {
 
 // PegoutService This struct is implements pegout api.
 type PegoutService struct {
-	Network *types.NetworkType
+	network                 *types.NetworkType
+	bitcoinGenesisBlockHash *types.ByteData
+	bitcoinAssetId          *types.ByteData
+}
+
+// WithConfig This function set a configuration.
+func (p *PegoutService) WithConfig(conf config.CfdConfig) (obj *PegoutService, err error) {
+	if !conf.Network.Valid() {
+		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+	} else if !conf.Network.IsElements() {
+		return p, fmt.Errorf("CFD Error: Network configuration is not elements")
+	}
+	network := conf.Network
+	tempAssetId := p.bitcoinAssetId
+	tempBlockHash := p.bitcoinGenesisBlockHash
+	if len(conf.BitcoinAssetId) != 0 {
+		tempBytes, err := types.NewByteDataFromHex(conf.BitcoinAssetId)
+		if (err != nil) || (len(conf.BitcoinAssetId) != 64) {
+			return p, fmt.Errorf("CFD Error: Invalid BitcoinAssetId configuration")
+		} else {
+			tempAssetId = &tempBytes
+		}
+	}
+	if len(conf.BitcoinGenesisBlockHash) != 0 {
+		tempBytes, err := types.NewByteDataFromHex(conf.BitcoinGenesisBlockHash)
+		if (err != nil) || (len(conf.BitcoinGenesisBlockHash) != 64) {
+			return p, fmt.Errorf("CFD Error: Invalid BitcoinGenesisBlockHash configuration")
+		} else {
+			tempBlockHash = &tempBytes
+		}
+	}
+	p.network = &network
+	p.bitcoinAssetId = tempAssetId
+	p.bitcoinGenesisBlockHash = tempBlockHash
+	return p, nil
 }
 
 // CreateOnlinePrivateKey This function generate random private key for online key.
@@ -63,14 +122,14 @@ func (p *PegoutService) CreateOnlinePrivateKey() (privkey *types.Privkey, err er
 	if err = p.validConfig(); err != nil {
 		return nil, err
 	}
-	_, privkeyHex, wif, err := cfd.CfdGoCreateKeyPair(true, p.Network.ToBitcoinType().ToCfdValue())
+	_, privkeyHex, wif, err := cfd.CfdGoCreateKeyPair(true, p.network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, err
 	}
 	return &types.Privkey{
 		Hex:                privkeyHex,
 		Wif:                wif,
-		Network:            *p.Network,
+		Network:            *p.network,
 		IsCompressedPubkey: true,
 	}, nil
 }
@@ -85,11 +144,11 @@ func (p *PegoutService) CreatePakEntry(
 	}
 	if err = validatePegoutExtPubkey(accountExtPubkey); err != nil {
 		return nil, errors.Wrap(err, "Pegout validate accountExtPubkey error")
-	} else if err = validateOnlinePrivkey(onlinePrivkey, p.Network.ToBitcoinType()); err != nil {
+	} else if err = validateOnlinePrivkey(onlinePrivkey, p.network.ToBitcoinType()); err != nil {
 		return nil, errors.Wrap(err, "Pegout validate onlinePrivkey error")
 	}
 
-	offlinePubkey, err := cfd.CfdGoGetPubkeyFromExtkey(accountExtPubkey.Key, p.Network.ToBitcoinType().ToCfdValue())
+	offlinePubkey, err := cfd.CfdGoGetPubkeyFromExtkey(accountExtPubkey.Key, p.network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegout get pubkey error")
 	}
@@ -141,7 +200,7 @@ func (p *PegoutService) CreatePegoutAddress(
 		return nil, nil, fmt.Errorf("CFD Error: Invalid account index. The hardened index can not used on the pegout")
 	}
 
-	address, _, err := cfd.CfdGoGetPegoutAddress(p.Network.ToBitcoinType().ToCfdValue(), p.Network.ToCfdValue(), accountExtPubkey.Key, addressIndex, addressType.ToCfdValue())
+	address, _, err := cfd.CfdGoGetPegoutAddress(p.network.ToBitcoinType().ToCfdValue(), p.network.ToCfdValue(), accountExtPubkey.Key, addressIndex, addressType.ToCfdValue())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,7 +211,7 @@ func (p *PegoutService) CreatePegoutAddress(
 	}
 	return &types.Address{
 			Address: address,
-			Network: p.Network.ToBitcoinType(),
+			Network: p.network.ToBitcoinType(),
 			Type:    addressType,
 		}, &types.Descriptor{
 			OutputDescriptor: desc,
@@ -168,28 +227,51 @@ func (p *PegoutService) CreatePegoutTransaction(
 	option *types.PegoutTxOption,
 ) (tx *types.ConfidentialTx, pegoutAddress *types.Address, err error) {
 	if err = p.validConfig(); err != nil {
+		return nil, nil, errors.Wrap(err, "Pegout invalid configuration error")
+	}
+	conf := p.getConfig()
+
+	txApi, err := transaction.NewConfidentialTxApi().WithConfig(*conf)
+	if err != nil {
 		return nil, nil, err
 	}
-	assetId := ""
-	cfdConfig := config.GetCurrentCfdConfig()
-	if len(cfdConfig.BitcoinAssetId) == 64 {
-		assetId = cfdConfig.BitcoinAssetId
-	} else {
-		assetId = pegoutData.Asset
+	caApi := address.ConfidentialAddressApiImpl{}
+	btcAddrApi, err := address.NewAddressApi().WithConfig(config.CfdConfig{
+		Network: p.network.ToBitcoinType()})
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// FIXME validation utxoList
 	// FIXME validation pegoutData
-	txApi := transaction.ConfidentialTxApiImpl{Network: p.Network}
-	caApi := address.ConfidentialAddressApiImpl{}
-	addrApi := address.AddressApiImpl{Network: p.Network.ToBitcoinTypePointer()}
+	if pegoutData.PegoutInput == nil {
+		return nil, nil, errors.Wrap(err, "Pegout not set PegoutInput error")
+	}
+	workPegoutData := pegoutData
+	workPegoutInput := *pegoutData.PegoutInput
+	workPegoutData.PegoutInput = &workPegoutInput
+	if len(workPegoutInput.BitcoinGenesisBlockHash) != 64 {
+		if p.bitcoinGenesisBlockHash != nil {
+			workPegoutInput.BitcoinGenesisBlockHash = p.bitcoinGenesisBlockHash.ToHex()
+		} else {
+			return nil, nil, errors.Wrap(err, "Pegout not set BitcoinGenesisBlockHash error")
+		}
+	}
+	if len(workPegoutData.Asset) != 64 {
+		if p.bitcoinAssetId != nil {
+			workPegoutData.Asset = p.bitcoinAssetId.ToHex()
+		} else {
+			return nil, nil, errors.Wrap(err, "Pegout not set PegoutData.Asset error")
+		}
+	}
+	assetId := workPegoutData.Asset
 
 	var changeAddr *types.ConfidentialAddress
 	if changeAddress != nil {
 		changeAddr, err = caApi.Parse(*changeAddress)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Pegout changeAddress error")
-		} else if changeAddr.Network != *p.Network {
+		} else if changeAddr.Network != *p.network {
 			return nil, nil, errors.Wrap(err, "Pegout changeAddress network check error")
 		}
 	}
@@ -212,8 +294,8 @@ func (p *PegoutService) CreatePegoutTransaction(
 	txins := []types.InputConfidentialTxIn{}
 	txouts := make([]types.InputConfidentialTxOut, sendListNum+1)
 	txouts[0].Asset = assetId
-	txouts[0].Amount = pegoutData.Amount
-	txouts[0].PegoutInput = pegoutData.PegoutInput
+	txouts[0].Amount = workPegoutData.Amount
+	txouts[0].PegoutInput = workPegoutData.PegoutInput
 	if sendList != nil {
 		for i, output := range *sendList {
 			txouts[i+1] = output
@@ -226,7 +308,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 	} else if len(pegoutAddrList) != 1 {
 		return nil, nil, errors.Wrap(err, "Pegout CT.Create pegoutAddress error")
 	}
-	pegoutAddress, err = addrApi.ParseAddress(pegoutAddrList[0])
+	pegoutAddress, err = btcAddrApi.ParseAddress(pegoutAddrList[0])
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Pegout parse address error")
 	}
@@ -235,7 +317,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 
 	// 2. add txout by output if single output.
 	if hasAppendDummyOutput {
-		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.Network)
+		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Pegin append dummy output error")
 		}
@@ -271,7 +353,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 	if changeAddress != nil {
 		targetAmounts[0].ReservedAddress = *changeAddress
 	}
-	fundOption := cfd.NewCfdFundRawTxOption(p.Network.ToCfdValue())
+	fundOption := cfd.NewCfdFundRawTxOption(p.network.ToCfdValue())
 	fundOption.FeeAsset = assetId
 	fundOption.EffectiveFeeRate = option.EffectiveFeeRate
 	fundOption.LongTermFeeRate = option.LongTermFeeRate
@@ -280,7 +362,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 	fundOption.KnapsackMinChange = option.KnapsackMinChange
 	fundOption.Exponent = option.Exponent
 	fundOption.MinimumBits = option.MinimumBits
-	outputTx, _, _, err := cfd.CfdGoFundRawTransaction(p.Network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+	outputTx, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "Pegin FundRawTransaction error (tx: %s)", tx.Hex)
 	}
@@ -301,11 +383,11 @@ func (p *PegoutService) CreatePegoutTransaction(
 			}
 		}
 		if !hasAllBlinded {
-			tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.Network)
+			tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "Pegin append dummy output error")
 			}
-			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.Network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "Pegin FundRawTransaction error")
 			}
@@ -354,8 +436,16 @@ func (p *PegoutService) VerifyPubkeySignature(
 		return false, err
 	}
 	// FIXME add validation
-	txApi := transaction.ConfidentialTxApiImpl{Network: p.Network}
-	descApi := descriptor.DescriptorApiImpl{Network: p.Network}
+	txApi, err := transaction.NewConfidentialTxApi().WithConfig(config.CfdConfig{
+		Network: *p.network,
+	})
+	if err != nil {
+		return false, err
+	}
+	descApi, err := descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *p.network})
+	if err != nil {
+		return false, err
+	}
 	pubkeyApi := key.NewPubkeyApi()
 
 	sig, cfdSighashType, _, err := cfd.CfdGoDecodeSignatureFromDer(signature.ToHex())
@@ -389,18 +479,23 @@ func (p *PegoutService) VerifyPubkeySignature(
 }
 
 func (p *PegoutService) validConfig() error {
-	if p.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		netType := cfdConfig.Network
-		p.Network = &netType
-	}
-	if !p.Network.IsElements() {
+	if p.network == nil {
+		return fmt.Errorf("CFD Error: configuration not set")
+	} else if !p.network.IsElements() {
 		return fmt.Errorf("CFD Error: NetworkType is not elements")
 	}
 	return nil
+}
+
+func (p *PegoutService) getConfig() *config.CfdConfig {
+	conf := config.CfdConfig{Network: *p.network}
+	if p.bitcoinAssetId != nil {
+		conf.BitcoinAssetId = p.bitcoinAssetId.ToHex()
+	}
+	if p.bitcoinGenesisBlockHash != nil {
+		conf.BitcoinGenesisBlockHash = p.bitcoinGenesisBlockHash.ToHex()
+	}
+	return &conf
 }
 
 func validateOnlinePrivkey(privkey *types.Privkey, network types.NetworkType) error {
@@ -479,7 +574,7 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 				addrInfo, err := caApi.Parse(txout.Address)
 				if err != nil {
 					return 0, false, 0, errors.Wrapf(err, "Pegout sendList address check error(n: %d)", index)
-				} else if addrInfo.Network != *p.Network {
+				} else if addrInfo.Network != *p.network {
 					return 0, false, 0, errors.Wrapf(err, "Pegout sendList address network check error(n: %d)", index)
 				} else if len(addrInfo.ConfidentialAddress) > 0 {
 					blindOutputCount += 1

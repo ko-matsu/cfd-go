@@ -18,6 +18,8 @@ const (
 )
 
 type ConfidentialTxApi interface {
+	// WithConfig This function set a configuration.
+	WithConfig(conf config.CfdConfig) (obj *ConfidentialTxApiImpl, err error)
 	Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error)
 	Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error
 	Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error
@@ -32,33 +34,86 @@ type ConfidentialTxApi interface {
 }
 
 func NewConfidentialTxApi() *ConfidentialTxApiImpl {
-	return &ConfidentialTxApiImpl{}
-}
-
-// -------------------------------------
-// API struct
-// -------------------------------------
-
-// ConfidentialTxApiImpl Create confidential transaction utility.
-type ConfidentialTxApiImpl struct {
-	Network *types.NetworkType
+	cfdConfig := config.GetCurrentCfdConfig()
+	api := ConfidentialTxApiImpl{}
+	if cfdConfig.Network.Valid() {
+		network := cfdConfig.Network
+		// At this point, we do not check if the network is Elements or not.
+		api.network = &network
+	}
+	if len(cfdConfig.BitcoinAssetId) == 64 {
+		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinAssetId)
+		if err != nil {
+			// unuse
+		} else {
+			api.bitcoinAssetId = &tempBytes
+		}
+	}
+	if len(cfdConfig.BitcoinGenesisBlockHash) == 64 {
+		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinGenesisBlockHash)
+		if err != nil {
+			// unuse
+		} else {
+			api.bitcoinGenesisBlockHash = &tempBytes
+		}
+	}
+	return &api
 }
 
 // -------------------------------------
 // ConfidentialTxApiImpl
 // -------------------------------------
 
-func (u *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
-	if err = u.validConfig(); err != nil {
+// ConfidentialTxApiImpl Create confidential transaction utility.
+type ConfidentialTxApiImpl struct {
+	network                 *types.NetworkType
+	bitcoinGenesisBlockHash *types.ByteData
+	bitcoinAssetId          *types.ByteData
+}
+
+// WithConfig This function set a configuration.
+func (p *ConfidentialTxApiImpl) WithConfig(conf config.CfdConfig) (obj *ConfidentialTxApiImpl, err error) {
+	if !conf.Network.Valid() {
+		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+	} else if !conf.Network.IsElements() {
+		return p, fmt.Errorf("CFD Error: Network configuration is not elements")
+	}
+	network := conf.Network
+	tempAssetId := p.bitcoinAssetId
+	tempBlockHash := p.bitcoinGenesisBlockHash
+	if len(conf.BitcoinAssetId) != 0 {
+		tempBytes, err := types.NewByteDataFromHex(conf.BitcoinAssetId)
+		if (err != nil) || (len(conf.BitcoinAssetId) != 64) {
+			return p, fmt.Errorf("CFD Error: Invalid BitcoinAssetId configuration")
+		} else {
+			tempAssetId = &tempBytes
+		}
+	}
+	if len(conf.BitcoinGenesisBlockHash) != 0 {
+		tempBytes, err := types.NewByteDataFromHex(conf.BitcoinGenesisBlockHash)
+		if (err != nil) || (len(conf.BitcoinGenesisBlockHash) != 64) {
+			return p, fmt.Errorf("CFD Error: Invalid BitcoinGenesisBlockHash configuration")
+		} else {
+			tempBlockHash = &tempBytes
+		}
+	}
+	p.network = &network
+	p.bitcoinAssetId = tempAssetId
+	p.bitcoinGenesisBlockHash = tempBlockHash
+	return p, nil
+}
+
+func (t *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
+	if err = t.validConfig(); err != nil {
 		return nil, err
 	}
-	txHandle, err := cfd.InitializeTransaction(u.Network.ToCfdValue(), version, locktime)
+	txHandle, err := cfd.InitializeTransaction(t.network.ToCfdValue(), version, locktime)
 	if err != nil {
 		return nil, err
 	}
 	defer cfd.FreeTransactionHandle(txHandle)
 
-	if err = addConidentialTx(txHandle, *u.Network, locktime, txinList, txoutList, pegoutAddressList); err != nil {
+	if err = t.addConidentialTx(txHandle, *t.network, locktime, txinList, txoutList, pegoutAddressList); err != nil {
 		return nil, err
 	}
 
@@ -75,26 +130,31 @@ func (u *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList
 	return &types.ConfidentialTx{Hex: txHex}, nil
 }
 
-func (u *ConfidentialTxApiImpl) validConfig() error {
-	if u.Network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		netType := cfdConfig.Network
-		u.Network = &netType
-	}
-	if !u.Network.IsElements() {
+func (t *ConfidentialTxApiImpl) validConfig() error {
+	if t.network == nil {
+		return fmt.Errorf("CFD Error: NetworkType not set")
+	} else if !t.network.IsElements() {
 		return fmt.Errorf("CFD Error: NetworkType is not elements")
 	}
 	return nil
+}
+
+func (p *ConfidentialTxApiImpl) getConfig() *config.CfdConfig {
+	conf := config.CfdConfig{Network: *p.network}
+	if p.bitcoinAssetId != nil {
+		conf.BitcoinAssetId = p.bitcoinAssetId.ToHex()
+	}
+	if p.bitcoinGenesisBlockHash != nil {
+		conf.BitcoinGenesisBlockHash = p.bitcoinGenesisBlockHash.ToHex()
+	}
+	return &conf
 }
 
 func (t *ConfidentialTxApiImpl) Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
 	if err := t.validConfig(); err != nil {
 		return err
 	}
-	txHandle, err := cfd.InitializeTransactionByHex(t.Network.ToCfdValue(), tx.Hex)
+	txHandle, err := cfd.InitializeTransactionByHex(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return err
 	}
@@ -105,7 +165,7 @@ func (t *ConfidentialTxApiImpl) Add(tx *types.ConfidentialTx, txinList *[]types.
 		return err
 	}
 
-	if err = addConidentialTx(txHandle, *t.Network, data.LockTime, txinList, txoutList, pegoutAddressList); err != nil {
+	if err = t.addConidentialTx(txHandle, *t.network, data.LockTime, txinList, txoutList, pegoutAddressList); err != nil {
 		return err
 	}
 
@@ -129,16 +189,15 @@ func (t *ConfidentialTxApiImpl) Add(tx *types.ConfidentialTx, txinList *[]types.
 
 // Blind ...
 func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error {
-	lbtcAsset, _ := getDefaultBitcoinData()
-
 	var err error
 	if err = t.validConfig(); err != nil {
 		return err
 	}
+	lbtcAsset, _ := t.getDefaultBitcoinData()
 
 	txHex := tx.Hex
 	if option != nil && option.AppendDummyOutput {
-		txHex, err = appendDummyOutput(txHex, *t.Network, &txinList)
+		txHex, err = appendDummyOutput(txHex, *t.network, &txinList)
 		if err != nil {
 			return err
 		}
@@ -184,7 +243,7 @@ func (t *ConfidentialTxApiImpl) AddPubkeySign(tx *types.ConfidentialTx, outpoint
 		SighashType:         int(cfd.KCfdSigHashAll),
 		SighashAnyoneCanPay: false,
 	}
-	txHex, err := cfd.CfdGoAddTxPubkeyHashSign(t.Network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), pubkey.Hex, signParam)
+	txHex, err := cfd.CfdGoAddTxPubkeyHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), pubkey.Hex, signParam)
 	if err != nil {
 		return errors.Wrap(err, "CT.AddPubkeySign error")
 	}
@@ -198,7 +257,10 @@ func (t *ConfidentialTxApiImpl) AddPubkeySignByDescriptor(tx *types.Confidential
 	if err = t.validConfig(); err != nil {
 		return err
 	}
-	descUtil := descriptor.DescriptorApiImpl{Network: t.Network}
+	descUtil, err := descriptor.NewDescriptorApi().WithConfig(*t.getConfig())
+	if err != nil {
+		return err
+	}
 	data, _, _, err := descUtil.Parse(outputDescriptor)
 	if err != nil {
 		return err
@@ -212,12 +274,12 @@ func (t *ConfidentialTxApiImpl) AddPubkeySignByDescriptor(tx *types.Confidential
 	if data.KeyType == int(cfd.KCfdDescriptorKeyPublic) {
 		pubkey.Hex = data.Pubkey
 	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.Network.ToBitcoinType().ToCfdValue())
+		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.network.ToBitcoinType().ToCfdValue())
 		if err != nil {
 			return err
 		}
 	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32Priv) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.Network.ToBitcoinType().ToCfdValue())
+		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.network.ToBitcoinType().ToCfdValue())
 		if err != nil {
 			return err
 		}
@@ -232,14 +294,14 @@ func (t *ConfidentialTxApiImpl) VerifySign(tx *types.ConfidentialTx, outpoint *t
 	if err := t.validConfig(); err != nil {
 		return false, "", err
 	}
-	lbtcAsset, _ := getDefaultBitcoinData()
+	lbtcAsset, _ := t.getDefaultBitcoinData()
 	utxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(txinUtxoList))
 	for i, utxo := range *utxoList {
 		if len(utxo.Asset) == 0 {
 			(*utxoList)[i].Asset = lbtcAsset
 		}
 	}
-	return cfd.CfdGoVerifySign(t.Network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
+	return cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
 }
 
 // GetTxid ...
@@ -247,7 +309,7 @@ func (t *ConfidentialTxApiImpl) GetTxid(tx *types.ConfidentialTx) string {
 	if err := t.validConfig(); err != nil {
 		return ""
 	}
-	handle, err := cfd.CfdGoInitializeTxDataHandle(t.Network.ToCfdValue(), tx.Hex)
+	handle, err := cfd.CfdGoInitializeTxDataHandle(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return ""
 	}
@@ -265,12 +327,15 @@ func (t *ConfidentialTxApiImpl) GetPegoutAddress(tx *types.ConfidentialTx, index
 	if err := t.validConfig(); err != nil {
 		return nil, false, err
 	}
-	addr, isPegoutOutput, err := cfd.CfdGoGetPegoutAddressFromTransaction(t.Network.ToCfdValue(), tx.Hex, index, t.Network.ToBitcoinType().ToCfdValue())
+	addr, isPegoutOutput, err := cfd.CfdGoGetPegoutAddressFromTransaction(t.network.ToCfdValue(), tx.Hex, index, t.network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, false, err
 	}
-	btcNetwork := t.Network.ToBitcoinType()
-	addrUtil := address.AddressApiImpl{Network: &btcNetwork}
+	addrUtil, err := address.NewAddressApi().WithConfig(config.CfdConfig{
+		Network: t.network.ToBitcoinType()})
+	if err != nil {
+		return nil, false, err
+	}
 	pegoutAddress, err = addrUtil.ParseAddress(addr)
 	if err != nil {
 		return nil, false, err
@@ -283,8 +348,11 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 	if err := t.validConfig(); err != nil {
 		return nil, err
 	}
-	cfdNetType := t.Network.ToCfdValue()
-	descUtil := descriptor.DescriptorApiImpl{Network: t.Network}
+	cfdNetType := t.network.ToCfdValue()
+	descUtil, err := descriptor.NewDescriptorApi().WithConfig(*t.getConfig())
+	if err != nil {
+		return nil, err
+	}
 	var script *cfd.Script
 	var pubkey *cfd.ByteData
 	for _, utxo := range *utxoList {
@@ -304,13 +372,13 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 			if data.KeyType == int(cfd.KCfdDescriptorKeyPublic) {
 				pubkey = cfd.NewByteDataFromHexIgnoreError(data.Pubkey)
 			} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32) {
-				tempPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.Network.ToBitcoinType().ToCfdValue())
+				tempPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.network.ToBitcoinType().ToCfdValue())
 				if err != nil {
 					return nil, err
 				}
 				pubkey = cfd.NewByteDataFromHexIgnoreError(tempPubkey)
 			} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32Priv) {
-				tempPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.Network.ToBitcoinType().ToCfdValue())
+				tempPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.network.ToBitcoinType().ToCfdValue())
 				if err != nil {
 					return nil, err
 				}
@@ -323,7 +391,7 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 			break
 		}
 	}
-	lbtcAsset, _ := getDefaultBitcoinData()
+	lbtcAsset, _ := t.getDefaultBitcoinData()
 	txinUtxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(utxoList))
 	for i, utxo := range *txinUtxoList {
 		if len(utxo.Asset) == 0 {
@@ -430,15 +498,9 @@ func convertListData(cfdData *cfd.TransactionData, cfdTxinList []cfd.Confidentia
 // FIXME need implements
 //}
 
-func getDefaultBitcoinData() (lbtcAssetId, genesisBlockHash string) {
-	cfdConfig := config.GetCurrentCfdConfig()
-	if len(cfdConfig.BitcoinGenesisBlockHash) == 64 {
-		genesisBlockHash = cfdConfig.BitcoinGenesisBlockHash
-	}
-	if len(cfdConfig.BitcoinAssetId) == 64 {
-		lbtcAssetId = cfdConfig.BitcoinAssetId
-	}
-	return lbtcAssetId, genesisBlockHash
+func (t *ConfidentialTxApiImpl) getDefaultBitcoinData() (lbtcAssetId, genesisBlockHash string) {
+	conf := t.getConfig()
+	return conf.BitcoinAssetId, conf.BitcoinGenesisBlockHash
 }
 
 // appendDummyOutput ...
@@ -497,11 +559,13 @@ func appendDummyOutput(txHex string, network types.NetworkType, txinList *[]type
 }
 
 // addConidentialTx ...
-func addConidentialTx(txHandle uintptr, network types.NetworkType, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
-	lbtcAsset, bitcoinGenesisBlockHash := getDefaultBitcoinData()
-	btcTxApi := TransactionApiImpl{Network: network.ToBitcoinTypePointer()}
+func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types.NetworkType, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
+	lbtcAsset, bitcoinGenesisBlockHash := t.getDefaultBitcoinData()
+	btcTxApi, err := NewTransactionApi().WithConfig(*t.getConfig())
+	if err != nil {
+		return err
+	}
 
-	var err error
 	if txinList != nil {
 		var bitcoinTxOut *types.TxOut
 		for i := 0; i < len(*txinList); i++ {
