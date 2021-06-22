@@ -11,6 +11,46 @@ import (
 	"github.com/cryptogarageinc/cfd-go/types"
 )
 
+type DescriptorApi interface {
+	// WithConfig This function set a configuration.
+	WithConfig(conf config.CfdConfig) (obj *DescriptorApiImpl, err error)
+	// NewDescriptorFromAddress This function return a Descriptor from pubkey.
+	NewDescriptorFromPubkey(
+		hashType types.HashType, pubkey *types.Pubkey) *types.Descriptor
+	// NewDescriptorFromMultisig This function return a Descriptor from multisig.
+	NewDescriptorFromMultisig(
+		hashType types.HashType,
+		pubkeys []string,
+		requireNum int,
+	) *types.Descriptor
+	// NewDescriptor This function return a Descriptor.
+	NewDescriptorFromString(descriptor string) *types.Descriptor
+	// NewDescriptorFromLockingScript This function return a Descriptor from locking script.
+	NewDescriptorFromLockingScript(lockingScript string) *types.Descriptor
+	// NewDescriptorFromAddress This function return a Descriptor from address.
+	NewDescriptorFromAddress(address string) *types.Descriptor
+	// Parse This function return a Descriptor parsing data.
+	Parse(descriptor *types.Descriptor) (
+		data *types.DescriptorData,
+		descriptorDataList []types.DescriptorData,
+		multisigList []types.DescriptorKeyData,
+		err error,
+	)
+	// ParseWithDerivationPath This function return a Descriptor parsing data.
+	ParseWithDerivationPath(
+		descriptor *types.Descriptor,
+		bip32DerivationPath string,
+	) (
+		data *types.DescriptorData,
+		descriptorDataList []types.DescriptorData,
+		multisigList []types.DescriptorKeyData,
+		err error,
+	)
+	// GetChecksum This function return a descriptor adding checksum.
+	GetChecksum(
+		descriptor *types.Descriptor) (descriptorAddedChecksum string, err error)
+}
+
 func NewDescriptorApi() *DescriptorApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := DescriptorApiImpl{}
