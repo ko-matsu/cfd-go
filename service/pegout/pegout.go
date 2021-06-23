@@ -37,7 +37,12 @@ type Pegout interface {
 		sendList *[]types.InputConfidentialTxOut,
 		changeAddress *string,
 		option *types.PegoutTxOption,
-	) (tx *types.ConfidentialTx, pegoutAddress *types.Address, err error)
+	) (
+		tx *types.ConfidentialTx,
+		pegoutAddress *types.Address,
+		unblindTx *types.ConfidentialTx,
+		err error,
+	)
 	// VerifyPubkeySignature This function validate the signature by pubkey.
 	VerifyPubkeySignature(
 		proposalTx *types.ConfidentialTx,
@@ -225,27 +230,27 @@ func (p *PegoutService) CreatePegoutTransaction(
 	sendList *[]types.InputConfidentialTxOut,
 	changeAddress *string,
 	option *types.PegoutTxOption,
-) (tx *types.ConfidentialTx, pegoutAddress *types.Address, err error) {
+) (tx *types.ConfidentialTx, pegoutAddress *types.Address, unblindTx *types.ConfidentialTx, err error) {
 	if err = p.validConfig(); err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout invalid configuration error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout invalid configuration error")
 	}
 	conf := p.getConfig()
 
 	txApi, err := transaction.NewConfidentialTxApi().WithConfig(*conf)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	btcAddrApi, err := address.NewAddressApi().WithConfig(config.CfdConfig{
 		Network: p.network.ToBitcoinType()})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// validation utxoList, pegoutData
 	if err = p.validateUtxoList(&utxoList); err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout utxoList validation error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout utxoList validation error")
 	} else if err = p.validatePegoutData(&pegoutData); err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout peginData validation error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout peginData validation error")
 	}
 
 	workPegoutData := pegoutData
@@ -261,17 +266,17 @@ func (p *PegoutService) CreatePegoutTransaction(
 
 	changeAddr, err := p.validateChangeAddress(changeAddress)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout changeAddress validation error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout changeAddress validation error")
 	}
 
 	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxInOutList(&utxoList, sendList, changeAddr)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout sendList validation error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout sendList validation error")
 	}
 	if option.IsBlindTx && (blindOutputCount == 0) {
-		return nil, nil, errors.Wrap(err, "Pegout sendList empty blinding output error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout sendList empty blinding output error")
 	} else if !option.IsBlindTx && (blindOutputCount > 0) {
-		return nil, nil, errors.Wrap(err, "Pegout sendList exist blinding output error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout sendList exist blinding output error")
 	}
 
 	// 1. create transaction
@@ -292,13 +297,13 @@ func (p *PegoutService) CreatePegoutTransaction(
 	pegoutAddrList := []string{}
 	tx, err = txApi.Create(uint32(2), uint32(0), &txins, &txouts, &pegoutAddrList)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout CT.Create error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
 	} else if len(pegoutAddrList) != 1 {
-		return nil, nil, errors.Wrap(err, "Pegout CT.Create pegoutAddress error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create pegoutAddress error")
 	}
 	pegoutAddress, err = btcAddrApi.ParseAddress(pegoutAddrList[0])
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout parse address error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout parse address error")
 	}
 
 	// 2. add txout by output if single output.
@@ -306,7 +311,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 		// TODO Is this really a necessary process? I feel like it should be integrated with the subsequent process.
 		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "Pegout append dummy output error")
+			return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
 		}
 	}
 
@@ -351,13 +356,13 @@ func (p *PegoutService) CreatePegoutTransaction(
 	fundOption.MinimumBits = option.MinimumBits
 	outputTx, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
+		return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
 	}
 
 	// 4. check to need append dummy output
 	_, inputs, outputs, err := txApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
+		return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 	}
 	outputCount := len(outputs)
 	if option.IsBlindTx && !hasAppendDummyOutput && (outputCount == 3) { // 3 = output + fee + pegout
@@ -372,27 +377,28 @@ func (p *PegoutService) CreatePegoutTransaction(
 		if !hasAllBlinded {
 			tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "Pegout append dummy output error")
+				return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
 			}
 			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
+				return nil, nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
 			}
 			_, inputs, _, err = txApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
+				return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 			}
 		}
 	}
 	tx.Hex = outputTx
 
 	// 5. blind
+	unblindTx = &types.ConfidentialTx{Hex: tx.Hex}
 	if option.IsBlindTx {
 		blindInputList := make([]types.BlindInputData, len(inputs))
 		for i, txin := range inputs {
 			utxo, ok := utxoMap[txin.OutPoint]
 			if !ok {
-				return nil, nil, fmt.Errorf("CFD Error: Internal error")
+				return nil, nil, nil, fmt.Errorf("CFD Error: Internal error")
 			}
 			blindInputList[i].OutPoint = txin.OutPoint
 			blindInputList[i].Amount = utxo.Amount
@@ -406,11 +412,11 @@ func (p *PegoutService) CreatePegoutTransaction(
 		blindOption.MinimumBits = option.MinimumBits
 		err = txApi.Blind(tx, blindInputList, nil, &blindOption)
 		if err != nil {
-			return nil, nil, errors.Wrapf(err, "Pegout Blind error: tx=%s", tx.Hex)
+			return nil, nil, nil, errors.Wrapf(err, "Pegout Blind error: tx=%s", tx.Hex)
 		}
 	}
 
-	return tx, pegoutAddress, nil
+	return tx, pegoutAddress, unblindTx, nil
 }
 
 // VerifyPubkeySignature This function validate the signature by pubkey.

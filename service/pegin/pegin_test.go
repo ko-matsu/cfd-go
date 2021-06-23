@@ -132,7 +132,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	sendList := []types.InputConfidentialTxOut{}
 	option := types.NewPeginTxOption()
 	option.KnapsackMinChange = 0
-	tx, err := peginApi.CreatePeginTransaction(&peginOutPoint, &peginInputData, nil, sendList, &outputAddr, &option)
+	tx, unblindTx, err := peginApi.CreatePeginTransaction(&peginOutPoint, &peginInputData, nil, sendList, &outputAddr, &option)
 	assert.NoError(t, err)
 
 	// output check
@@ -142,6 +142,9 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Equal(t, 3, len(outList))
 	assert.Less(t, 13370, len(tx.Hex))
 	assert.Greater(t, 13380, len(tx.Hex))
+	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), unblindTxoutList[0].Amount)
 
 	// create utxo data
 	peginUtxoData, err := peginApi.GetPeginUtxoData(tx, &peginOutPoint, pubkey)

@@ -98,7 +98,7 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	changeAddress := "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8"
 	option := types.NewPegoutTxOption()
 	option.KnapsackMinChange = 0
-	tx, pegoutAddr, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, nil, &changeAddress, &option)
+	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, nil, &changeAddress, &option)
 	assert.NoError(t, err)
 	assert.Equal(t, "1D4YiPF4k9qotSS3QWMa2E8Bt4jV9SZPmE", pegoutAddr.Address)
 
@@ -109,6 +109,9 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	assert.Equal(t, 3, len(outList)) // pegout, fee, output(change)
 	assert.Less(t, 6780, len(tx.Hex))
 	assert.Greater(t, 6800, len(tx.Hex))
+	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(183), unblindTxoutList[1].Amount)
 
 	pegoutAddress, hasPegout, err := txApi.GetPegoutAddress(tx, uint32(0))
 	assert.NoError(t, err)
@@ -225,7 +228,7 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 	changeAddress := "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8"
 	option := types.NewPegoutTxOption()
 	option.KnapsackMinChange = 0
-	tx, pegoutAddr, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, &txouts, &changeAddress, &option)
+	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, &txouts, &changeAddress, &option)
 	assert.NoError(t, err)
 	assert.Equal(t, "1D4YiPF4k9qotSS3QWMa2E8Bt4jV9SZPmE", pegoutAddr.Address)
 
@@ -236,6 +239,9 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 	assert.Equal(t, 4, len(outList)) // pegout, fee, output(send), change
 	assert.Less(t, 17310, len(tx.Hex))
 	assert.Greater(t, 17320, len(tx.Hex))
+	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(200000000000000), unblindTxoutList[1].Amount)
 
 	pegoutAddress, hasPegout, err := txApi.GetPegoutAddress(tx, uint32(0))
 	assert.NoError(t, err)
@@ -359,7 +365,7 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	changeAddress := "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8"
 	option := types.NewPegoutTxOption()
 	option.KnapsackMinChange = 0
-	tx, pegoutAddr, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, nil, &changeAddress, &option)
+	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, nil, &changeAddress, &option)
 	assert.NoError(t, err)
 	assert.Equal(t, "1D4YiPF4k9qotSS3QWMa2E8Bt4jV9SZPmE", pegoutAddr.Address)
 
@@ -371,7 +377,9 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	// If the dummy output is blinded, the rangeproof will be small because the CT value cannot be high.
 	assert.Less(t, 15330, len(tx.Hex))
 	assert.Greater(t, 15340, len(tx.Hex))
-	//assert.Equal(t, "", tx.Hex)
+	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), unblindTxoutList[1].Amount)
 
 	pegoutAddress, hasPegout, err := txApi.GetPegoutAddress(tx, uint32(0))
 	assert.NoError(t, err)

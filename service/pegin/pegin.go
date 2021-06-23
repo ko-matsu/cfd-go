@@ -41,7 +41,11 @@ type Pegin interface {
 		sendList []types.InputConfidentialTxOut,
 		changeAddress *string,
 		option *types.PeginTxOption,
-	) (tx *types.ConfidentialTx, err error)
+	) (
+		tx *types.ConfidentialTx,
+		unblindTx *types.ConfidentialTx,
+		err error,
+	)
 	// VerifyPubkeySignature This function validate the signature by pubkey.
 	VerifyPubkeySignature(
 		proposalTx *types.ConfidentialTx,
@@ -202,20 +206,20 @@ func (p *PeginService) CreatePeginTransaction(
 	sendList []types.InputConfidentialTxOut,
 	changeAddress *string,
 	option *types.PeginTxOption,
-) (tx *types.ConfidentialTx, err error) {
+) (tx *types.ConfidentialTx, unblindTx *types.ConfidentialTx, err error) {
 	if err = p.validConfig(); err != nil {
-		return nil, errors.Wrap(err, "Invalid configuration")
+		return nil, nil, errors.Wrap(err, "Invalid configuration")
 	}
 	txApi, err := transaction.NewConfidentialTxApi().WithConfig(config.CfdConfig{Network: *p.network})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// validation utxoList, peginData
 	if err = p.validateUtxoList(utxoList); err != nil {
-		return nil, errors.Wrap(err, "Pegin utxoList validation error")
+		return nil, nil, errors.Wrap(err, "Pegin utxoList validation error")
 	} else if err = p.validatePeginData(peginOutPoint, peginData); err != nil {
-		return nil, errors.Wrap(err, "Pegin peginData validation error")
+		return nil, nil, errors.Wrap(err, "Pegin peginData validation error")
 	}
 
 	assetId := ""
@@ -228,17 +232,17 @@ func (p *PeginService) CreatePeginTransaction(
 
 	changeAddr, err := p.validateChangeAddress(changeAddress)
 	if err != nil {
-		return nil, errors.Wrap(err, "Pegin changeAddress validation error")
+		return nil, nil, errors.Wrap(err, "Pegin changeAddress validation error")
 	}
 
 	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxOutList(&sendList, changeAddr)
 	if err != nil {
-		return nil, errors.Wrap(err, "Pegin sendList validation error")
+		return nil, nil, errors.Wrap(err, "Pegin sendList validation error")
 	}
 	if option.IsBlindTx && (blindOutputCount == 0) {
-		return nil, errors.Wrap(err, "Pegin sendList empty blinding output error")
+		return nil, nil, errors.Wrap(err, "Pegin sendList empty blinding output error")
 	} else if !option.IsBlindTx && (blindOutputCount > 0) {
-		return nil, errors.Wrap(err, "Pegin sendList exist blinding output error")
+		return nil, nil, errors.Wrap(err, "Pegin sendList exist blinding output error")
 	}
 
 	txins := []types.InputConfidentialTxIn{
@@ -249,7 +253,7 @@ func (p *PeginService) CreatePeginTransaction(
 	}
 	tx, err = txApi.Create(uint32(2), uint32(0), &txins, &sendList, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "Pegin CT.Create error")
+		return nil, nil, errors.Wrap(err, "Pegin CT.Create error")
 	}
 
 	// 2. add txout by output if single output.
@@ -257,14 +261,14 @@ func (p *PeginService) CreatePeginTransaction(
 		// TODO Is this really a necessary process? I feel like it should be integrated with the subsequent process.
 		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 		if err != nil {
-			return nil, errors.Wrap(err, "Pegin append dummy output error")
+			return nil, nil, errors.Wrap(err, "Pegin append dummy output error")
 		}
 	}
 
 	// 3. fundrawtransaction
 	peginAmount, _, err := cfd.CfdGoGetTxOut(p.network.ToBitcoinType().ToCfdValue(), peginData.BitcoinTransaction, peginOutPoint.Vout)
 	if err != nil {
-		return nil, errors.Wrap(err, "Pegin get btc txout error")
+		return nil, nil, errors.Wrap(err, "Pegin get btc txout error")
 	}
 	fundTxInList := make([]cfd.CfdUtxo, 1)
 	fundTxInList[0].Txid = peginOutPoint.Txid
@@ -316,32 +320,33 @@ func (p *PeginService) CreatePeginTransaction(
 	fundOption.MinimumBits = option.MinimumBits
 	outputTx, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Pegin FundRawTransaction error (tx: %s)", tx.Hex)
+		return nil, nil, errors.Wrapf(err, "Pegin FundRawTransaction error (tx: %s)", tx.Hex)
 	}
 	outputCount, err := cfd.CfdGoGetTxOutCount(p.network.ToCfdValue(), outputTx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Pegin GetTxOutCount error")
+		return nil, nil, errors.Wrap(err, "Pegin GetTxOutCount error")
 	}
 
 	// 4. check to need append dummy output
 	if option.IsBlindTx && !hasAppendDummyOutput && (outputCount == 2) { // 2 = output + fee
 		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 		if err != nil {
-			return nil, errors.Wrap(err, "Pegin append dummy output error")
+			return nil, nil, errors.Wrap(err, "Pegin append dummy output error")
 		}
 		outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 		if err != nil {
-			return nil, errors.Wrap(err, "Pegin FundRawTransaction error")
+			return nil, nil, errors.Wrap(err, "Pegin FundRawTransaction error")
 		}
 	}
 	tx.Hex = outputTx
 
 	_, inputs, _, err := txApi.GetAll(tx, false)
 	if err != nil {
-		return nil, errors.Wrap(err, "Pegin GetTxAll error")
+		return nil, nil, errors.Wrap(err, "Pegin GetTxAll error")
 	}
 
 	// 5. blind
+	unblindTx = &types.ConfidentialTx{Hex: tx.Hex}
 	if option.IsBlindTx {
 		blindInputList := make([]types.BlindInputData, len(inputs))
 		for i, txin := range inputs {
@@ -352,7 +357,7 @@ func (p *PeginService) CreatePeginTransaction(
 			} else {
 				utxo, ok := utxoMap[txin.OutPoint]
 				if !ok {
-					return nil, fmt.Errorf("CFD Error: Internal error")
+					return nil, nil, fmt.Errorf("CFD Error: Internal error")
 				}
 				blindInputList[i].Amount = utxo.Amount
 				blindInputList[i].Asset = utxo.Asset
@@ -366,10 +371,10 @@ func (p *PeginService) CreatePeginTransaction(
 		blindOption.MinimumBits = option.MinimumBits
 		err = txApi.Blind(tx, blindInputList, nil, &blindOption)
 		if err != nil {
-			return nil, errors.Wrap(err, "Pegin Blind error")
+			return nil, nil, errors.Wrap(err, "Pegin Blind error")
 		}
 	}
-	return tx, nil
+	return tx, unblindTx, nil
 }
 
 // VerifyPubkeySignature This function validate the signature by pubkey.
