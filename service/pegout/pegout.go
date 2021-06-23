@@ -235,45 +235,33 @@ func (p *PegoutService) CreatePegoutTransaction(
 	if err != nil {
 		return nil, nil, err
 	}
-	caApi := address.ConfidentialAddressApiImpl{}
 	btcAddrApi, err := address.NewAddressApi().WithConfig(config.CfdConfig{
 		Network: p.network.ToBitcoinType()})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// FIXME validation utxoList
-	// FIXME validation pegoutData
-	if pegoutData.PegoutInput == nil {
-		return nil, nil, errors.Wrap(err, "Pegout not set PegoutInput error")
+	// validation utxoList, pegoutData
+	if err = p.validateUtxoList(&utxoList); err != nil {
+		return nil, nil, errors.Wrap(err, "Pegout utxoList validation error")
+	} else if err = p.validatePegoutData(&pegoutData); err != nil {
+		return nil, nil, errors.Wrap(err, "Pegout peginData validation error")
 	}
+
 	workPegoutData := pegoutData
 	workPegoutInput := *pegoutData.PegoutInput
 	workPegoutData.PegoutInput = &workPegoutInput
-	if len(workPegoutInput.BitcoinGenesisBlockHash) != 64 {
-		if p.bitcoinGenesisBlockHash != nil {
-			workPegoutInput.BitcoinGenesisBlockHash = p.bitcoinGenesisBlockHash.ToHex()
-		} else {
-			return nil, nil, errors.Wrap(err, "Pegout not set BitcoinGenesisBlockHash error")
-		}
+	if (len(workPegoutInput.BitcoinGenesisBlockHash) != 64) && (p.bitcoinGenesisBlockHash != nil) {
+		workPegoutInput.BitcoinGenesisBlockHash = p.bitcoinGenesisBlockHash.ToHex()
 	}
-	if len(workPegoutData.Asset) != 64 {
-		if p.bitcoinAssetId != nil {
-			workPegoutData.Asset = p.bitcoinAssetId.ToHex()
-		} else {
-			return nil, nil, errors.Wrap(err, "Pegout not set PegoutData.Asset error")
-		}
+	if (len(workPegoutData.Asset) != 64) && (p.bitcoinAssetId != nil) {
+		workPegoutData.Asset = p.bitcoinAssetId.ToHex()
 	}
 	assetId := workPegoutData.Asset
 
-	var changeAddr *types.ConfidentialAddress
-	if changeAddress != nil {
-		changeAddr, err = caApi.Parse(*changeAddress)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "Pegout changeAddress error")
-		} else if changeAddr.Network != *p.network {
-			return nil, nil, errors.Wrap(err, "Pegout changeAddress network check error")
-		}
+	changeAddr, err := p.validateChangeAddress(changeAddress)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Pegout changeAddress validation error")
 	}
 
 	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxInOutList(&utxoList, sendList, changeAddr)
@@ -313,13 +301,12 @@ func (p *PegoutService) CreatePegoutTransaction(
 		return nil, nil, errors.Wrap(err, "Pegout parse address error")
 	}
 
-	// FIXME implements
-
 	// 2. add txout by output if single output.
 	if hasAppendDummyOutput {
+		// TODO Is this really a necessary process? I feel like it should be integrated with the subsequent process.
 		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "Pegin append dummy output error")
+			return nil, nil, errors.Wrap(err, "Pegout append dummy output error")
 		}
 	}
 
@@ -364,13 +351,13 @@ func (p *PegoutService) CreatePegoutTransaction(
 	fundOption.MinimumBits = option.MinimumBits
 	outputTx, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Pegin FundRawTransaction error (tx: %s)", tx.Hex)
+		return nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
 	}
 
 	// 4. check to need append dummy output
 	_, inputs, outputs, err := txApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Pegin GetTxAll error")
+		return nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 	}
 	outputCount := len(outputs)
 	if option.IsBlindTx && !hasAppendDummyOutput && (outputCount == 3) { // 3 = output + fee + pegout
@@ -385,15 +372,15 @@ func (p *PegoutService) CreatePegoutTransaction(
 		if !hasAllBlinded {
 			tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "Pegin append dummy output error")
+				return nil, nil, errors.Wrap(err, "Pegout append dummy output error")
 			}
 			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "Pegin FundRawTransaction error")
+				return nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
 			}
 			_, inputs, _, err = txApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "Pegin GetTxAll error")
+				return nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 			}
 		}
 	}
@@ -419,7 +406,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 		blindOption.MinimumBits = option.MinimumBits
 		err = txApi.Blind(tx, blindInputList, nil, &blindOption)
 		if err != nil {
-			return nil, nil, errors.Wrapf(err, "Pegin Blind error: tx=%s", tx.Hex)
+			return nil, nil, errors.Wrapf(err, "Pegout Blind error: tx=%s", tx.Hex)
 		}
 	}
 
@@ -434,8 +421,12 @@ func (p *PegoutService) VerifyPubkeySignature(
 ) (isVerify bool, err error) {
 	if err = p.validConfig(); err != nil {
 		return false, err
+	} else if proposalTx == nil || utxoData == nil || signature == nil {
+		return false, fmt.Errorf("CFD Error: parameter is nil")
+	} else if err = p.validateUtxoData(utxoData); err != nil {
+		return false, errors.Wrap(err, "Pegout utxoData validate error")
 	}
-	// FIXME add validation
+
 	txApi, err := transaction.NewConfidentialTxApi().WithConfig(config.CfdConfig{
 		Network: *p.network,
 	})
@@ -614,6 +605,97 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 		hasAppendDummyOutput = false
 	}
 	return blindOutputCount, hasAppendDummyOutput, amount, nil
+}
+
+func (p *PegoutService) validateUtxoList(utxoList *[]types.ElementsUtxoData) error {
+	if utxoList != nil {
+		for _, utxo := range *utxoList {
+			if len(utxo.OutPoint.Txid) != 64 {
+				return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
+			} else if utxo.Amount == 0 {
+				return fmt.Errorf("CFD Error: utxo Amount is invalid")
+			} else if len(utxo.Asset) != 64 {
+				return fmt.Errorf("CFD Error: utxo Amount is invalid")
+			} else if (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64) {
+				return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
+			} else if (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64) {
+				return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
+			} else if len(utxo.Descriptor) == 0 {
+				return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
+			} else if (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66) {
+				return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
+			} else if utxo.PeginData != nil {
+				return fmt.Errorf("CFD Error: Pegout utxo cannot use PeginData")
+			} else if utxo.IsIssuance {
+				return fmt.Errorf("CFD Error: Pegout utxo cannot use IsIssuance")
+			}
+		}
+	}
+	return nil
+}
+
+func (p *PegoutService) validatePegoutData(pegoutData *types.InputConfidentialTxOut) error {
+	if pegoutData.PegoutInput == nil {
+		return fmt.Errorf("CFD Error: pegoutData.PegoutInput is nil")
+	} else if pegoutData.Amount == 0 {
+		return fmt.Errorf("CFD Error: pegoutData.Amount is 0")
+	} else if pegoutData.IsDestroy {
+		return fmt.Errorf("CFD Error: pegoutData.IsDestroy cannot use")
+	} else if pegoutData.IsFee {
+		return fmt.Errorf("CFD Error: pegoutData.IsFee cannot use")
+	} else if len(pegoutData.Nonce) != 0 {
+		return fmt.Errorf("CFD Error: pegoutData.Nonce is empty")
+	} else if len(pegoutData.LockingScript) != 0 {
+		return fmt.Errorf("CFD Error: pegoutData.LockingScript is empty")
+	} else if len(pegoutData.PegoutInput.BitcoinOutputDescriptor) == 0 {
+		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.BitcoinOutputDescriptor is empty")
+	} else if len(pegoutData.PegoutInput.OnlineKey) == 0 {
+		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.OnlineKey is empty")
+	} else if len(pegoutData.PegoutInput.Whitelist) == 0 {
+		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.Whitelist is empty")
+	}
+
+	if (p.bitcoinGenesisBlockHash == nil) && (len(pegoutData.PegoutInput.BitcoinGenesisBlockHash) != 64) {
+		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.BitcoinGenesisBlockHash is invalid")
+	} else if (p.bitcoinAssetId == nil) && (len(pegoutData.Asset) != 64) {
+		return fmt.Errorf("CFD Error: pegoutData.Asset is invalid")
+	}
+	return nil
+}
+
+func (p *PegoutService) validateChangeAddress(changeAddress *string) (addr *types.ConfidentialAddress, err error) {
+	caApi := address.ConfidentialAddressApiImpl{}
+	if changeAddress != nil {
+		addr, err = caApi.Parse(*changeAddress)
+		if err != nil {
+			return nil, errors.Wrap(err, "Pegout changeAddress error")
+		} else if addr.Network != *p.network {
+			return nil, errors.Wrap(err, "Pegout changeAddress network check error")
+		}
+		return addr, nil
+	}
+	return nil, nil
+}
+
+func (p *PegoutService) validateUtxoData(utxo *types.ElementsUtxoData) error {
+	if len(utxo.OutPoint.Txid) != 64 {
+		return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
+	} else if utxo.Amount == 0 {
+		return fmt.Errorf("CFD Error: utxo Amount is invalid")
+	} else if len(utxo.Asset) != 64 {
+		return fmt.Errorf("CFD Error: utxo Amount is invalid")
+	} else if (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64) {
+		return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
+	} else if (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64) {
+		return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
+	} else if len(utxo.Descriptor) == 0 {
+		return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
+	} else if (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66) {
+		return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
+	} else if utxo.IsIssuance {
+		return fmt.Errorf("CFD Error: Pegout utxo cannot use IsIssuance")
+	}
+	return nil
 }
 
 func appendDummyOutput(txHex string, assetId string, network *types.NetworkType) (outputTxHex string, err error) {
