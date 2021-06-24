@@ -178,9 +178,7 @@ func (p *PeginService) CreatePeginAddress(
 	}
 
 	switch addressType {
-	case types.P2shAddress:
-	case types.P2wshAddress:
-	case types.P2shP2wshAddress:
+	case types.P2shAddress, types.P2wshAddress, types.P2shP2wshAddress:
 		break
 	default:
 		return nil, nil, fmt.Errorf("CFD Error: Invalid pegin address type")
