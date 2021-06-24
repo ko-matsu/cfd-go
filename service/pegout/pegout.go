@@ -542,11 +542,12 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 	if sendList != nil {
 		for index, txout := range *sendList {
 			isFee := false
-			if txout.PegoutInput != nil {
+			switch {
+			case txout.PegoutInput != nil:
 				return 0, false, 0, errors.Wrapf(err, "Pegout sendList exist pegout data error(n: %d)", index)
-			} else if txout.IsFee {
+			case txout.IsFee:
 				isFee = true
-			} else if len(txout.Nonce) == types.CommitmentHexDataSize {
+			case len(txout.Nonce) == types.CommitmentHexDataSize:
 				if txout.IsDestroy || len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
 					blindOutputCount += 1
 					if txout.IsDestroy && (len(txout.LockingScript) > 0 || len(txout.Address) > 0) {
@@ -555,12 +556,12 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 				} else {
 					return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid nonce error(n: %d)", index)
 				}
-			} else if txout.IsDestroy {
+			case txout.IsDestroy:
 				if len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
 					return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid destroy amount error(n: %d)", index)
 				}
 				unblindOutputCount += 1
-			} else if len(txout.Address) > 0 {
+			case len(txout.Address) > 0:
 				addrInfo, err := caApi.Parse(txout.Address)
 				if err != nil {
 					return 0, false, 0, errors.Wrapf(err, "Pegout sendList address check error(n: %d)", index)
@@ -571,9 +572,9 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 				} else {
 					unblindOutputCount += 1
 				}
-			} else if len(txout.LockingScript) > 0 {
+			case len(txout.LockingScript) > 0:
 				unblindOutputCount += 1
-			} else {
+			default:
 				isFee = true
 			}
 
@@ -618,23 +619,24 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 func (p *PegoutService) validateUtxoList(utxoList *[]types.ElementsUtxoData) error {
 	if utxoList != nil {
 		for _, utxo := range *utxoList {
-			if len(utxo.OutPoint.Txid) != 64 {
+			switch {
+			case len(utxo.OutPoint.Txid) != 64:
 				return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
-			} else if utxo.Amount == 0 {
+			case utxo.Amount == 0:
 				return fmt.Errorf("CFD Error: utxo Amount is invalid")
-			} else if len(utxo.Asset) != 64 {
+			case len(utxo.Asset) != 64:
 				return fmt.Errorf("CFD Error: utxo Amount is invalid")
-			} else if (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64) {
+			case (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64):
 				return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
-			} else if (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64) {
+			case (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64):
 				return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
-			} else if len(utxo.Descriptor) == 0 {
+			case len(utxo.Descriptor) == 0:
 				return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
-			} else if (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66) {
+			case (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66):
 				return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
-			} else if utxo.PeginData != nil {
+			case utxo.PeginData != nil:
 				return fmt.Errorf("CFD Error: Pegout utxo cannot use PeginData")
-			} else if utxo.IsIssuance {
+			case utxo.IsIssuance:
 				return fmt.Errorf("CFD Error: Pegout utxo cannot use IsIssuance")
 			}
 		}
@@ -643,23 +645,24 @@ func (p *PegoutService) validateUtxoList(utxoList *[]types.ElementsUtxoData) err
 }
 
 func (p *PegoutService) validatePegoutData(pegoutData *types.InputConfidentialTxOut) error {
-	if pegoutData.PegoutInput == nil {
+	switch {
+	case pegoutData.PegoutInput == nil:
 		return fmt.Errorf("CFD Error: pegoutData.PegoutInput is nil")
-	} else if pegoutData.Amount == 0 {
+	case pegoutData.Amount == 0:
 		return fmt.Errorf("CFD Error: pegoutData.Amount is 0")
-	} else if pegoutData.IsDestroy {
+	case pegoutData.IsDestroy:
 		return fmt.Errorf("CFD Error: pegoutData.IsDestroy cannot use")
-	} else if pegoutData.IsFee {
+	case pegoutData.IsFee:
 		return fmt.Errorf("CFD Error: pegoutData.IsFee cannot use")
-	} else if len(pegoutData.Nonce) != 0 {
+	case len(pegoutData.Nonce) != 0:
 		return fmt.Errorf("CFD Error: pegoutData.Nonce is empty")
-	} else if len(pegoutData.LockingScript) != 0 {
+	case len(pegoutData.LockingScript) != 0:
 		return fmt.Errorf("CFD Error: pegoutData.LockingScript is empty")
-	} else if len(pegoutData.PegoutInput.BitcoinOutputDescriptor) == 0 {
+	case len(pegoutData.PegoutInput.BitcoinOutputDescriptor) == 0:
 		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.BitcoinOutputDescriptor is empty")
-	} else if len(pegoutData.PegoutInput.OnlineKey) == 0 {
+	case len(pegoutData.PegoutInput.OnlineKey) == 0:
 		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.OnlineKey is empty")
-	} else if len(pegoutData.PegoutInput.Whitelist) == 0 {
+	case len(pegoutData.PegoutInput.Whitelist) == 0:
 		return fmt.Errorf("CFD Error: pegoutData.PegoutInput.Whitelist is empty")
 	}
 
@@ -686,24 +689,26 @@ func (p *PegoutService) validateChangeAddress(changeAddress *string) (addr *type
 }
 
 func (p *PegoutService) validateUtxoData(utxo *types.ElementsUtxoData) error {
-	if len(utxo.OutPoint.Txid) != 64 {
+	switch {
+	case len(utxo.OutPoint.Txid) != 64:
 		return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
-	} else if utxo.Amount == 0 {
+	case utxo.Amount == 0:
 		return fmt.Errorf("CFD Error: utxo Amount is invalid")
-	} else if len(utxo.Asset) != 64 {
+	case len(utxo.Asset) != 64:
 		return fmt.Errorf("CFD Error: utxo Amount is invalid")
-	} else if (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64) {
+	case (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64):
 		return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
-	} else if (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64) {
+	case (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64):
 		return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
-	} else if len(utxo.Descriptor) == 0 {
+	case len(utxo.Descriptor) == 0:
 		return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
-	} else if (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66) {
+	case (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66):
 		return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
-	} else if utxo.IsIssuance {
+	case utxo.IsIssuance:
 		return fmt.Errorf("CFD Error: Pegout utxo cannot use IsIssuance")
+	default:
+		return nil
 	}
-	return nil
 }
 
 func appendDummyOutput(txHex string, assetId string, network *types.NetworkType) (outputTxHex string, err error) {

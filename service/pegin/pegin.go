@@ -518,11 +518,12 @@ func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOu
 	feeCount := uint32(0)
 	for index, txout := range *sendList {
 		isFee := false
-		if txout.PegoutInput != nil {
+		switch {
+		case txout.PegoutInput != nil:
 			return 0, false, 0, errors.Wrapf(err, "Pegin sendList exist pegout data error(n: %d)", index)
-		} else if txout.IsFee {
+		case txout.IsFee:
 			isFee = true
-		} else if len(txout.Nonce) == types.CommitmentHexDataSize {
+		case len(txout.Nonce) == types.CommitmentHexDataSize:
 			if txout.IsDestroy || len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
 				blindOutputCount += 1
 				if txout.IsDestroy && (len(txout.LockingScript) > 0 || len(txout.Address) > 0) {
@@ -531,12 +532,12 @@ func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOu
 			} else {
 				return 0, false, 0, errors.Wrapf(err, "Pegin sendList invalid nonce error(n: %d)", index)
 			}
-		} else if txout.IsDestroy {
+		case txout.IsDestroy:
 			if len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
 				return 0, false, 0, errors.Wrapf(err, "Pegin sendList invalid destroy amount error(n: %d)", index)
 			}
 			unblindOutputCount += 1
-		} else if len(txout.Address) > 0 {
+		case len(txout.Address) > 0:
 			addrInfo, err := caApi.Parse(txout.Address)
 			if err != nil {
 				return 0, false, 0, errors.Wrapf(err, "Pegin sendList address check error(n: %d)", index)
@@ -547,9 +548,9 @@ func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOu
 			} else {
 				unblindOutputCount += 1
 			}
-		} else if len(txout.LockingScript) > 0 {
+		case len(txout.LockingScript) > 0:
 			unblindOutputCount += 1
-		} else {
+		default:
 			isFee = true
 		}
 
@@ -587,44 +588,48 @@ func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOu
 }
 
 func (p *PeginService) validateUtxoList(utxoList *[]types.ElementsUtxoData) error {
-	if utxoList != nil {
-		for _, utxo := range *utxoList {
-			if len(utxo.OutPoint.Txid) != 64 {
-				return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
-			} else if utxo.Amount == 0 {
-				return fmt.Errorf("CFD Error: utxo Amount is invalid")
-			} else if len(utxo.Asset) != 64 {
-				return fmt.Errorf("CFD Error: utxo Amount is invalid")
-			} else if (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64) {
-				return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
-			} else if (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64) {
-				return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
-			} else if len(utxo.Descriptor) == 0 {
-				return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
-			} else if (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66) {
-				return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
-			} else if utxo.PeginData != nil {
-				return fmt.Errorf("CFD Error: Pegin utxo cannot use PeginData")
-			} else if utxo.IsIssuance {
-				return fmt.Errorf("CFD Error: Pegin utxo cannot use IsIssuance")
-			}
+	if utxoList == nil {
+		return nil
+	}
+	for _, utxo := range *utxoList {
+		switch {
+		case len(utxo.OutPoint.Txid) != 64:
+			return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
+		case utxo.Amount == 0:
+			return fmt.Errorf("CFD Error: utxo Amount is invalid")
+		case len(utxo.Asset) != 64:
+			return fmt.Errorf("CFD Error: utxo Amount is invalid")
+		case (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64):
+			return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
+		case (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64):
+			return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
+		case len(utxo.Descriptor) == 0:
+			return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
+		case (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66):
+			return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
+		case utxo.PeginData != nil:
+			return fmt.Errorf("CFD Error: Pegin utxo cannot use PeginData")
+		case utxo.IsIssuance:
+			return fmt.Errorf("CFD Error: Pegin utxo cannot use IsIssuance")
 		}
 	}
 	return nil
 }
 
 func (p *PeginService) validatePeginData(peginOutPoint *types.OutPoint, peginData *types.InputPeginData) error {
-	if peginOutPoint == nil {
+	switch {
+	case peginOutPoint == nil:
 		return fmt.Errorf("CFD Error: peginOutPoint is nil")
-	} else if peginData == nil {
+	case peginData == nil:
 		return fmt.Errorf("CFD Error: peginData is nil")
-	} else if len(peginOutPoint.Txid) != 64 {
+	case len(peginOutPoint.Txid) != 64:
 		return fmt.Errorf("CFD Error: peginOutPoint.Txid is invalid")
-	} else if len(peginData.TxOutProof) == 0 {
+	case len(peginData.TxOutProof) == 0:
 		return fmt.Errorf("CFD Error: peginData.TxOutProof is empty")
-	} else if len(peginData.BitcoinTransaction) == 0 {
+	case len(peginData.BitcoinTransaction) == 0:
 		return fmt.Errorf("CFD Error: peginData.BitcoinTransaction is empty")
 	}
+
 	btcTxApi, err := transaction.NewTransactionApi().WithConfig(config.CfdConfig{
 		Network: *p.network,
 	})
@@ -676,24 +681,26 @@ func (p *PeginService) validateChangeAddress(changeAddress *string) (addr *types
 }
 
 func (p *PeginService) validateUtxoData(utxo *types.ElementsUtxoData) error {
-	if len(utxo.OutPoint.Txid) != 64 {
+	switch {
+	case len(utxo.OutPoint.Txid) != 64:
 		return fmt.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
-	} else if utxo.Amount == 0 {
+	case utxo.Amount == 0:
 		return fmt.Errorf("CFD Error: utxo Amount is invalid")
-	} else if len(utxo.Asset) != 64 {
+	case len(utxo.Asset) != 64:
 		return fmt.Errorf("CFD Error: utxo Amount is invalid")
-	} else if (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64) {
+	case (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64):
 		return fmt.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
-	} else if (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64) {
+	case (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64):
 		return fmt.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
-	} else if len(utxo.Descriptor) == 0 {
+	case len(utxo.Descriptor) == 0:
 		return fmt.Errorf("CFD Error: utxo Descriptor is invalid")
-	} else if (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66) {
+	case (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66):
 		return fmt.Errorf("CFD Error: utxo AmountCommitment is invalid")
-	} else if utxo.IsIssuance {
+	case utxo.IsIssuance:
 		return fmt.Errorf("CFD Error: Pegin utxo cannot use IsIssuance")
+	default:
+		return nil
 	}
-	return nil
 }
 
 func appendDummyOutput(txHex string, assetId string, network *types.NetworkType) (outputTxHex string, err error) {
