@@ -221,6 +221,8 @@ func (k *ExtPubkeyApiImpl) GetData(extPubkey *types.ExtPubkey) (data *types.Extk
 func (k *ExtPubkeyApiImpl) validConfig() error {
 	if k.network == nil {
 		return fmt.Errorf("CFD Error: NetworkType not set")
+	} else if !k.network.IsBitcoin() {
+		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
 	}
 	return nil
 }
@@ -303,6 +305,8 @@ func (k *ExtPrivkeyApiImpl) GetData(extPrivkey *types.ExtPrivkey) (data *types.E
 func (k *ExtPrivkeyApiImpl) validConfig() error {
 	if k.network == nil {
 		return fmt.Errorf("CFD Error: NetworkType not set")
+	} else if !k.network.IsBitcoin() {
+		return fmt.Errorf("CFD Error: NetworkType is not bitcoin")
 	}
 	return nil
 }

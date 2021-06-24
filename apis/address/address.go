@@ -165,12 +165,7 @@ func (u *AddressApiImpl) GetPegoutAddress(addressType types.AddressType, descrip
 // validConfig ...
 func (u *AddressApiImpl) validConfig() error {
 	if u.network == nil {
-		cfdConfig := config.GetCurrentCfdConfig()
-		if !cfdConfig.Network.Valid() {
-			return fmt.Errorf("CFD Error: NetworkType not set")
-		}
-		netType := cfdConfig.Network
-		u.network = &netType
+		return fmt.Errorf("CFD Error: NetworkType not set")
 	}
 	return nil
 }
