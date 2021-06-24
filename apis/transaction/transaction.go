@@ -15,8 +15,6 @@ import (
 // -------------------------------------
 
 type TransactionApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *TransactionApiImpl, err error)
 	Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error)
 	Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error
 	AddPubkeySign(tx *types.Transaction, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
@@ -47,12 +45,13 @@ type TransactionApiImpl struct {
 
 // WithConfig This function set a configuration.
 func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig) (obj *TransactionApiImpl, err error) {
+	obj = p
 	if !conf.Network.Valid() {
-		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+		return obj, fmt.Errorf("CFD Error: Invalid network configuration")
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	return obj, nil
 }
 
 func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
@@ -73,7 +72,8 @@ func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[
 	if err != nil {
 		return nil, err
 	}
-	return &types.Transaction{Hex: txHex}, nil
+	tx = &types.Transaction{Hex: txHex}
+	return tx, nil
 }
 
 func (t *TransactionApiImpl) Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
@@ -224,7 +224,8 @@ func (t *TransactionApiImpl) GetTxOut(tx *types.Transaction, vout uint32) (txout
 	if tempErr == nil {
 		output.Address = addr
 	}
-	return &output, nil
+	txout = &output
+	return txout, nil
 }
 
 func (t *TransactionApiImpl) validConfig() error {

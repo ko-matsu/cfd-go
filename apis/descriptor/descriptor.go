@@ -12,8 +12,6 @@ import (
 )
 
 type DescriptorApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *DescriptorApiImpl, err error)
 	// NewDescriptorFromAddress This function return a Descriptor from pubkey.
 	NewDescriptorFromPubkey(
 		hashType types.HashType, pubkey *types.Pubkey) *types.Descriptor
@@ -78,7 +76,8 @@ func (p *DescriptorApiImpl) WithConfig(conf config.CfdConfig) (obj *DescriptorAp
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	obj = p
+	return obj, nil
 }
 
 // NewDescriptorFromAddress This function return a Descriptor from pubkey.
@@ -151,7 +150,8 @@ func (d *DescriptorApiImpl) Parse(descriptor *types.Descriptor) (data *types.Des
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return convertFromCfd(&cfdData, cfdDescDataList, cfdMultisigs)
+	data, descriptorDataList, multisigList, err = convertFromCfd(&cfdData, cfdDescDataList, cfdMultisigs)
+	return data, descriptorDataList, multisigList, err
 }
 
 // ParseWithDerivationPath This function return a Descriptor parsing data.
@@ -163,7 +163,8 @@ func (d *DescriptorApiImpl) ParseWithDerivationPath(descriptor *types.Descriptor
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return convertFromCfd(&cfdData, cfdDescDataList, cfdMultisigs)
+	data, descriptorDataList, multisigList, err = convertFromCfd(&cfdData, cfdDescDataList, cfdMultisigs)
+	return data, descriptorDataList, multisigList, err
 }
 
 // GetChecksum This function return a descriptor adding checksum.
@@ -171,7 +172,8 @@ func (d *DescriptorApiImpl) GetChecksum(descriptor *types.Descriptor) (descripto
 	if err = d.validConfig(); err != nil {
 		return "", err
 	}
-	return cfd.CfdGoGetDescriptorChecksum(d.network.ToCfdValue(), descriptor.OutputDescriptor)
+	descriptorAddedChecksum, err = cfd.CfdGoGetDescriptorChecksum(d.network.ToCfdValue(), descriptor.OutputDescriptor)
+	return descriptorAddedChecksum, err
 }
 
 func convertFromCfd(cfdData *cfd.CfdDescriptorData, cfdDescriptorDataList []cfd.CfdDescriptorData, cfdMultisigList []cfd.CfdDescriptorKeyData) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {

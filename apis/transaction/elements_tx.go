@@ -19,8 +19,6 @@ const (
 
 // ConfidentialTxApi This interface defines the API to operate Elements Confidential Transaction.
 type ConfidentialTxApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *ConfidentialTxApiImpl, err error)
 	// Create This function create the elements transaction.
 	Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error)
 	// Add This function add the inputs and outputs.
@@ -81,10 +79,11 @@ type ConfidentialTxApiImpl struct {
 
 // WithConfig This function set a configuration.
 func (p *ConfidentialTxApiImpl) WithConfig(conf config.CfdConfig) (obj *ConfidentialTxApiImpl, err error) {
+	obj = p
 	if !conf.Network.Valid() {
-		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+		return obj, fmt.Errorf("CFD Error: Invalid network configuration")
 	} else if !conf.Network.IsElements() {
-		return p, fmt.Errorf("CFD Error: Network configuration is not elements")
+		return obj, fmt.Errorf("CFD Error: Network configuration is not elements")
 	}
 	network := conf.Network
 	tempAssetId := p.bitcoinAssetId
@@ -108,7 +107,7 @@ func (p *ConfidentialTxApiImpl) WithConfig(conf config.CfdConfig) (obj *Confiden
 	p.network = &network
 	p.bitcoinAssetId = tempAssetId
 	p.bitcoinGenesisBlockHash = tempBlockHash
-	return p, nil
+	return obj, nil
 }
 
 func (t *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
@@ -135,7 +134,9 @@ func (t *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList
 			return nil, err
 		}
 	}
-	return &types.ConfidentialTx{Hex: txHex}, nil
+	tx = &types.ConfidentialTx{Hex: txHex}
+	return tx, nil
+
 }
 
 func (t *ConfidentialTxApiImpl) validConfig() error {
@@ -422,7 +423,8 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 	if err != nil {
 		return nil, err
 	}
-	return types.NewByteDataFromHexIgnoreError(sighashHex), nil
+	sighash = types.NewByteDataFromHexIgnoreError(sighashHex)
+	return sighash, nil
 }
 
 func (t *ConfidentialTxApiImpl) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error) {
@@ -523,7 +525,8 @@ func (t *ConfidentialTxApiImpl) GetTxIn(txHex string, outpoint *types.OutPoint) 
 	}
 	tempTxin.PeginWitness.Stack = pList
 
-	return &tempTxin, nil
+	txin = &tempTxin
+	return txin, nil
 }
 
 func convertListData(cfdData *cfd.TransactionData, cfdTxinList []cfd.ConfidentialTxIn, cfdTxoutList []cfd.ConfidentialTxOut) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {

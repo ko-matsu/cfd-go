@@ -15,23 +15,17 @@ type PubkeyApi interface {
 }
 
 type PrivkeyApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *PrivkeyApiImpl, err error)
 	GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error)
 	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
 	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
 }
 
 type ExtPubkeyApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *ExtPubkeyApiImpl, err error)
 	GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error)
 	GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error)
 }
 
 type ExtPrivkeyApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *ExtPrivkeyApiImpl, err error)
 	GetPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.Pubkey, err error)
 	GetPrivkey(extPrivkey *types.ExtPrivkey) (privkey *types.Privkey, err error)
 	GetExtPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.ExtPubkey, err error)
@@ -40,8 +34,6 @@ type ExtPrivkeyApi interface {
 }
 
 type HdWalletApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *HdWalletApiImpl, err error)
 }
 
 func NewPubkeyApi() *PubkeyApiImpl {
@@ -122,7 +114,8 @@ type HdWalletApiImpl struct {
 
 // VerifyEcSignature ...
 func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error) {
-	return cfd.CfdGoVerifyEcSignature(sighash, pubkey.Hex, signature)
+	isVerify, err = cfd.CfdGoVerifyEcSignature(sighash, pubkey.Hex, signature)
+	return isVerify, err
 }
 
 // -------------------------------------
@@ -131,12 +124,14 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 
 // WithConfig This function set a configuration.
 func (p *PrivkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *PrivkeyApiImpl, err error) {
+	obj = p
 	if !conf.Network.Valid() {
-		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+		err = fmt.Errorf("CFD Error: Invalid network configuration")
+		return obj, err
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	return obj, nil
 }
 
 // GetPrivkeyFromWif ...
@@ -147,14 +142,16 @@ func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, 
 	}
 	networkType := types.NewNetworkType(network)
 	if k.network != nil && k.network.ToBitcoinType() != networkType {
-		return nil, fmt.Errorf("CFD Error: Unmatch wif network type")
+		err = fmt.Errorf("CFD Error: Unmatch wif network type")
+		return nil, err
 	}
-	return &types.Privkey{
+	privkey = &types.Privkey{
 		Wif:                wif,
 		Hex:                hex,
 		Network:            networkType,
 		IsCompressedPubkey: isCompressed,
-	}, nil
+	}
+	return privkey, nil
 }
 
 // GetPubkey ...
@@ -163,7 +160,8 @@ func (k *PrivkeyApiImpl) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey
 	if err != nil {
 		return nil, err
 	}
-	return &types.Pubkey{Hex: hex}, nil
+	pubkey = &types.Pubkey{Hex: hex}
+	return pubkey, nil
 }
 
 // CreateEcSignature ...
@@ -180,7 +178,8 @@ func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *type
 	if err != nil {
 		return nil, err
 	}
-	return types.NewByteDataFromHexIgnoreError(derSig), nil
+	signature = types.NewByteDataFromHexIgnoreError(derSig)
+	return signature, nil
 }
 
 // -------------------------------------
@@ -189,12 +188,14 @@ func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *type
 
 // WithConfig This function set a configuration.
 func (p *ExtPubkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *ExtPubkeyApiImpl, err error) {
+	obj = p
 	if !conf.Network.Valid() {
-		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+		err = fmt.Errorf("CFD Error: Invalid network configuration")
+		return obj, err
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	return obj, nil
 }
 
 // GetPubkey ...
@@ -206,7 +207,8 @@ func (k *ExtPubkeyApiImpl) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.
 	if err != nil {
 		return nil, err
 	}
-	return &types.Pubkey{Hex: hex}, nil
+	pubkey = &types.Pubkey{Hex: hex}
+	return pubkey, nil
 }
 
 // GetData ...
@@ -214,7 +216,8 @@ func (k *ExtPubkeyApiImpl) GetData(extPubkey *types.ExtPubkey) (data *types.Extk
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
-	return getExtkeyInformationInternal(extPubkey.Key)
+	data, err = getExtkeyInformationInternal(extPubkey.Key)
+	return data, err
 }
 
 // validConfig ...
@@ -233,12 +236,14 @@ func (k *ExtPubkeyApiImpl) validConfig() error {
 
 // WithConfig This function set a configuration.
 func (p *ExtPrivkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *ExtPrivkeyApiImpl, err error) {
+	obj = p
 	if !conf.Network.Valid() {
-		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+		err = fmt.Errorf("CFD Error: Invalid network configuration")
+		return obj, err
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	return obj, nil
 }
 
 // GetPubkey ...
@@ -250,7 +255,8 @@ func (k *ExtPrivkeyApiImpl) GetPubkey(extPrivkey *types.ExtPrivkey) (pubkey *typ
 	if err != nil {
 		return nil, err
 	}
-	return &types.Pubkey{Hex: hex}, nil
+	pubkey = &types.Pubkey{Hex: hex}
+	return pubkey, nil
 }
 
 // GetPrivkey
@@ -262,12 +268,13 @@ func (k *ExtPrivkeyApiImpl) GetPrivkey(extPrivkey *types.ExtPrivkey) (privkey *t
 	if err != nil {
 		return nil, err
 	}
-	return &types.Privkey{
+	privkey = &types.Privkey{
 		Hex:                hex,
 		Wif:                wif,
 		Network:            *k.network,
 		IsCompressedPubkey: true,
-	}, nil
+	}
+	return privkey, nil
 }
 
 // GetExtPubkey
@@ -279,7 +286,8 @@ func (k *ExtPrivkeyApiImpl) GetExtPubkey(extPrivkey *types.ExtPrivkey) (pubkey *
 	if err != nil {
 		return nil, err
 	}
-	return &types.ExtPubkey{Key: key}, nil
+	pubkey = &types.ExtPubkey{Key: key}
+	return pubkey, nil
 }
 
 func (k *ExtPrivkeyApiImpl) GetExtPrivkeyByPath(extPrivkey *types.ExtPrivkey, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error) {
@@ -290,7 +298,8 @@ func (k *ExtPrivkeyApiImpl) GetExtPrivkeyByPath(extPrivkey *types.ExtPrivkey, bi
 	if err != nil {
 		return nil, err
 	}
-	return &types.ExtPrivkey{Key: key}, nil
+	derivedPrivkey = &types.ExtPrivkey{Key: key}
+	return derivedPrivkey, nil
 }
 
 // GetData ...
@@ -298,7 +307,8 @@ func (k *ExtPrivkeyApiImpl) GetData(extPrivkey *types.ExtPrivkey) (data *types.E
 	if err = k.validConfig(); err != nil {
 		return nil, err
 	}
-	return getExtkeyInformationInternal(extPrivkey.Key)
+	data, err = getExtkeyInformationInternal(extPrivkey.Key)
+	return data, err
 }
 
 // validConfig ...
@@ -317,12 +327,14 @@ func (k *ExtPrivkeyApiImpl) validConfig() error {
 
 // WithConfig This function set a configuration.
 func (p *HdWalletApiImpl) WithConfig(conf config.CfdConfig) (obj *HdWalletApiImpl, err error) {
+	obj = p
 	if !conf.Network.Valid() {
-		return p, fmt.Errorf("CFD Error: Invalid network configuration")
+		err = fmt.Errorf("CFD Error: Invalid network configuration")
+		return obj, err
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	return obj, nil
 }
 
 // internal --------------------------------------------------------------------
@@ -332,11 +344,12 @@ func getExtkeyInformationInternal(key string) (data *types.ExtkeyData, err error
 	if err != nil {
 		return nil, err
 	}
-	return &types.ExtkeyData{
+	data = &types.ExtkeyData{
 		Version:     tempData.Version,
 		Fingerprint: tempData.Fingerprint,
 		Depth:       tempData.Depth,
 		ChildNumber: tempData.ChildNumber,
 		ChainCode:   tempData.ChainCode,
-	}, nil
+	}
+	return data, nil
 }

@@ -16,8 +16,6 @@ import (
 
 // Pegin This interface defines the API used by the pegin function.
 type Pegin interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *PeginService, err error)
 	// GetPubkeyFromAccountExtPubkey This function get the pubkey from xpubkey.
 	GetPubkeyFromAccountExtPubkey(
 		accountExtPubkey *types.ExtPubkey,
@@ -128,7 +126,8 @@ func (p *PeginService) WithConfig(conf config.CfdConfig) (obj *PeginService, err
 	p.network = &network
 	p.bitcoinAssetId = tempAssetId
 	p.bitcoinGenesisBlockHash = tempBlockHash
-	return p, nil
+	obj = p
+	return obj, nil
 }
 
 // GetPubkeyFromExtPubkey This function get the pubkey from xpubkey.
@@ -160,7 +159,8 @@ func (p *PeginService) GetPubkeyFromAccountExtPubkey(
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Pegin pubkey get error")
 	}
-	return &types.Pubkey{Hex: pubkeyHex}, derivedExtPubkey, nil
+	pubkey = &types.Pubkey{Hex: pubkeyHex}
+	return pubkey, derivedExtPubkey, nil
 }
 
 // CreatePeginAddress This function get the pegin address and claim script.
@@ -418,7 +418,11 @@ func (p *PeginService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegin descriptor unsupport key type")
 	}
 	pubkey := types.Pubkey{Hex: descData.Pubkey}
-	return pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	isVerify, err = pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	if err != nil {
+		return false, errors.Wrap(err, "Pegin verify signature error")
+	}
+	return isVerify, err
 }
 
 // GetPeginUtxoData This function get the pegin utxo data from transaction.

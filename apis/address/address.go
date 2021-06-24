@@ -13,8 +13,6 @@ import (
 // -------------------------------------
 
 type AddressApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *AddressApiImpl, err error)
 	ParseAddress(addressString string) (address *types.Address, err error)
 	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
 	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
@@ -58,11 +56,12 @@ func (u *AddressApiImpl) ParseAddress(addressString string) (address *types.Addr
 	if err != nil {
 		return nil, err
 	}
-	return &types.Address{
+	address = &types.Address{
 		Address: addressString,
 		Network: types.NewNetworkType(data.NetworkType),
 		Type:    types.NewAddressTypeByHashType(data.HashType),
-	}, nil
+	}
+	return address, nil
 }
 
 // CreateByPubkey ...
@@ -74,11 +73,12 @@ func (u *AddressApiImpl) CreateByPubkey(pubkey *types.Pubkey, addressType types.
 	if err != nil {
 		return nil, err
 	}
-	return &types.Address{
+	address = &types.Address{
 		Address: addr,
 		Network: *u.network,
 		Type:    addressType,
-	}, nil
+	}
+	return address, nil
 }
 
 // CreateByScript ...
@@ -90,11 +90,12 @@ func (u *AddressApiImpl) CreateByScript(redeemScript *types.Script, addressType 
 	if err != nil {
 		return nil, err
 	}
-	return &types.Address{
+	address = &types.Address{
 		Address: addr,
 		Network: *u.network,
 		Type:    addressType,
-	}, nil
+	}
+	return address, nil
 }
 
 // CreateMultisigAddress ...
@@ -115,11 +116,12 @@ func (u *AddressApiImpl) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireN
 	} else {
 		redeemScript = types.NewScriptFromHexIgnoreError(witnessScript)
 	}
-	return &types.Address{
+	address = &types.Address{
 		Address: addr,
 		Network: *u.network,
 		Type:    addressType,
-	}, redeemScript, nil
+	}
+	return address, redeemScript, nil
 }
 
 // GetPeginAddressByPubkey ...

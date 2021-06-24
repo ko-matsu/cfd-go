@@ -13,8 +13,6 @@ import (
 // -------------------------------------
 
 type BlockApi interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *BlockApiImpl, err error)
 	GetHeaderData(block *types.Block) (blockHash string, header *types.BlockHeader, err error)
 	GetTxCount(block *types.Block) (count uint32, err error)
 	GetTxidList(block *types.Block) (txidList []string, err error)
@@ -48,7 +46,8 @@ func (p *BlockApiImpl) WithConfig(conf config.CfdConfig) (obj *BlockApiImpl, err
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return p, nil
+	obj = p
+	return obj, nil
 }
 
 // GetHeaderData ...
@@ -60,14 +59,15 @@ func (b *BlockApiImpl) GetHeaderData(block *types.Block) (blockHash string, head
 	if err != nil {
 		return "", nil, err
 	}
-	return hash, &types.BlockHeader{
+	header = &types.BlockHeader{
 		Version:       cfdHeader.Version,
 		PrevBlockHash: cfdHeader.PrevBlockHash,
 		MerkleRoot:    cfdHeader.MerkleRoot,
 		Time:          cfdHeader.Time,
 		Bits:          cfdHeader.Bits,
 		Nonce:         cfdHeader.Nonce,
-	}, nil
+	}
+	return hash, header, nil
 }
 
 // GetTxCount ...
@@ -75,7 +75,8 @@ func (b *BlockApiImpl) GetTxCount(block *types.Block) (count uint32, err error) 
 	if err = b.validConfig(); err != nil {
 		return 0, err
 	}
-	return cfd.CfdGoGetTxCountInBlock(b.network.ToCfdValue(), block.Hex)
+	count, err = cfd.CfdGoGetTxCountInBlock(b.network.ToCfdValue(), block.Hex)
+	return count, err
 }
 
 // GetTxidList ...
@@ -83,7 +84,8 @@ func (b *BlockApiImpl) GetTxidList(block *types.Block) (txidList []string, err e
 	if err = b.validConfig(); err != nil {
 		return nil, err
 	}
-	return cfd.CfdGoGetTxidListFromBlock(b.network.ToCfdValue(), block.Hex)
+	txidList, err = cfd.CfdGoGetTxidListFromBlock(b.network.ToCfdValue(), block.Hex)
+	return txidList, err
 }
 
 // GetTransactionData ...
@@ -105,7 +107,8 @@ func (b *BlockApiImpl) ExistTxid(block *types.Block, txid string) (exist bool, e
 	if err = b.validConfig(); err != nil {
 		return false, err
 	}
-	return cfd.CfdGoExistTxidInBlock(b.network.ToCfdValue(), block.Hex, txid)
+	exist, err = cfd.CfdGoExistTxidInBlock(b.network.ToCfdValue(), block.Hex, txid)
+	return exist, err
 }
 
 // validConfig ...

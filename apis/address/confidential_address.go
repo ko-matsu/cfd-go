@@ -39,13 +39,14 @@ func (u *ConfidentialAddressApiImpl) Create(addressString string, confidentialKe
 			return nil, err
 		}
 	}
-	return &types.ConfidentialAddress{
+	address = &types.ConfidentialAddress{
 		ConfidentialAddress: addr,
 		Address:             addressString,
 		Network:             types.NewNetworkType(data.NetworkType),
 		Type:                types.NewAddressTypeByHashType(data.HashType),
 		ConfidentialKey:     confidentialKey,
-	}, nil
+	}
+	return address, nil
 }
 
 // ParseAddress ...
@@ -56,21 +57,23 @@ func (u *ConfidentialAddressApiImpl) Parse(addressString string) (address *types
 		if err != nil {
 			return nil, err
 		}
-		return &types.ConfidentialAddress{
+		address = &types.ConfidentialAddress{
 			ConfidentialAddress: addressString,
 			Address:             addr,
 			Network:             types.NewNetworkType(network),
 			Type:                types.NewAddressTypeByHashType(data.HashType),
 			ConfidentialKey:     &types.Pubkey{Hex: key},
-		}, nil
+		}
+	} else {
+		data, err := cfd.CfdGoGetAddressInfo(addressString)
+		if err != nil {
+			return nil, err
+		}
+		address = &types.ConfidentialAddress{
+			Address: addressString,
+			Network: types.NewNetworkType(data.NetworkType),
+			Type:    types.NewAddressTypeByHashType(data.HashType),
+		}
 	}
-	data, err := cfd.CfdGoGetAddressInfo(addressString)
-	if err != nil {
-		return nil, err
-	}
-	return &types.ConfidentialAddress{
-		Address: addressString,
-		Network: types.NewNetworkType(data.NetworkType),
-		Type:    types.NewAddressTypeByHashType(data.HashType),
-	}, nil
+	return address, nil
 }

@@ -15,8 +15,6 @@ import (
 
 // Pegout This interface defines the API used by the pegout function.
 type Pegout interface {
-	// WithConfig This function set a configuration.
-	WithConfig(conf config.CfdConfig) (obj *PegoutService, err error)
 	// CreateOnlinePrivateKey This function generate random private key for online key.
 	CreateOnlinePrivateKey() (privkey *types.Privkey, err error)
 	// CreatePakEntry This function create the PAK-Entry.
@@ -131,12 +129,13 @@ func (p *PegoutService) CreateOnlinePrivateKey() (privkey *types.Privkey, err er
 	if err != nil {
 		return nil, err
 	}
-	return &types.Privkey{
+	privkey = &types.Privkey{
 		Hex:                privkeyHex,
 		Wif:                wif,
 		Network:            *p.network,
 		IsCompressedPubkey: true,
-	}, nil
+	}
+	return privkey, nil
 }
 
 // CreatePakEntry This function create the PAK-Entry.
@@ -175,7 +174,8 @@ func (p *PegoutService) CreatePakEntry(
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegout internal error")
 	}
-	return &pakEntryObj, nil
+	pakEntry = &pakEntryObj
+	return pakEntry, nil
 }
 
 // CreatePegoutAddress This function create the pegout address for bitcoin network.
@@ -214,13 +214,15 @@ func (p *PegoutService) CreatePegoutAddress(
 	} else {
 		desc = desc + accountExtPubkey.Key + ")"
 	}
-	return &types.Address{
-			Address: address,
-			Network: p.network.ToBitcoinType(),
-			Type:    addressType,
-		}, &types.Descriptor{
-			OutputDescriptor: desc,
-		}, nil
+	pegoutAddress = &types.Address{
+		Address: address,
+		Network: p.network.ToBitcoinType(),
+		Type:    addressType,
+	}
+	baseDescriptor = &types.Descriptor{
+		OutputDescriptor: desc,
+	}
+	return pegoutAddress, baseDescriptor, nil
 }
 
 // CreatePegoutTransaction This function create the pegout transaction.

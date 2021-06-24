@@ -292,17 +292,17 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
-	privkeyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
-	pegoutApi := (Pegout)(NewPegoutService())
-	xprvApi, err := xprvApi.WithConfig(curConfig)
+	var xprvApi key.ExtPrivkeyApi
+	var privkeyApi key.PrivkeyApi
+	var txApi transaction.ConfidentialTxApi
+	var pegoutApi Pegout
+	xprvApi, err := key.NewExtPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	privkeyApi, err = privkeyApi.WithConfig(curConfig)
+	privkeyApi, err = key.NewPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	txApi, err = txApi.WithConfig(curConfig)
+	txApi, err = transaction.NewConfidentialTxApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	pegoutApi, err = pegoutApi.WithConfig(curConfig)
+	pegoutApi, err = NewPegoutService().WithConfig(curConfig)
 	assert.NoError(t, err)
 
 	// key
