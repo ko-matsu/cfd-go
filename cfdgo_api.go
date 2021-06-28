@@ -4271,31 +4271,32 @@ func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, 
 	}
 	defer CfdFreeFundRawTxHandle(handle, fundHandle)
 
-	for i := 0; i < len(txinList); i++ {
-		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].Vout)))
-		peginBtcTxSizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].PeginBtcTxSize)))
-		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txinList[i].Amount)))
-		ret = CfdAddTxInTemplateForFundRawTx(handle, fundHandle, txinList[i].Txid, voutPtr, amountPtr, txinList[i].Descriptor, txinList[i].Asset, txinList[i].IsIssuance, txinList[i].IsBlindIssuance, txinList[i].IsPegin, peginBtcTxSizePtr, txinList[i].FedpegScript, txinList[i].ScriptSigTemplate)
+	for _, txin := range txinList {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txin.Vout)))
+		peginBtcTxSizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txin.PeginBtcTxSize)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txin.Amount)))
+		ret = CfdAddTxInTemplateForFundRawTx(handle, fundHandle, txin.Txid, voutPtr, amountPtr, txin.Descriptor, txin.Asset, txin.IsIssuance, txin.IsBlindIssuance, txin.IsPegin, peginBtcTxSizePtr, txin.FedpegScript, txin.ScriptSigTemplate)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
 		}
 	}
 
-	for i := 0; i < len(utxoList); i++ {
-		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxoList[i].Vout)))
-		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxoList[i].Amount)))
-		ret = CfdAddUtxoTemplateForFundRawTx(handle, fundHandle, utxoList[i].Txid, voutPtr, amountPtr, utxoList[i].Descriptor, utxoList[i].Asset, utxoList[i].ScriptSigTemplate)
+	for _, utxo := range utxoList {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxo.Vout)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxo.Amount)))
+		ret = CfdAddUtxoTemplateForFundRawTx(handle, fundHandle, utxo.Txid, voutPtr, amountPtr, utxo.Descriptor, utxo.Asset, utxo.ScriptSigTemplate)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
 		}
 	}
 
-	for idx := uint32(0); idx < uint32(len(targetAmountList)); idx++ {
-		idxPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&idx)))
-		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&targetAmountList[idx].Amount)))
-		ret = CfdAddTargetAmountForFundRawTx(handle, fundHandle, idxPtr, amountPtr, targetAmountList[idx].Asset, targetAmountList[idx].ReservedAddress)
+	for idx, target := range targetAmountList {
+		index := uint32(idx)
+		idxPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&target.Amount)))
+		ret = CfdAddTargetAmountForFundRawTx(handle, fundHandle, idxPtr, amountPtr, target.Asset, target.ReservedAddress)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
@@ -6612,6 +6613,23 @@ func CfdGoExistTxidInBlock(networkType int, block, txid string) (exist bool, err
 	defer CfdFreeBlockHandle(uintptr(0), blockHandle)
 
 	return ExistTxidInBlock(blockHandle, txid)
+}
+
+// CfdGoUnblindData This function returns unblind txout data.
+func CfdGoUnblindData(blindingKey, lockingScript, assetCommitment, valueCommitment, commitmentNonce, rangeproof string) (amount int64, asset, assetBlindFactor, valueBlindFactor string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
+	ret := CfdUnblindTxOutData(handle, blindingKey, lockingScript, assetCommitment, valueCommitment, commitmentNonce, rangeproof, &asset, amountPtr, &assetBlindFactor, &valueBlindFactor)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return 0, "", "", "", err
+	}
+	return amount, asset, assetBlindFactor, valueBlindFactor, nil
 }
 
 // refine API ------------------------------------------------------------------

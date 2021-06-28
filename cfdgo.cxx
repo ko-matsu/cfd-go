@@ -6092,6 +6092,84 @@ intgo _wrap_CfdAddTxPegoutOutput_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, void *
 }
 
 
+intgo _wrap_CfdUnblindTxOutData_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, _gostring_ _swig_go_4, _gostring_ _swig_go_5, _gostring_ _swig_go_6, _gostring_* _swig_go_7, int64_t *_swig_go_8, _gostring_* _swig_go_9, _gostring_* _swig_go_10) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  char *arg5 = (char *) 0 ;
+  char *arg6 = (char *) 0 ;
+  char *arg7 = (char *) 0 ;
+  char **arg8 = (char **) 0 ;
+  int64_t *arg9 = (int64_t *) 0 ;
+  char **arg10 = (char **) 0 ;
+  char **arg11 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  arg4 = (char *)malloc(_swig_go_3.n + 1);
+  memcpy(arg4, _swig_go_3.p, _swig_go_3.n);
+  arg4[_swig_go_3.n] = '\0';
+  
+  
+  arg5 = (char *)malloc(_swig_go_4.n + 1);
+  memcpy(arg5, _swig_go_4.p, _swig_go_4.n);
+  arg5[_swig_go_4.n] = '\0';
+  
+  
+  arg6 = (char *)malloc(_swig_go_5.n + 1);
+  memcpy(arg6, _swig_go_5.p, _swig_go_5.n);
+  arg6[_swig_go_5.n] = '\0';
+  
+  
+  arg7 = (char *)malloc(_swig_go_6.n + 1);
+  memcpy(arg7, _swig_go_6.p, _swig_go_6.n);
+  arg7[_swig_go_6.n] = '\0';
+  
+  arg8 = *(char ***)&_swig_go_7; 
+  arg9 = *(int64_t **)&_swig_go_8; 
+  arg10 = *(char ***)&_swig_go_9; 
+  arg11 = *(char ***)&_swig_go_10; 
+  
+  result = (int)CfdUnblindTxOutData(arg1,(char const *)arg2,(char const *)arg3,(char const *)arg4,(char const *)arg5,(char const *)arg6,(char const *)arg7,arg8,arg9,arg10,arg11);
+  _swig_go_result = result; 
+  {
+    if (arg8 && *arg8) {
+      _swig_go_7->n = strlen(*arg8);
+    }
+  }
+  {
+    if (arg10 && *arg10) {
+      _swig_go_9->n = strlen(*arg10);
+    }
+  }
+  {
+    if (arg11 && *arg11) {
+      _swig_go_10->n = strlen(*arg11);
+    }
+  }
+  free(arg2); 
+  free(arg3); 
+  free(arg4); 
+  free(arg5); 
+  free(arg6); 
+  free(arg7); 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_kCfdExtPrivkey_cfdgo_8e1c65a7d98a8829() {
   CfdExtKeyType result;
   intgo _swig_go_result;
@@ -7719,6 +7797,55 @@ intgo _wrap_CfdGetExtkeyInformation_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, _go
   arg7 = *(uint32_t **)&_swig_go_6; 
   
   result = (int)CfdGetExtkeyInformation(arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7);
+  _swig_go_result = result; 
+  {
+    if (arg3 && *arg3) {
+      _swig_go_2->n = strlen(*arg3);
+    }
+  }
+  {
+    if (arg4 && *arg4) {
+      _swig_go_3->n = strlen(*arg4);
+    }
+  }
+  {
+    if (arg5 && *arg5) {
+      _swig_go_4->n = strlen(*arg5);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdGetExtkeyInfo_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_* _swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4, uint32_t *_swig_go_5, uint32_t *_swig_go_6, intgo *_swig_go_7, intgo *_swig_go_8) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char **arg3 = (char **) 0 ;
+  char **arg4 = (char **) 0 ;
+  char **arg5 = (char **) 0 ;
+  uint32_t *arg6 = (uint32_t *) 0 ;
+  uint32_t *arg7 = (uint32_t *) 0 ;
+  int *arg8 = (int *) 0 ;
+  int *arg9 = (int *) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = *(char ***)&_swig_go_2; 
+  arg4 = *(char ***)&_swig_go_3; 
+  arg5 = *(char ***)&_swig_go_4; 
+  arg6 = *(uint32_t **)&_swig_go_5; 
+  arg7 = *(uint32_t **)&_swig_go_6; 
+  arg8 = *(int **)&_swig_go_7; 
+  arg9 = *(int **)&_swig_go_8; 
+  
+  result = (int)CfdGetExtkeyInfo(arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
   _swig_go_result = result; 
   {
     if (arg3 && *arg3) {
