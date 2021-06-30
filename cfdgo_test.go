@@ -704,6 +704,18 @@ func TestCfdExtkey(t *testing.T) {
 		assert.Equal(t, (uint32)(2147483692), data.ChildNumber)
 	}
 
+	data, keyType, networkType, err := CfdGoGetExtkeyInfo(extprivkey2)
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "0488ade4", data.Version)
+		assert.Equal(t, "03af54a0", data.Fingerprint)
+		assert.Equal(t, "16ddac07d3c3110f0292136af4bc476323e87b6da49ac0b8eef5bcde17e8a672", data.ChainCode)
+		assert.Equal(t, (uint32)(1), data.Depth)
+		assert.Equal(t, (uint32)(2147483692), data.ChildNumber)
+		assert.Equal(t, (int)(KCfdExtPrivkey), keyType)
+		assert.Equal(t, kNetwork, networkType)
+	}
+
 	extkey, err := CfdGoCreateExtkey(int(KCfdNetworkMainnet), int(KCfdExtPrivkey), "03af54a0", "a0467585c122e8c2c59d2a10dbe073533cbe887758b05c23f281c9bf873998f6", "16ddac07d3c3110f0292136af4bc476323e87b6da49ac0b8eef5bcde17e8a672", byte(1), uint32(2147483692))
 	assert.NoError(t, err)
 	assert.Equal(t, "xprv9tviYANkXM1CY831VtMFKFn6LP6aMHf1kvtCZyTL9YbyMwTR2BSmJaEoqw59BZdQhLSx9ZxyKsRUeCetxA2xZ34eupBqZUsifnWyLJJ16j3", extkey)
