@@ -16,4 +16,8 @@ type ExtkeyData struct {
 	Depth uint32
 	// child number
 	ChildNumber uint32
+	// key type
+	KeyType ExtkeyType
+	// network
+	Network NetworkType
 }
