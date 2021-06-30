@@ -2477,6 +2477,22 @@ func CfdGoGetExtkeyInformation(
 	return extkeyData, err
 }
 
+// CfdGoGetExtkeyInfo This function returns extkey info and network.
+func CfdGoGetExtkeyInfo(
+	extkey string) (extkeyData CfdExtkeyData, keyType, networkType int, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&extkeyData.Depth)))
+	childNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&extkeyData.ChildNumber)))
+	ret := CfdGetExtkeyInfo(handle, extkey, &extkeyData.Version, &extkeyData.Fingerprint, &extkeyData.ChainCode, depthPtr, childNumPtr, &keyType, &networkType)
+	err = convertCfdError(ret, handle)
+	return extkeyData, keyType, networkType, err
+}
+
 /**
  * Parse script items from script.
  * param: script          script.
