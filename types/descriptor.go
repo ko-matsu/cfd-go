@@ -1,5 +1,7 @@
 package types
 
+import cfd "github.com/cryptogarageinc/cfd-go"
+
 /**
  * Descriptor data struct.
  */
@@ -61,4 +63,24 @@ type Descriptor struct {
 	OutputDescriptor string
 	// Network Type
 	Network *NetworkType
+}
+
+func NewDescriptorData(cfdData *cfd.CfdDescriptorData) *DescriptorData {
+	data := &DescriptorData{
+		Depth:         cfdData.Depth,
+		ScriptType:    cfdData.ScriptType,
+		LockingScript: cfdData.LockingScript,
+		Address:       cfdData.Address,
+		HashType:      cfdData.HashType,
+		RedeemScript:  cfdData.RedeemScript,
+		KeyType:       cfdData.KeyType,
+		Pubkey:        cfdData.Pubkey,
+		ExtPubkey:     cfdData.ExtPubkey,
+		ExtPrivkey:    cfdData.ExtPrivkey,
+		SchnorrPubkey: cfdData.SchnorrPubkey,
+		IsMultisig:    cfdData.IsMultisig,
+		ReqSigNum:     cfdData.ReqSigNum,
+		TreeString:    cfdData.TreeString,
+	}
+	return data
 }

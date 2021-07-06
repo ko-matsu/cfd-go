@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"unsafe"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/config"
@@ -177,8 +176,22 @@ func (d *DescriptorApiImpl) GetChecksum(descriptor *types.Descriptor) (descripto
 }
 
 func convertFromCfd(cfdData *cfd.CfdDescriptorData, cfdDescriptorDataList []cfd.CfdDescriptorData, cfdMultisigList []cfd.CfdDescriptorKeyData) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {
-	data = (*types.DescriptorData)(unsafe.Pointer(cfdData))
-	descriptorDataList = *(*[]types.DescriptorData)(unsafe.Pointer(&cfdDescriptorDataList))
-	multisigList = *(*[]types.DescriptorKeyData)(unsafe.Pointer(&cfdMultisigList))
+	data = types.NewDescriptorData(cfdData)
+	descriptorDataList = make([]types.DescriptorData, len(cfdDescriptorDataList))
+	for i, data := range cfdDescriptorDataList {
+		descriptorDataList[i] = *(types.NewDescriptorData(&data))
+	}
+	if cfdMultisigList != nil {
+		multisigList = make([]types.DescriptorKeyData, len(cfdMultisigList))
+		for i, key := range cfdMultisigList {
+			multisigList[i] = types.DescriptorKeyData{
+				KeyType:       key.KeyType,
+				Pubkey:        key.Pubkey,
+				ExtPubkey:     key.ExtPubkey,
+				ExtPrivkey:    key.ExtPrivkey,
+				SchnorrPubkey: key.SchnorrPubkey,
+			}
+		}
+	}
 	return data, descriptorDataList, multisigList, nil
 }

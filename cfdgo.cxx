@@ -3160,6 +3160,89 @@ intgo _wrap_CfdAddTxInTemplateForEstimateFee_cfdgo_8e1c65a7d98a8829(void *_swig_
 }
 
 
+intgo _wrap_CfdAddTxInputForEstimateFee_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, void *_swig_go_1, _gostring_ _swig_go_2, uint32_t *_swig_go_3, _gostring_ _swig_go_4, _gostring_ _swig_go_5, bool _swig_go_6, bool _swig_go_7, bool _swig_go_8, _gostring_ _swig_go_9, uint32_t *_swig_go_10, uint32_t *_swig_go_11, _gostring_ _swig_go_12) {
+  void *arg1 = (void *) 0 ;
+  void *arg2 = (void *) 0 ;
+  char *arg3 = (char *) 0 ;
+  uint32_t arg4 ;
+  char *arg5 = (char *) 0 ;
+  char *arg6 = (char *) 0 ;
+  bool arg7 ;
+  bool arg8 ;
+  bool arg9 ;
+  char *arg10 = (char *) 0 ;
+  uint32_t arg11 ;
+  uint32_t arg12 ;
+  char *arg13 = (char *) 0 ;
+  uint32_t *argp4 ;
+  uint32_t *argp11 ;
+  uint32_t *argp12 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  arg2 = *(void **)&_swig_go_1; 
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  argp4 = (uint32_t *)_swig_go_3;
+  if (argp4 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg4 = (uint32_t)*argp4;
+  
+  
+  arg5 = (char *)malloc(_swig_go_4.n + 1);
+  memcpy(arg5, _swig_go_4.p, _swig_go_4.n);
+  arg5[_swig_go_4.n] = '\0';
+  
+  
+  arg6 = (char *)malloc(_swig_go_5.n + 1);
+  memcpy(arg6, _swig_go_5.p, _swig_go_5.n);
+  arg6[_swig_go_5.n] = '\0';
+  
+  arg7 = (bool)_swig_go_6; 
+  arg8 = (bool)_swig_go_7; 
+  arg9 = (bool)_swig_go_8; 
+  
+  arg10 = (char *)malloc(_swig_go_9.n + 1);
+  memcpy(arg10, _swig_go_9.p, _swig_go_9.n);
+  arg10[_swig_go_9.n] = '\0';
+  
+  
+  argp11 = (uint32_t *)_swig_go_10;
+  if (argp11 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg11 = (uint32_t)*argp11;
+  
+  
+  argp12 = (uint32_t *)_swig_go_11;
+  if (argp12 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg12 = (uint32_t)*argp12;
+  
+  
+  arg13 = (char *)malloc(_swig_go_12.n + 1);
+  memcpy(arg13, _swig_go_12.p, _swig_go_12.n);
+  arg13[_swig_go_12.n] = '\0';
+  
+  
+  result = (int)CfdAddTxInputForEstimateFee(arg1,arg2,(char const *)arg3,arg4,(char const *)arg5,(char const *)arg6,arg7,arg8,arg9,(char const *)arg10,arg11,arg12,(char const *)arg13);
+  _swig_go_result = result; 
+  free(arg3); 
+  free(arg5); 
+  free(arg6); 
+  free(arg10); 
+  free(arg13); 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_CfdSetOptionEstimateFee_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, void *_swig_go_1, intgo _swig_go_2, int64_t *_swig_go_3, double _swig_go_4, bool _swig_go_5) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
@@ -11465,6 +11548,98 @@ intgo _wrap_CfdAddTxInTemplateForFundRawTx_cfdgo_8e1c65a7d98a8829(void *_swig_go
   free(arg7); 
   free(arg12); 
   free(arg13); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdAddTxInputForFundRawTx_cfdgo_8e1c65a7d98a8829(void *_swig_go_0, void *_swig_go_1, _gostring_ _swig_go_2, uint32_t *_swig_go_3, int64_t *_swig_go_4, _gostring_ _swig_go_5, _gostring_ _swig_go_6, bool _swig_go_7, bool _swig_go_8, bool _swig_go_9, _gostring_ _swig_go_10, uint32_t *_swig_go_11, uint32_t *_swig_go_12, _gostring_ _swig_go_13) {
+  void *arg1 = (void *) 0 ;
+  void *arg2 = (void *) 0 ;
+  char *arg3 = (char *) 0 ;
+  uint32_t arg4 ;
+  int64_t arg5 ;
+  char *arg6 = (char *) 0 ;
+  char *arg7 = (char *) 0 ;
+  bool arg8 ;
+  bool arg9 ;
+  bool arg10 ;
+  char *arg11 = (char *) 0 ;
+  uint32_t arg12 ;
+  uint32_t arg13 ;
+  char *arg14 = (char *) 0 ;
+  uint32_t *argp4 ;
+  int64_t *argp5 ;
+  uint32_t *argp12 ;
+  uint32_t *argp13 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  arg2 = *(void **)&_swig_go_1; 
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  argp4 = (uint32_t *)_swig_go_3;
+  if (argp4 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg4 = (uint32_t)*argp4;
+  
+  
+  argp5 = (int64_t *)_swig_go_4;
+  if (argp5 == NULL) {
+    _swig_gopanic("Attempt to dereference null int64_t");
+  }
+  arg5 = (int64_t)*argp5;
+  
+  
+  arg6 = (char *)malloc(_swig_go_5.n + 1);
+  memcpy(arg6, _swig_go_5.p, _swig_go_5.n);
+  arg6[_swig_go_5.n] = '\0';
+  
+  
+  arg7 = (char *)malloc(_swig_go_6.n + 1);
+  memcpy(arg7, _swig_go_6.p, _swig_go_6.n);
+  arg7[_swig_go_6.n] = '\0';
+  
+  arg8 = (bool)_swig_go_7; 
+  arg9 = (bool)_swig_go_8; 
+  arg10 = (bool)_swig_go_9; 
+  
+  arg11 = (char *)malloc(_swig_go_10.n + 1);
+  memcpy(arg11, _swig_go_10.p, _swig_go_10.n);
+  arg11[_swig_go_10.n] = '\0';
+  
+  
+  argp12 = (uint32_t *)_swig_go_11;
+  if (argp12 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg12 = (uint32_t)*argp12;
+  
+  
+  argp13 = (uint32_t *)_swig_go_12;
+  if (argp13 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg13 = (uint32_t)*argp13;
+  
+  
+  arg14 = (char *)malloc(_swig_go_13.n + 1);
+  memcpy(arg14, _swig_go_13.p, _swig_go_13.n);
+  arg14[_swig_go_13.n] = '\0';
+  
+  
+  result = (int)CfdAddTxInputForFundRawTx(arg1,arg2,(char const *)arg3,arg4,arg5,(char const *)arg6,(char const *)arg7,arg8,arg9,arg10,(char const *)arg11,arg12,arg13,(char const *)arg14);
+  _swig_go_result = result; 
+  free(arg3); 
+  free(arg6); 
+  free(arg7); 
+  free(arg11); 
+  free(arg14); 
   return _swig_go_result;
 }
 

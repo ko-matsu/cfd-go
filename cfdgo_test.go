@@ -1217,7 +1217,6 @@ func TestFundRawTransactionBtc(t *testing.T) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 	}
 	txHex := "02000000000101f1993fe8e7189542ee4506258e170201be292703cd275acb09ece16672fd848b0000000017160014703e50206e4d27ad1340a7b6a0d94563a3fb768afeffffff02080410240100000017a9141e60c63c6d099ee2b48eded11acfdf3a79a891f48700e1f5050000000017a9142699570770f32e0cf3e1d12d81064fbc45899e8a870247304402202b12edc9a75edd70a0e4261c5816efa2c5256e3f8bcffdd49182bd9f791c74e902201e3ae5c1062a83d787098322b3071fe68c4b181e0088b0e0087020495adaf6e3012102f466d403c0c4057257e7bcbed1d172880fe75f337c77df5490ad9bc8cc2d6a1600000000"
@@ -1666,8 +1665,8 @@ func TestTaprootDescriptorStruct(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(0), rootData.Depth)
 	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
-	assert.Equal(t, "5120ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", rootData.LockingScript)
-	assert.Equal(t, "bcrt1paag57xhtzja2dnzh4vex37ejnjj5p3yy2nmlgem3a4e3ud962gdqqctzwn", rootData.Address)
+	assert.Equal(t, "5120630f2d9ea4cbcc3f04b73fd56a1c7b51fd3192de8e26e7cd893124900033d3d1", rootData.LockingScript)
+	assert.Equal(t, "bcrt1pvv8jm84ye0xr7p9h8l2k58rm287nryk73cnw0nvfxyjfqqpn60gssz7u5f", rootData.Address)
 	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
 	assert.Equal(t, "", rootData.RedeemScript)
 	assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), rootData.KeyType)
@@ -1683,8 +1682,8 @@ func TestTaprootDescriptorStruct(t *testing.T) {
 	if len(descriptorDataList) == 1 {
 		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
 		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
-		assert.Equal(t, "5120ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", descriptorDataList[0].LockingScript)
-		assert.Equal(t, "bcrt1paag57xhtzja2dnzh4vex37ejnjj5p3yy2nmlgem3a4e3ud962gdqqctzwn", descriptorDataList[0].Address)
+		assert.Equal(t, "5120630f2d9ea4cbcc3f04b73fd56a1c7b51fd3192de8e26e7cd893124900033d3d1", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bcrt1pvv8jm84ye0xr7p9h8l2k58rm287nryk73cnw0nvfxyjfqqpn60gssz7u5f", descriptorDataList[0].Address)
 		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
 		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
 		assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), descriptorDataList[0].KeyType)
@@ -1709,8 +1708,8 @@ func TestTaprootDescriptorStruct(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(0), rootData.Depth)
 	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
-	assert.Equal(t, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", rootData.LockingScript)
-	assert.Equal(t, "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt", rootData.Address)
+	assert.Equal(t, "5120acb99cf4bb397c8aef2fca4f9201053526f5484174fef211ac6ac7fad0a38a48", rootData.LockingScript)
+	assert.Equal(t, "bc1p4jueea9m897g4me0ef8eyqg9x5n02jzpwnl0yydvdtrl459r3fyqg8wvnj", rootData.Address)
 	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
 	assert.Equal(t, "", rootData.RedeemScript)
 	assert.Equal(t, (int)(KCfdDescriptorKeyBip32), rootData.KeyType)
@@ -1726,8 +1725,8 @@ func TestTaprootDescriptorStruct(t *testing.T) {
 	if len(descriptorDataList) == 1 {
 		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
 		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
-		assert.Equal(t, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", descriptorDataList[0].LockingScript)
-		assert.Equal(t, "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt", descriptorDataList[0].Address)
+		assert.Equal(t, "5120acb99cf4bb397c8aef2fca4f9201053526f5484174fef211ac6ac7fad0a38a48", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1p4jueea9m897g4me0ef8eyqg9x5n02jzpwnl0yydvdtrl459r3fyqg8wvnj", descriptorDataList[0].Address)
 		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
 		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
 		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), descriptorDataList[0].KeyType)

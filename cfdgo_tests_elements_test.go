@@ -725,7 +725,6 @@ func TestCfdBlindTransaction3(t *testing.T) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 	}
 	feeOption := NewCfdEstimateFeeOption()
@@ -1476,7 +1475,6 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 		{
 			Utxo: CfdUtxo{
@@ -1490,7 +1488,6 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 		{
 			Utxo: CfdUtxo{
@@ -1504,7 +1501,6 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 		{
 			Utxo: CfdUtxo{
@@ -1518,7 +1514,6 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 	}
 
@@ -1866,7 +1861,6 @@ func TestFundRawTransaction(t *testing.T) {
 			IsBlindIssuance: false,
 			IsPegin:         false,
 			PeginBtcTxSize:  uint32(0),
-			FedpegScript:    "",
 		},
 	}
 	txHex := "010000000001fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff010100000000000000000000000000000000000000000000000000000000000000aa010000000006b22c2000160014c6598809d09edaacb8f4f4d5b9b81e4413a5724311000000"

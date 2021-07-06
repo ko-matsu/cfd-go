@@ -3,7 +3,6 @@ package transaction
 import (
 	"fmt"
 	"strings"
-	"unsafe"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/address"
@@ -230,9 +229,20 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 	}
 	var blindOutputList []cfd.CfdBlindOutputData
 	if txoutList != nil {
-		blindOutputList = *(*[]cfd.CfdBlindOutputData)(unsafe.Pointer(txoutList))
+		blindOutputList = make([]cfd.CfdBlindOutputData, len(*txoutList))
+		for i, data := range *txoutList {
+			blindOutputList[i] = cfd.CfdBlindOutputData{
+				Index:               data.Index,
+				ConfidentialAddress: data.ConfidentialAddress,
+				ConfidentialKey:     data.ConfidentialKey,
+			}
+		}
 	}
-	blindOption := (*cfd.CfdBlindTxOption)(unsafe.Pointer(option))
+	blindOption := &cfd.CfdBlindTxOption{
+		MinimumRangeValue: option.MinimumRangeValue,
+		Exponent:          option.Exponent,
+		MinimumBits:       option.MinimumBits,
+	}
 	outputTx, err := cfd.CfdGoBlindRawTransaction(txHex, blindTxinList, blindOutputList, blindOption)
 	if err != nil {
 		return err
@@ -530,10 +540,24 @@ func (t *ConfidentialTxApiImpl) GetTxIn(txHex string, outpoint *types.OutPoint) 
 }
 
 func convertListData(cfdData *cfd.TransactionData, cfdTxinList []cfd.ConfidentialTxIn, cfdTxoutList []cfd.ConfidentialTxOut) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
-	// FIXME need implement logic
-	data = (*types.TransactionData)(unsafe.Pointer(cfdData))
-	txinList = *(*[]types.ConfidentialTxIn)(unsafe.Pointer(&cfdTxinList))
-	txoutList = *(*[]types.ConfidentialTxOut)(unsafe.Pointer(&cfdTxoutList))
+	data = &types.TransactionData{
+		Txid:     cfdData.Txid,
+		Wtxid:    cfdData.Wtxid,
+		WitHash:  cfdData.WitHash,
+		Size:     cfdData.Size,
+		Vsize:    cfdData.Vsize,
+		Weight:   cfdData.Weight,
+		Version:  cfdData.Version,
+		LockTime: cfdData.LockTime,
+	}
+	txinList = make([]types.ConfidentialTxIn, len(cfdTxinList))
+	for i, txin := range cfdTxinList {
+		txinList[i] = *types.NewConfidentialTxIn(&txin)
+	}
+	txoutList = make([]types.ConfidentialTxOut, len(cfdTxoutList))
+	for i, txout := range cfdTxoutList {
+		txoutList[i] = *types.NewConfidentialTxOut(&txout)
+	}
 	return data, txinList, txoutList, nil
 }
 

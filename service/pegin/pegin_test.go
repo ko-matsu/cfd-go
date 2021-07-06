@@ -88,8 +88,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 	utxos := []types.UtxoData{
 		{
-			Txid:       utxoOutPoint.Txid,
-			Vout:       utxoOutPoint.Vout,
+			OutPoint:   utxoOutPoint,
 			Amount:     amount,
 			Descriptor: "wpkh(" + utxoPubkey.Hex + ")",
 		},
@@ -132,6 +131,9 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	sendList := []types.InputConfidentialTxOut{}
 	option := types.NewPeginTxOption()
 	option.KnapsackMinChange = 0
+	option.EffectiveFeeRate = 0.1
+	option.MinimumBits = 36
+	option.KnapsackMinChange = 0
 	tx, unblindTx, err := peginApi.CreatePeginTransaction(&peginOutPoint, &peginInputData, nil, sendList, &outputAddr, &option)
 	assert.NoError(t, err)
 
@@ -144,11 +146,14 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Greater(t, 13380, len(tx.Hex))
 	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(0), unblindTxoutList[0].Amount)
+	assert.Equal(t, int64(0), unblindTxoutList[0].Amount)        // dummy
+	assert.Equal(t, int64(194), unblindTxoutList[1].Amount)      // fee
+	assert.Equal(t, int64(99999306), unblindTxoutList[2].Amount) // amount
 
 	// create utxo data
 	peginUtxoData, err := peginApi.GetPeginUtxoData(tx, &peginOutPoint, pubkey)
 	assert.NoError(t, err)
+	assert.Equal(t, "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225", peginUtxoData.Asset)
 
 	// create sighash
 	peginUtxos := []types.ElementsUtxoData{
@@ -175,6 +180,13 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	// add sign to tx
 	err = txApi.AddPubkeySignByDescriptor(tx, &peginOutPoint, desc, signature.ToHex())
 	assert.NoError(t, err)
+
+	txData, _, _, err := txApi.GetAll(tx, false)
+	assert.NoError(t, err)
+	if txData.Size != 6793 && txData.Size != 6794 {
+		assert.Equal(t, uint32(6793), txData.Size)
+	}
+	assert.Equal(t, uint32(1938), txData.Vsize)
 
 	// verify (after sign)
 	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, &peginUtxos)
