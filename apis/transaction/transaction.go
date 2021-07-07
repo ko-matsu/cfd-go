@@ -2,7 +2,6 @@ package transaction
 
 import (
 	"fmt"
-	"unsafe"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
@@ -169,8 +168,14 @@ func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *ty
 		AnyoneCanPay: sighashType.AnyoneCanPay,
 		Rangeproof:   sighashType.Rangeproof,
 	}
-	txinUtxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(utxoList))
-	txHex, err := cfd.CfdGoAddTxSignWithPrivkeyByUtxoList(t.network.ToCfdValue(), tx.Hex, *txinUtxoList, outpoint.Txid, outpoint.Vout, privkey.Hex, &cfdSighashType, true, nil, nil)
+	txinUtxoList := []cfd.CfdUtxo{}
+	if utxoList != nil {
+		txinUtxoList = make([]cfd.CfdUtxo, len(*utxoList))
+		for i, utxo := range *utxoList {
+			txinUtxoList[i] = utxo.ConvertToCfdUtxo()
+		}
+	}
+	txHex, err := cfd.CfdGoAddTxSignWithPrivkeyByUtxoList(t.network.ToCfdValue(), tx.Hex, txinUtxoList, outpoint.Txid, outpoint.Vout, privkey.Hex, &cfdSighashType, true, nil, nil)
 	if err == nil {
 		tx.Hex = txHex
 	}
@@ -182,8 +187,14 @@ func (t *TransactionApiImpl) VerifySign(tx *types.Transaction, outpoint *types.O
 	if err := t.validConfig(); err != nil {
 		return false, "", err
 	}
-	utxoList := (*[]cfd.CfdUtxo)(unsafe.Pointer(txinUtxoList))
-	return cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, *utxoList, outpoint.Txid, outpoint.Vout)
+	utxoList := []cfd.CfdUtxo{}
+	if txinUtxoList != nil {
+		utxoList = make([]cfd.CfdUtxo, len(*txinUtxoList))
+		for i, utxo := range *txinUtxoList {
+			utxoList[i] = utxo.ConvertToCfdUtxo()
+		}
+	}
+	return cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, utxoList, outpoint.Txid, outpoint.Vout)
 }
 
 func (t *TransactionApiImpl) GetTxid(tx *types.Transaction) string {

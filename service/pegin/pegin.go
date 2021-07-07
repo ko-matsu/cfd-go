@@ -274,8 +274,9 @@ func (p *PeginService) CreatePeginTransaction(
 	fundTxInList[0].Amount = peginAmount
 	fundTxInList[0].Asset = assetId
 	fundTxInList[0].IsPegin = true
+	fundTxInList[0].ClaimScript = peginData.ClaimScript
 	fundTxInList[0].PeginBtcTxSize = uint32(len(peginData.BitcoinTransaction) / 2)
-	fundTxInList[0].FedpegScript = peginData.ClaimScript
+	fundTxInList[0].PeginTxOutProofSize = uint32(len(peginData.TxOutProof) / 2)
 	fundTxInList[0].Descriptor = "wpkh(02" + assetId + ")" // dummy for calc fee
 
 	utxoListLen := 0
@@ -448,7 +449,7 @@ func (p *PeginService) GetPeginUtxoData(
 	input, err := txApi.GetTxIn(proposalTx.Hex, peginOutPoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegin get txin index error")
-	} else if len(input.PeginWitness.Stack) == 0 {
+	} else if len(input.PeginWitness.Stack) < 6 {
 		return nil, errors.Wrap(err, "Target outpoint is not pegin")
 	}
 	btcTx := types.Transaction{Hex: input.PeginWitness.Stack[4]}
@@ -457,11 +458,23 @@ func (p *PeginService) GetPeginUtxoData(
 		return nil, errors.Wrap(err, "Pegin get btc tx error")
 	}
 
+	assetBytes := cfd.NewByteDataFromHexIgnoreError(input.PeginWitness.Stack[1])
+	asset := make([]byte, 32)
+	for i, data := range assetBytes.ToSlice() {
+		asset[32-i-1] = data
+	}
+	assetObj := cfd.NewByteData(asset)
+
 	utxoData = &types.ElementsUtxoData{
 		OutPoint:   *peginOutPoint,
 		Amount:     output.Amount,
 		Descriptor: "wpkh(" + pubkey.Hex + ")",
-		Asset:      input.PeginWitness.Stack[1],
+		Asset:      assetObj.ToHex(),
+		PeginData: &types.PeginUtxoData{
+			ClaimScript:        input.PeginWitness.Stack[3],
+			BitcoinTransaction: input.PeginWitness.Stack[4],
+			TxOutProof:         input.PeginWitness.Stack[5],
+		},
 	}
 	return utxoData, nil
 }

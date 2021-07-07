@@ -478,10 +478,12 @@ type CfdUtxo struct {
 	IsBlindIssuance bool
 	// is peg-in output
 	IsPegin bool
+	// claim script hex (require when IsPegin is true)
+	ClaimScript string
 	// peg-in bitcoin tx size (require when IsPegin is true)
 	PeginBtcTxSize uint32
-	// fedpegscript hex (require when IsPegin is true)
-	FedpegScript string
+	// peg-in bitcoin txoutproof size (require when IsPegin is true)
+	PeginTxOutProofSize uint32
 	// scriptsig template hex (require script hash estimate fee)
 	ScriptSigTemplate string
 	// amount commitment hex
@@ -663,10 +665,12 @@ type CfdEstimateFeeInput struct {
 	IsBlindIssuance bool
 	// is peg-in input
 	IsPegin bool
+	// claimscript hex (require when IsPegin is true)
+	ClaimScript string
 	// peg-in bitcoin tx size (require when IsPegin is true)
 	PeginBtcTxSize uint32
-	// fedpegscript hex (require when IsPegin is true)
-	FedpegScript string
+	// peg-in bitcoin txoutproof size (require when IsPegin is true)
+	PeginTxOutProofSize uint32
 }
 
 /**
@@ -733,7 +737,8 @@ func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeE
 	for _, input := range inputs {
 		vout := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.Utxo.Vout)))
 		peginBtcTxSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.PeginBtcTxSize)))
-		if ret := CfdAddTxInTemplateForEstimateFee(
+		txOutProofSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.PeginTxOutProofSize)))
+		if ret := CfdAddTxInputForEstimateFee(
 			handle,
 			estimateFeeHandle,
 			input.Utxo.Txid,
@@ -743,8 +748,9 @@ func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeE
 			input.IsIssuance,
 			input.IsBlindIssuance,
 			input.IsPegin,
+			input.ClaimScript,
 			peginBtcTxSize,
-			input.FedpegScript,
+			txOutProofSize,
 			input.Utxo.ScriptSigTemplate,
 		); ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
@@ -819,7 +825,8 @@ func CfdGoEstimateFeeUsingUtxo(txHex string, inputs []CfdUtxo, option CfdFeeEsti
 	for _, input := range inputs {
 		vout := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.Vout)))
 		peginBtcTxSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.PeginBtcTxSize)))
-		if ret := CfdAddTxInTemplateForEstimateFee(
+		txoutproofSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.PeginTxOutProofSize)))
+		if ret := CfdAddTxInputForEstimateFee(
 			handle,
 			estimateFeeHandle,
 			input.Txid,
@@ -829,8 +836,9 @@ func CfdGoEstimateFeeUsingUtxo(txHex string, inputs []CfdUtxo, option CfdFeeEsti
 			input.IsIssuance,
 			input.IsBlindIssuance,
 			input.IsPegin,
+			input.ClaimScript,
 			peginBtcTxSize,
-			input.FedpegScript,
+			txoutproofSize,
 			input.ScriptSigTemplate,
 		); ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
@@ -4290,8 +4298,9 @@ func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, 
 	for _, txin := range txinList {
 		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txin.Vout)))
 		peginBtcTxSizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txin.PeginBtcTxSize)))
+		txoutproofSizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txin.PeginTxOutProofSize)))
 		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txin.Amount)))
-		ret = CfdAddTxInTemplateForFundRawTx(handle, fundHandle, txin.Txid, voutPtr, amountPtr, txin.Descriptor, txin.Asset, txin.IsIssuance, txin.IsBlindIssuance, txin.IsPegin, peginBtcTxSizePtr, txin.FedpegScript, txin.ScriptSigTemplate)
+		ret = CfdAddTxInputForFundRawTx(handle, fundHandle, txin.Txid, voutPtr, amountPtr, txin.Descriptor, txin.Asset, txin.IsIssuance, txin.IsBlindIssuance, txin.IsPegin, txin.ClaimScript, peginBtcTxSizePtr, txoutproofSizePtr, txin.ScriptSigTemplate)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return

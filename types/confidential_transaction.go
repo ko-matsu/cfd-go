@@ -116,6 +116,7 @@ type FundRawTxOption struct {
 
 type PeginUtxoData struct {
 	BitcoinTransaction string
+	TxOutProof         string
 	ClaimScript        string
 }
 
@@ -291,8 +292,51 @@ func (u ElementsUtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
 	}
 	if u.PeginData != nil {
 		utxo.IsPegin = true
+		utxo.ClaimScript = u.PeginData.ClaimScript
 		utxo.PeginBtcTxSize = uint32(len(u.PeginData.BitcoinTransaction) / 2)
-		utxo.FedpegScript = u.PeginData.ClaimScript
+		utxo.PeginTxOutProofSize = uint32(len(u.PeginData.TxOutProof) / 2)
 	}
 	return utxo
+}
+
+func NewConfidentialTxIn(cfdTxin *cfd.ConfidentialTxIn) *ConfidentialTxIn {
+	data := ConfidentialTxIn{
+		OutPoint: OutPoint{
+			Txid: cfdTxin.OutPoint.Txid,
+			Vout: cfdTxin.OutPoint.Vout,
+		},
+		Sequence:  cfdTxin.Sequence,
+		ScriptSig: cfdTxin.ScriptSig,
+	}
+	if cfdTxin.Issuance.Entropy != "" {
+		data.Issuance.Entropy = cfdTxin.Issuance.Entropy
+		data.Issuance.Nonce = cfdTxin.Issuance.Nonce
+		data.Issuance.AssetAmount = cfdTxin.Issuance.AssetAmount
+		data.Issuance.AssetValue = cfdTxin.Issuance.AssetValue
+		data.Issuance.TokenAmount = cfdTxin.Issuance.TokenAmount
+		data.Issuance.TokenValue = cfdTxin.Issuance.TokenValue
+		data.IssuanceAmountRangeproof = cfdTxin.IssuanceAmountRangeproof
+		data.InflationKeysRangeproof = cfdTxin.InflationKeysRangeproof
+	}
+	if len(cfdTxin.WitnessStack.Stack) > 0 {
+		data.WitnessStack.Stack = cfdTxin.WitnessStack.Stack
+	}
+	if len(cfdTxin.PeginWitness.Stack) > 0 {
+		data.PeginWitness.Stack = cfdTxin.PeginWitness.Stack
+	}
+	return &data
+}
+
+func NewConfidentialTxOut(cfdTxout *cfd.ConfidentialTxOut) *ConfidentialTxOut {
+	data := ConfidentialTxOut{
+		LockingScript:   cfdTxout.LockingScript,
+		Address:         cfdTxout.Address,
+		Amount:          cfdTxout.Amount,
+		CommitmentValue: cfdTxout.CommitmentValue,
+		Asset:           cfdTxout.Asset,
+		CommitmentNonce: cfdTxout.CommitmentNonce,
+		Surjectionproof: cfdTxout.Surjectionproof,
+		Rangeproof:      cfdTxout.Rangeproof,
+	}
+	return &data
 }

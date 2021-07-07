@@ -75,8 +75,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	// add sign
 	utxos := []types.UtxoData{
 		{
-			Txid:       utxoOutPoint.Txid,
-			Vout:       utxoOutPoint.Vout,
+			OutPoint:   utxoOutPoint,
 			Amount:     amount,
 			Descriptor: "wpkh(02fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8)",
 		},
@@ -305,8 +304,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	// add sign
 	utxos := []types.UtxoData{
 		{
-			Txid:       utxoOutPoint.Txid,
-			Vout:       utxoOutPoint.Vout,
+			OutPoint:   utxoOutPoint,
 			Amount:     amount,
 			Descriptor: "wpkh(02fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8)",
 		},
@@ -372,10 +370,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	// create signature
 	peginUtxos := []types.ElementsUtxoData{
 		{
-			OutPoint: types.OutPoint{
-				Txid: peginOutPoint.Txid,
-				Vout: peginOutPoint.Vout,
-			},
+			OutPoint:   peginOutPoint,
 			Amount:     peginAmount,
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},

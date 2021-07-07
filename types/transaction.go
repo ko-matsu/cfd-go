@@ -1,6 +1,10 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+
+	cfd "github.com/cryptogarageinc/cfd-go"
+)
 
 const (
 	SequenceLockTimeFinal     uint32 = 0xffffffff
@@ -49,30 +53,12 @@ type TxOut struct {
 }
 
 type UtxoData struct {
-	// utxo txid
-	Txid string
-	// utxo vout
-	Vout uint32
-	// amount
-	Amount int64
-	// asset
-	Asset string
-	// output descriptor
-	Descriptor string
-	// is issuance output
-	IsIssuance bool
-	// is blind issuance output
-	IsBlindIssuance bool
-	// is peg-in output
-	IsPegin bool
-	// peg-in bitcoin tx size (require when IsPegin is true)
-	PeginBtcTxSize uint32
-	// fedpegscript hex (require when IsPegin is true)
-	FedpegScript string
-	// scriptsig template hex (require script hash estimate fee)
-	ScriptSigTemplate string
-	// amount commitment hex
-	AmountCommitment string
+	OutPoint          OutPoint // OutPoint
+	Amount            int64    // satoshi value
+	Descriptor        string   // output descriptor
+	ScriptSigTemplate string   // scriptsig template hex (require script hash estimate fee)
+	Asset             string   // Asset
+	AmountCommitment  string   // Amount commitment
 }
 
 /**
@@ -119,4 +105,17 @@ func (o OutPoint) Equal(target OutPoint) bool {
 		return true
 	}
 	return false
+}
+
+func (u UtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
+	utxo := cfd.CfdUtxo{
+		Txid:              u.OutPoint.Txid,
+		Vout:              u.OutPoint.Vout,
+		Amount:            u.Amount,
+		Descriptor:        u.Descriptor,
+		ScriptSigTemplate: u.ScriptSigTemplate,
+		Asset:             u.Asset,
+		AmountCommitment:  u.AmountCommitment,
+	}
+	return utxo
 }
