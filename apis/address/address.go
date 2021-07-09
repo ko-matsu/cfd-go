@@ -12,7 +12,16 @@ import (
 // API
 // -------------------------------------
 
+// AddressApi This interface handles bitcoin addresses.
 type AddressApi interface {
+	ParseAddress(addressString string) (address *types.Address, err error)
+	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
+	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
+	CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error)
+}
+
+// ElementsAddressApi This interface handles elements addresses.
+type ElementsAddressApi interface {
 	ParseAddress(addressString string) (address *types.Address, err error)
 	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
 	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
