@@ -9,6 +9,7 @@ import (
 	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
 	"github.com/cryptogarageinc/cfd-go/config"
 	"github.com/cryptogarageinc/cfd-go/types"
+	"github.com/cryptogarageinc/cfd-go/utils"
 	"github.com/pkg/errors"
 )
 
@@ -38,7 +39,7 @@ type ConfidentialTxApi interface {
 }
 
 // NewConfidentialTxApi This function returns a struct that implements ConfidentialTxApi.
-func NewConfidentialTxApi() *ConfidentialTxApiImpl {
+func NewConfidentialTxApi(overrideInterfaces ...interface{}) *ConfidentialTxApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := ConfidentialTxApiImpl{}
 	if cfdConfig.Network.Valid() {
@@ -62,6 +63,7 @@ func NewConfidentialTxApi() *ConfidentialTxApiImpl {
 			api.bitcoinGenesisBlockHash = &tempBytes
 		}
 	}
+	api.WithInterfaces(overrideInterfaces...)
 	return &api
 }
 
@@ -74,39 +76,85 @@ type ConfidentialTxApiImpl struct {
 	network                 *types.NetworkType
 	bitcoinGenesisBlockHash *types.ByteData
 	bitcoinAssetId          *types.ByteData
+	descriptorApi           descriptor.DescriptorApi
+	addressApi              address.ElementsAddressApi
 }
 
 // WithConfig This function set a configuration.
-func (p *ConfidentialTxApiImpl) WithConfig(conf config.CfdConfig) (obj *ConfidentialTxApiImpl, err error) {
+func (p *ConfidentialTxApiImpl) WithConfig(conf config.CfdConfig, overrideInterfaces ...interface{}) (obj *ConfidentialTxApiImpl, err error) {
 	obj = p
 	if !conf.Network.Valid() {
 		return obj, fmt.Errorf("CFD Error: Invalid network configuration")
 	} else if !conf.Network.IsElements() {
 		return obj, fmt.Errorf("CFD Error: Network configuration is not elements")
+	} else if _, err = p.WithInterfaces(overrideInterfaces...); err != nil {
+		return obj, fmt.Errorf("CFD Error: Invalid interfaces")
 	}
 	network := conf.Network
 	tempAssetId := p.bitcoinAssetId
 	tempBlockHash := p.bitcoinGenesisBlockHash
 	if len(conf.BitcoinAssetId) != 0 {
-		tempBytes, err := types.NewByteDataFromHex(conf.BitcoinAssetId)
-		if (err != nil) || (len(conf.BitcoinAssetId) != 64) {
-			return p, fmt.Errorf("CFD Error: Invalid BitcoinAssetId configuration")
-		} else {
-			tempAssetId = &tempBytes
+		tempBytes, err := utils.ValidAssetId(conf.BitcoinAssetId)
+		if err != nil {
+			return p, errors.Wrap(err, "Invalid BitcoinAssetId")
 		}
+		tempAssetId = tempBytes
 	}
 	if len(conf.BitcoinGenesisBlockHash) != 0 {
-		tempBytes, err := types.NewByteDataFromHex(conf.BitcoinGenesisBlockHash)
-		if (err != nil) || (len(conf.BitcoinGenesisBlockHash) != 64) {
-			return p, fmt.Errorf("CFD Error: Invalid BitcoinGenesisBlockHash configuration")
-		} else {
-			tempBlockHash = &tempBytes
+		tempBytes, err := utils.ValidBlockHash(conf.BitcoinGenesisBlockHash)
+		if err != nil {
+			return p, errors.Wrap(err, "Invalid BitcoinGenesisBlockHash")
 		}
+		tempBlockHash = tempBytes
 	}
 	p.network = &network
 	p.bitcoinAssetId = tempAssetId
 	p.bitcoinGenesisBlockHash = tempBlockHash
 	return obj, nil
+}
+
+// WithInterfaces This function set a interface.
+func (p *ConfidentialTxApiImpl) WithInterfaces(interfaces ...interface{}) (obj *ConfidentialTxApiImpl, err error) {
+	obj = p
+	if len(interfaces) == 0 {
+		return obj, nil
+	}
+	descriptorApi := p.descriptorApi
+	addressApi := p.addressApi
+	for _, apiInterface := range interfaces {
+		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok {
+			descriptorApi = descApi
+		} else if addrApi, ok := apiInterface.(address.ElementsAddressApi); ok {
+			addressApi = addrApi
+		}
+	}
+	if (descriptorApi == nil) || (addressApi == nil) {
+		return obj, fmt.Errorf("CFD Error: Invalid interfaces")
+	}
+	p.descriptorApi = descriptorApi
+	p.addressApi = addressApi
+	return obj, nil
+}
+
+func (t *ConfidentialTxApiImpl) getDescriptorApi() (api descriptor.DescriptorApi, err error) {
+	api = t.descriptorApi
+	if t.descriptorApi == nil {
+		if api, err = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network}); err != nil {
+			return nil, err
+		}
+	}
+	return api, err
+}
+
+func (t *ConfidentialTxApiImpl) getAddressApi() (api address.ElementsAddressApi, err error) {
+	api = t.addressApi
+	if t.addressApi == nil {
+		if api, err = address.NewAddressApi().WithConfig(config.CfdConfig{
+			Network: t.network.ToBitcoinType()}); err != nil {
+			return nil, err
+		}
+	}
+	return api, err
 }
 
 func (t *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
@@ -276,7 +324,7 @@ func (t *ConfidentialTxApiImpl) AddPubkeySignByDescriptor(tx *types.Confidential
 	if err = t.validConfig(); err != nil {
 		return err
 	}
-	descUtil, err := descriptor.NewDescriptorApi().WithConfig(*t.getConfig())
+	descUtil, err := t.getDescriptorApi()
 	if err != nil {
 		return err
 	}
@@ -354,8 +402,7 @@ func (t *ConfidentialTxApiImpl) GetPegoutAddress(tx *types.ConfidentialTx, index
 	if err != nil {
 		return nil, false, err
 	}
-	addrUtil, err := address.NewAddressApi().WithConfig(config.CfdConfig{
-		Network: t.network.ToBitcoinType()})
+	addrUtil, err := t.getAddressApi()
 	if err != nil {
 		return nil, false, err
 	}
@@ -375,7 +422,7 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 		return nil, fmt.Errorf("CFD Error: utxoList is nil")
 	}
 	cfdNetType := t.network.ToCfdValue()
-	descUtil, err := descriptor.NewDescriptorApi().WithConfig(*t.getConfig())
+	descUtil, err := t.getDescriptorApi()
 	if err != nil {
 		return nil, err
 	}

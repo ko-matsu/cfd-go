@@ -24,13 +24,14 @@ type TransactionApi interface {
 	GetTxOut(tx *types.Transaction, vout uint32) (txout *types.TxOut, err error)
 }
 
-func NewTransactionApi() *TransactionApiImpl {
+func NewTransactionApi(overrideInterfaces ...interface{}) *TransactionApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := TransactionApiImpl{}
 	if cfdConfig.Network.Valid() {
 		network := cfdConfig.Network.ToBitcoinType()
 		api.network = &network
 	}
+	api.WithInterfaces(overrideInterfaces...)
 	return &api
 }
 
@@ -39,18 +40,50 @@ func NewTransactionApi() *TransactionApiImpl {
 // -------------------------------------
 
 type TransactionApiImpl struct {
-	network *types.NetworkType
+	network       *types.NetworkType
+	descriptorApi descriptor.DescriptorApi
 }
 
 // WithConfig This function set a configuration.
-func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig) (obj *TransactionApiImpl, err error) {
+func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig, overrideInterfaces ...interface{}) (obj *TransactionApiImpl, err error) {
 	obj = p
 	if !conf.Network.Valid() {
 		return obj, fmt.Errorf("CFD Error: Invalid network configuration")
+	} else if _, err = p.WithInterfaces(overrideInterfaces...); err != nil {
+		return obj, fmt.Errorf("CFD Error: Invalid interfaces")
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
 	return obj, nil
+}
+
+// WithInterfaces This function set a interface.
+func (p *TransactionApiImpl) WithInterfaces(interfaces ...interface{}) (obj *TransactionApiImpl, err error) {
+	obj = p
+	if len(interfaces) == 0 {
+		return obj, nil
+	}
+	descriptorApi := p.descriptorApi
+	for _, apiInterface := range interfaces {
+		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok {
+			descriptorApi = descApi
+		}
+	}
+	if descriptorApi == nil {
+		return obj, fmt.Errorf("CFD Error: Invalid interfaces")
+	}
+	p.descriptorApi = descriptorApi
+	return obj, nil
+}
+
+func (t *TransactionApiImpl) getDescriptorApi() (api descriptor.DescriptorApi, err error) {
+	api = t.descriptorApi
+	if t.descriptorApi == nil {
+		if api, err = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network}); err != nil {
+			return nil, err
+		}
+	}
+	return api, err
 }
 
 func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
@@ -126,7 +159,7 @@ func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, ou
 	if err = t.validConfig(); err != nil {
 		return err
 	}
-	descUtil, err := descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network})
+	descUtil, err := t.getDescriptorApi()
 	if err != nil {
 		return err
 	}
