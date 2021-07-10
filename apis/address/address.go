@@ -61,6 +61,9 @@ func (p *AddressApiImpl) WithConfig(conf config.CfdConfig) (obj *AddressApiImpl,
 
 // ParseAddress ...
 func (u *AddressApiImpl) ParseAddress(addressString string) (address *types.Address, err error) {
+	if err = u.validConfig(); err != nil {
+		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
 	data, err := cfd.CfdGoGetAddressInfo(addressString)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse address error")
@@ -69,6 +72,9 @@ func (u *AddressApiImpl) ParseAddress(addressString string) (address *types.Addr
 		Address: addressString,
 		Network: types.NewNetworkType(data.NetworkType),
 		Type:    types.NewAddressTypeByHashType(data.HashType),
+	}
+	if address.Network.IsBitcoin() != u.network.IsBitcoin() {
+		return address, cfdErrors.UnmatchNetworkError
 	}
 	return address, nil
 }

@@ -9,6 +9,7 @@ const (
 	ElementsNetworkError  CfdError = "CFD Error: Network configuration is not elements"
 	BitcoinNetworkError   CfdError = "CFD Error: Network configuration is not bitcoin"
 	ParameterNilError     CfdError = "CFD Error: Parameter is nil"
+	UnmatchNetworkError   CfdError = "CFD Error: network type is unmatching"
 
 	// text
 	InterfaceSettingErrorMessage string = "Failed to set interfaces"
