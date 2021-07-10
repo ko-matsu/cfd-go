@@ -148,9 +148,9 @@ func (p *PeginService) WithInterfaces(interfaces ...interface{}) (obj *PeginServ
 	elementsTxApi := p.elementsTxApi
 	pubkeyApi := p.pubkeyApi
 	for _, apiInterface := range interfaces {
-		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok {
+		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.LiquidV1) {
 			descriptorApi = descApi
-		} else if addrApi, ok := apiInterface.(address.ElementsAddressApi); ok {
+		} else if addrApi, ok := apiInterface.(address.ElementsAddressApi); ok && utils.ValidNetworkTypes(addrApi.GetNetworkTypes(), types.LiquidV1) {
 			elementsAddressApi = addrApi
 		} else if btcTxApi, ok := apiInterface.(transaction.TransactionApi); ok {
 			bitcoinTxApi = btcTxApi
@@ -196,11 +196,7 @@ func (t *PeginService) getBitcoinTxApi() (api transaction.TransactionApi, err er
 	api = t.bitcoinTxApi
 	if t.bitcoinTxApi == nil {
 		conf := config.CfdConfig{Network: t.network.ToBitcoinType()}
-		apis := make([]interface{}, 0, 1)
-		if t.descriptorApi != nil {
-			apis = append(apis, t.descriptorApi)
-		}
-		if api, err = transaction.NewTransactionApi().WithConfig(conf, apis...); err != nil {
+		if api, err = transaction.NewTransactionApi().WithConfig(conf); err != nil {
 			return nil, errors.Wrap(err, "create TransactionApi error")
 		}
 	}

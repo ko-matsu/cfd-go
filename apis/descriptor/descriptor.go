@@ -12,6 +12,8 @@ import (
 )
 
 type DescriptorApi interface {
+	// GetNetworkTypes This function returns the available network types.
+	GetNetworkTypes() []types.NetworkType
 	// NewDescriptorFromAddress This function return a Descriptor from pubkey.
 	NewDescriptorFromPubkey(
 		hashType types.HashType, pubkey *types.Pubkey) *types.Descriptor
@@ -49,6 +51,7 @@ type DescriptorApi interface {
 		descriptor *types.Descriptor) (descriptorAddedChecksum string, err error)
 }
 
+// NewDescriptorApi This function returns an object that defines the API for output descriptor.
 func NewDescriptorApi() *DescriptorApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := DescriptorApiImpl{}
@@ -74,10 +77,23 @@ func (p *DescriptorApiImpl) WithConfig(conf config.CfdConfig) (obj *DescriptorAp
 	if !conf.Network.Valid() {
 		return p, cfdErrors.NetworkConfigError
 	}
-	network := conf.Network.ToBitcoinType()
+	network := conf.Network
 	p.network = &network
 	obj = p
 	return obj, nil
+}
+
+// GetNetworkTypes This function returns the available network types.
+func (d *DescriptorApiImpl) GetNetworkTypes() []types.NetworkType {
+	networks := []types.NetworkType{}
+	if err := d.validConfig(); err != nil {
+		// returns empty networks.
+	} else if d.network.IsBitcoin() {
+		networks = []types.NetworkType{types.Mainnet, types.Testnet, types.Regtest}
+	} else if d.network.IsElements() {
+		networks = []types.NetworkType{types.LiquidV1, types.ElementsRegtest}
+	}
+	return networks
 }
 
 // NewDescriptorFromAddress This function return a Descriptor from pubkey.

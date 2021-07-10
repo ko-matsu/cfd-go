@@ -24,3 +24,13 @@ func ValidBlockHash(blockHash string) (blockHashBytes *types.ByteData, err error
 	blockHashBytes = &tempBytes
 	return blockHashBytes, nil
 }
+
+// ValidNetworkTypes This function checks if the target network is included.
+func ValidNetworkTypes(networks []types.NetworkType, target types.NetworkType) bool {
+	for _, network := range networks {
+		if network.Valid() && ((network.IsBitcoin() == target.IsBitcoin()) || (network.IsElements() == target.IsElements())) {
+			return true
+		}
+	}
+	return false
+}

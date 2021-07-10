@@ -14,6 +14,8 @@ import (
 
 // AddressApi This interface handles bitcoin addresses.
 type AddressApi interface {
+	// GetNetworkTypes This function returns the available network types.
+	GetNetworkTypes() []types.NetworkType
 	ParseAddress(addressString string) (address *types.Address, err error)
 	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
 	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
@@ -22,14 +24,12 @@ type AddressApi interface {
 
 // ElementsAddressApi This interface handles elements addresses.
 type ElementsAddressApi interface {
-	ParseAddress(addressString string) (address *types.Address, err error)
-	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
-	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
-	CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error)
+	AddressApi
 	GetPeginAddressByPubkey(addressType types.AddressType, fedpegScript, pubkey string) (peginAddress *types.Address, claimScript *types.Script, err error)
 	GetPegoutAddress(addressType types.AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *types.Address, baseDescriptor *string, err error)
 }
 
+// NewAddressApi This function returns an object that defines the API for address.
 func NewAddressApi() *AddressApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := AddressApiImpl{}
@@ -57,6 +57,19 @@ func (p *AddressApiImpl) WithConfig(conf config.CfdConfig) (obj *AddressApiImpl,
 	network := conf.Network
 	p.network = &network
 	return p, nil
+}
+
+// GetNetworkTypes This function returns the available network types.
+func (u *AddressApiImpl) GetNetworkTypes() []types.NetworkType {
+	networks := []types.NetworkType{}
+	if err := u.validConfig(); err != nil {
+		// returns empty networks.
+	} else if u.network.IsBitcoin() {
+		networks = []types.NetworkType{types.Mainnet, types.Testnet, types.Regtest}
+	} else if u.network.IsElements() {
+		networks = []types.NetworkType{types.LiquidV1, types.ElementsRegtest}
+	}
+	return networks
 }
 
 // ParseAddress ...

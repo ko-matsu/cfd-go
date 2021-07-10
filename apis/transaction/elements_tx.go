@@ -124,9 +124,9 @@ func (p *ConfidentialTxApiImpl) WithInterfaces(interfaces ...interface{}) (obj *
 	bitcoinAddressApi := p.bitcoinAddressApi
 	bitcoinTxApi := p.bitcoinTxApi
 	for _, apiInterface := range interfaces {
-		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok {
+		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.LiquidV1) {
 			descriptorApi = descApi
-		} else if addrApi, ok := apiInterface.(address.AddressApi); ok {
+		} else if addrApi, ok := apiInterface.(address.AddressApi); ok && utils.ValidNetworkTypes(addrApi.GetNetworkTypes(), types.Mainnet) {
 			bitcoinAddressApi = addrApi
 		} else if btcTxApi, ok := apiInterface.(TransactionApi); ok {
 			bitcoinTxApi = btcTxApi

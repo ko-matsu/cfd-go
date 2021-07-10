@@ -6,6 +6,7 @@ import (
 	"github.com/cryptogarageinc/cfd-go/config"
 	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
+	"github.com/cryptogarageinc/cfd-go/utils"
 	"github.com/pkg/errors"
 )
 
@@ -65,7 +66,7 @@ func (p *TransactionApiImpl) WithInterfaces(interfaces ...interface{}) (obj *Tra
 	}
 	descriptorApi := p.descriptorApi
 	for _, apiInterface := range interfaces {
-		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok {
+		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.Mainnet) {
 			descriptorApi = descApi
 		}
 	}
