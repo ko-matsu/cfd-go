@@ -116,6 +116,18 @@ func (n NetworkType) ToBitcoinType() NetworkType {
 	}
 }
 
+// IsMainnet ...
+func (n NetworkType) IsMainnet() bool {
+	switch n {
+	case Mainnet, LiquidV1:
+		return true
+	case Testnet, Regtest, ElementsRegtest:
+		return false
+	default:
+		return false
+	}
+}
+
 // ToBitcoinTypePointer ...
 func (n NetworkType) ToBitcoinTypePointer() *NetworkType {
 	network := n.ToBitcoinType()

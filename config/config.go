@@ -1,10 +1,9 @@
 package config
 
 import (
-	"fmt"
-
 	types "github.com/cryptogarageinc/cfd-go/types"
 	"github.com/cryptogarageinc/cfd-go/utils"
+	"github.com/pkg/errors"
 )
 
 // GlobalConfig This struct is cfd's global configuration.
@@ -30,17 +29,17 @@ func SetCfdConfig(config CfdConfig) error {
 	if config.Network.Valid() {
 		cfdConfig.Network = config.Network
 	} else {
-		return fmt.Errorf("CFD Error: Invalid network type")
+		return errors.Errorf("CFD Error: Invalid network type(%d)", config.Network)
 	}
 	if len(config.BitcoinGenesisBlockHash) > 0 {
 		if _, err := utils.ValidBlockHash(config.BitcoinGenesisBlockHash); err != nil {
-			return err
+			return errors.Wrap(err, "validate blockhash error")
 		}
 		cfdConfig.BitcoinGenesisBlockHash = config.BitcoinGenesisBlockHash
 	}
 	if len(config.BitcoinAssetId) > 0 {
 		if _, err := utils.ValidAssetId(config.BitcoinAssetId); err != nil {
-			return err
+			return errors.Wrap(err, "validate assetId error")
 		}
 		cfdConfig.BitcoinAssetId = config.BitcoinAssetId
 	}

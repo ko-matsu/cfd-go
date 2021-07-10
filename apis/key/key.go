@@ -1,11 +1,11 @@
 package key
 
 import (
-	"fmt"
-
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
+	"github.com/pkg/errors"
 )
 
 // PubkeyApi This interface has pubkey operation API.
@@ -54,7 +54,10 @@ type PrivkeyApiImpl struct {
 // VerifyEcSignature ...
 func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error) {
 	isVerify, err = cfd.CfdGoVerifyEcSignature(sighash, pubkey.Hex, signature)
-	return isVerify, err
+	if err != nil {
+		return false, errors.Wrap(err, "verify ec signature error")
+	}
+	return isVerify, nil
 }
 
 // -------------------------------------
@@ -65,7 +68,7 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 func (p *PrivkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *PrivkeyApiImpl, err error) {
 	obj = p
 	if !conf.Network.Valid() {
-		err = fmt.Errorf("CFD Error: Invalid network configuration")
+		err = cfdErrors.NetworkConfigError
 		return obj, err
 	}
 	network := conf.Network.ToBitcoinType()
@@ -77,11 +80,11 @@ func (p *PrivkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *PrivkeyApiImpl,
 func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {
 	hex, network, isCompressed, err := cfd.CfdGoParsePrivkeyWif(wif)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "parse wif error")
 	}
 	networkType := types.NewNetworkType(network)
-	if (k.network != nil) && !isMatchNetworkType(k.network.ToBitcoinType(), networkType) {
-		err = fmt.Errorf("CFD Error: Unmatch wif network type")
+	if (k.network != nil) && (k.network.ToBitcoinType().IsMainnet() != networkType.IsMainnet()) {
+		err = errors.Errorf("CFD Error: Unmatch wif network type")
 		return nil, err
 	}
 	privkey = &types.Privkey{
@@ -97,7 +100,7 @@ func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, 
 func (k *PrivkeyApiImpl) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error) {
 	hex, err := cfd.CfdGoGetPubkeyFromPrivkey(privkey.Hex, "", privkey.IsCompressedPubkey)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "get pubkey error")
 	}
 	pubkey = &types.Pubkey{Hex: hex}
 	return pubkey, nil
@@ -107,7 +110,7 @@ func (k *PrivkeyApiImpl) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey
 func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error) {
 	sig, err := cfd.CfdGoCalculateEcSignature(sighash.ToHex(), privkey.Hex, "", privkey.Network.ToCfdValue(), true)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "calculate ec signature error")
 	}
 	if sighashType == nil {
 		return types.NewByteDataFromHexIgnoreError(sig), nil
@@ -115,24 +118,8 @@ func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *type
 	// DER encode
 	derSig, err := cfd.CfdGoEncodeSignatureByDer(sig, sighashType.GetValue(), sighashType.AnyoneCanPay)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "DER encode error")
 	}
 	signature = types.NewByteDataFromHexIgnoreError(derSig)
 	return signature, nil
-}
-
-// -------------------------------------
-// internal
-// -------------------------------------
-
-func isMatchNetworkType(keyNetwork types.NetworkType, network types.NetworkType) bool {
-	if keyNetwork == network {
-		return true
-	} else if (keyNetwork == types.Regtest) && (network == types.Testnet) {
-		return true
-	} else if (keyNetwork == types.Testnet) && (network == types.Regtest) {
-		return true
-	} else {
-		return false
-	}
 }
