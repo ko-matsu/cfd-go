@@ -160,7 +160,7 @@ func (p *PeginService) WithInterfaces(interfaces ...interface{}) (obj *PeginServ
 			pubkeyApi = keyApi
 		}
 	}
-	if (descriptorApi == nil) || (elementsAddressApi == nil) || (bitcoinTxApi == nil) || (elementsTxApi == nil) || (pubkeyApi == nil) {
+	if (descriptorApi == nil) && (elementsAddressApi == nil) && (bitcoinTxApi == nil) && (elementsTxApi == nil) && (pubkeyApi == nil) {
 		return obj, cfdErrors.InterfaceSettingError
 	}
 	p.descriptorApi = descriptorApi
@@ -195,8 +195,12 @@ func (t *PeginService) getElementsAddressApi() (api address.ElementsAddressApi, 
 func (t *PeginService) getBitcoinTxApi() (api transaction.TransactionApi, err error) {
 	api = t.bitcoinTxApi
 	if t.bitcoinTxApi == nil {
-		if api, err = transaction.NewTransactionApi().WithConfig(config.CfdConfig{
-			Network: t.network.ToBitcoinType()}); err != nil {
+		conf := config.CfdConfig{Network: t.network.ToBitcoinType()}
+		apis := make([]interface{}, 0, 1)
+		if t.descriptorApi != nil {
+			apis = append(apis, t.descriptorApi)
+		}
+		if api, err = transaction.NewTransactionApi().WithConfig(conf, apis...); err != nil {
 			return nil, errors.Wrap(err, "create TransactionApi error")
 		}
 	}
@@ -206,7 +210,14 @@ func (t *PeginService) getBitcoinTxApi() (api transaction.TransactionApi, err er
 func (t *PeginService) getElementsTxApi() (api transaction.ConfidentialTxApi, err error) {
 	api = t.elementsTxApi
 	if t.elementsTxApi == nil {
-		if api, err = transaction.NewConfidentialTxApi().WithConfig(*t.getConfig()); err != nil {
+		apis := make([]interface{}, 0, 2)
+		if t.descriptorApi != nil {
+			apis = append(apis, t.descriptorApi)
+		}
+		if t.bitcoinTxApi != nil {
+			apis = append(apis, t.bitcoinTxApi)
+		}
+		if api, err = transaction.NewConfidentialTxApi().WithConfig(*t.getConfig(), apis...); err != nil {
 			return nil, errors.Wrap(err, "create ConfidentialTxApi error")
 		}
 	}

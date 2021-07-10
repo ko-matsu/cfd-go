@@ -132,7 +132,7 @@ func (p *ConfidentialTxApiImpl) WithInterfaces(interfaces ...interface{}) (obj *
 			bitcoinTxApi = btcTxApi
 		}
 	}
-	if (descriptorApi == nil) || (bitcoinAddressApi == nil) || (bitcoinTxApi == nil) {
+	if (descriptorApi == nil) && (bitcoinAddressApi == nil) && (bitcoinTxApi == nil) {
 		return obj, cfdErrors.InterfaceSettingError
 	}
 	p.descriptorApi = descriptorApi

@@ -146,7 +146,7 @@ func (p *PegoutService) WithInterfaces(interfaces ...interface{}) (obj *PegoutSe
 			pubkeyApi = keyApi
 		}
 	}
-	if (descriptorApi == nil) || (bitcoinAddressApi == nil) || (elementsTxApi == nil) || (pubkeyApi == nil) {
+	if (descriptorApi == nil) && (bitcoinAddressApi == nil) && (elementsTxApi == nil) && (pubkeyApi == nil) {
 		return obj, cfdErrors.InterfaceSettingError
 	}
 	p.descriptorApi = descriptorApi
@@ -180,7 +180,14 @@ func (t *PegoutService) getBitcoinAddressApi() (api address.AddressApi, err erro
 func (t *PegoutService) getElementsTxApi() (api transaction.ConfidentialTxApi, err error) {
 	api = t.elementsTxApi
 	if t.elementsTxApi == nil {
-		if api, err = transaction.NewConfidentialTxApi().WithConfig(*t.getConfig()); err != nil {
+		apis := make([]interface{}, 0, 2)
+		if t.descriptorApi != nil {
+			apis = append(apis, t.descriptorApi)
+		}
+		if t.bitcoinAddressApi != nil {
+			apis = append(apis, t.bitcoinAddressApi)
+		}
+		if api, err = transaction.NewConfidentialTxApi().WithConfig(*t.getConfig(), apis...); err != nil {
 			return nil, errors.Wrap(err, "create ConfidentialTxApi error")
 		}
 	}
