@@ -158,10 +158,9 @@ func (p *PeginService) WithInterfaces(interfaces ...interface{}) (obj *PeginServ
 			elementsTxApi = elmTxApi
 		} else if keyApi, ok := apiInterface.(key.PubkeyApi); ok {
 			pubkeyApi = keyApi
+		} else {
+			return obj, cfdErrors.InterfaceSettingError
 		}
-	}
-	if (descriptorApi == nil) && (elementsAddressApi == nil) && (bitcoinTxApi == nil) && (elementsTxApi == nil) && (pubkeyApi == nil) {
-		return obj, cfdErrors.InterfaceSettingError
 	}
 	p.descriptorApi = descriptorApi
 	p.elementsAddressApi = elementsAddressApi

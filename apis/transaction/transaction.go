@@ -68,10 +68,9 @@ func (p *TransactionApiImpl) WithInterfaces(interfaces ...interface{}) (obj *Tra
 	for _, apiInterface := range interfaces {
 		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.Mainnet) {
 			descriptorApi = descApi
+		} else {
+			return obj, cfdErrors.InterfaceSettingError
 		}
-	}
-	if descriptorApi == nil {
-		return obj, cfdErrors.InterfaceSettingError
 	}
 	p.descriptorApi = descriptorApi
 	return obj, nil
