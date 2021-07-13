@@ -59,18 +59,21 @@ type Pegin interface {
 }
 
 // NewPeginService This function returns an object that defines the API for Pegin.
-func NewPeginService(overrideInterfaces ...interface{}) *PeginService {
+func NewPeginService() *PeginService {
 	cfdConfig := config.GetCurrentCfdConfig()
 	service := PeginService{}
+	network := types.Unknown
 	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network
-		// At this point, we do not check if the network is Elements or not.
+		network = cfdConfig.Network
+		if !network.IsElements() {
+			service.Error = cfdErrors.ElementsNetworkError
+		}
 		service.network = &network
 	}
 	if len(cfdConfig.BitcoinAssetId) == 64 {
 		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinAssetId)
 		if err != nil {
-			// unuse
+			service.setError(err)
 		} else {
 			service.bitcoinAssetId = &tempBytes
 		}
@@ -78,12 +81,42 @@ func NewPeginService(overrideInterfaces ...interface{}) *PeginService {
 	if len(cfdConfig.BitcoinGenesisBlockHash) == 64 {
 		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinGenesisBlockHash)
 		if err != nil {
-			// unuse
+			service.setError(err)
 		} else {
 			service.bitcoinGenesisBlockHash = &tempBytes
 		}
 	}
-	service.WithInterfaces(overrideInterfaces...)
+
+	if network.Valid() {
+		// TODO(k-matsuzawa): To be changed after finalization.
+		conf := service.getConfig()
+		descriptorApi, err := descriptor.NewDescriptorApi().WithConfig(*conf)
+		if err != nil {
+			service.setError(err)
+		} else {
+			service.descriptorApi = descriptorApi
+		}
+		addressApi, err := address.NewAddressApi().WithConfig(*conf)
+		if err != nil {
+			service.setError(err)
+		} else {
+			service.elementsAddressApi = addressApi
+		}
+		txApi := transaction.NewConfidentialTxApi().WithConfig(*conf)
+		if txApi.Error != nil {
+			service.setError(txApi.Error)
+		} else {
+			service.elementsTxApi = txApi
+		}
+		btcConfig := config.CfdConfig{Network: network.ToBitcoinType()}
+		bitcoinTxApi := transaction.NewTransactionApi().WithConfig(btcConfig)
+		if bitcoinTxApi.Error != nil {
+			service.setError(bitcoinTxApi.Error)
+		} else {
+			service.bitcoinTxApi = bitcoinTxApi
+		}
+		service.pubkeyApi = key.NewPubkeyApi()
+	}
 	return &service
 }
 
@@ -93,6 +126,7 @@ func NewPeginService(overrideInterfaces ...interface{}) *PeginService {
 
 // PeginService This struct is implements pegin api.
 type PeginService struct {
+	Error                   error
 	network                 *types.NetworkType
 	bitcoinGenesisBlockHash *types.ByteData
 	bitcoinAssetId          *types.ByteData
@@ -103,14 +137,74 @@ type PeginService struct {
 	pubkeyApi               key.PubkeyApi
 }
 
+// WithConfig This function set a elements descriptor api.
+func (p *PeginService) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *PeginService {
+	if descriptorApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.LiquidV1) {
+		p.Error = errors.New(string(cfdErrors.ElementsNetworkError))
+	} else {
+		p.descriptorApi = descriptorApi
+	}
+	return p
+}
+
+// WithElementsAddressApi This function set a elements address api.
+func (p *PeginService) WithElementsAddressApi(addressApi address.ElementsAddressApi) *PeginService {
+	if addressApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else if !utils.ValidNetworkTypes(addressApi.GetNetworkTypes(), types.LiquidV1) {
+		p.Error = errors.New(string(cfdErrors.ElementsNetworkError))
+	} else {
+		p.elementsAddressApi = addressApi
+	}
+	return p
+}
+
+// WithBitcoinTxApi This function set a bitcoin transaction api.
+func (p *PeginService) WithBitcoinTxApi(transactionApi transaction.TransactionApi) *PeginService {
+	if transactionApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else {
+		p.bitcoinTxApi = transactionApi
+	}
+	return p
+}
+
+// WithConfidentialTxApi This function set a confidential transaction api.
+func (p *PeginService) WithConfidentialTxApi(confidentialTxApi transaction.ConfidentialTxApi) *PeginService {
+	if confidentialTxApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else {
+		p.elementsTxApi = confidentialTxApi
+	}
+	return p
+}
+
+// WithPubkeyApi This function set a pubkey api.
+func (p *PeginService) WithPubkeyApi(pubkeyApi key.PubkeyApi) *PeginService {
+	if pubkeyApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else {
+		p.pubkeyApi = pubkeyApi
+	}
+	return p
+}
+
+func (p *PeginService) setError(err error) {
+	if p.Error == nil {
+		p.Error = err
+	}
+}
+
 // WithConfig This function set a configuration.
-func (p *PeginService) WithConfig(conf config.CfdConfig, overrideInterfaces ...interface{}) (obj *PeginService, err error) {
+func (p *PeginService) WithConfig(conf config.CfdConfig) *PeginService {
 	if !conf.Network.Valid() {
-		return p, cfdErrors.NetworkConfigError
+		p.Error = cfdErrors.NetworkConfigError
+		return p
 	} else if !conf.Network.IsElements() {
-		return p, cfdErrors.ElementsNetworkError
-	} else if _, err = p.WithInterfaces(overrideInterfaces...); err != nil {
-		return obj, errors.Wrap(err, cfdErrors.InterfaceSettingErrorMessage)
+		p.Error = cfdErrors.ElementsNetworkError
+		return p
 	}
 	network := conf.Network
 	tempAssetId := p.bitcoinAssetId
@@ -118,113 +212,54 @@ func (p *PeginService) WithConfig(conf config.CfdConfig, overrideInterfaces ...i
 	if len(conf.BitcoinAssetId) != 0 {
 		tempBytes, err := utils.ValidAssetId(conf.BitcoinAssetId)
 		if err != nil {
-			return p, errors.Wrap(err, "Invalid BitcoinAssetId")
+			p.Error = errors.Wrap(err, "Invalid BitcoinAssetId")
+			return p
 		}
 		tempAssetId = tempBytes
 	}
 	if len(conf.BitcoinGenesisBlockHash) != 0 {
 		tempBytes, err := utils.ValidBlockHash(conf.BitcoinGenesisBlockHash)
 		if err != nil {
-			return p, errors.Wrap(err, "Invalid BitcoinGenesisBlockHash")
+			p.Error = errors.Wrap(err, "Invalid BitcoinGenesisBlockHash")
+			return p
 		}
 		tempBlockHash = tempBytes
 	}
 	p.network = &network
 	p.bitcoinAssetId = tempAssetId
 	p.bitcoinGenesisBlockHash = tempBlockHash
-	obj = p
-	return obj, nil
-}
 
-// WithInterfaces This function set a interface.
-func (p *PeginService) WithInterfaces(interfaces ...interface{}) (obj *PeginService, err error) {
-	obj = p
-	if len(interfaces) == 0 {
-		return obj, nil
-	}
-	descriptorApi := p.descriptorApi
-	elementsAddressApi := p.elementsAddressApi
-	bitcoinTxApi := p.bitcoinTxApi
-	elementsTxApi := p.elementsTxApi
-	pubkeyApi := p.pubkeyApi
-	for _, apiInterface := range interfaces {
-		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.LiquidV1) {
-			descriptorApi = descApi
-		} else if addrApi, ok := apiInterface.(address.ElementsAddressApi); ok && utils.ValidNetworkTypes(addrApi.GetNetworkTypes(), types.LiquidV1) {
-			elementsAddressApi = addrApi
-		} else if btcTxApi, ok := apiInterface.(transaction.TransactionApi); ok {
-			bitcoinTxApi = btcTxApi
-		} else if elmTxApi, ok := apiInterface.(transaction.ConfidentialTxApi); ok {
-			elementsTxApi = elmTxApi
-		} else if keyApi, ok := apiInterface.(key.PubkeyApi); ok {
-			pubkeyApi = keyApi
+	if network.Valid() {
+		// TODO(k-matsuzawa): Temporarily stated.
+		conf := p.getConfig()
+		descriptorApi, err := descriptor.NewDescriptorApi().WithConfig(*conf)
+		if err != nil {
+			p.setError(err)
 		} else {
-			return obj, cfdErrors.InterfaceSettingError
+			p.descriptorApi = descriptorApi
 		}
+		addressApi, err := address.NewAddressApi().WithConfig(*conf)
+		if err != nil {
+			p.setError(err)
+		} else {
+			p.elementsAddressApi = addressApi
+		}
+		txApi := transaction.NewConfidentialTxApi().WithConfig(*conf)
+		if txApi.Error != nil {
+			p.setError(txApi.Error)
+		} else {
+			p.elementsTxApi = txApi
+		}
+		btcConfig := config.CfdConfig{Network: network.ToBitcoinType()}
+		bitcoinTxApi := transaction.NewTransactionApi().WithConfig(btcConfig)
+		if bitcoinTxApi.Error != nil {
+			p.setError(bitcoinTxApi.Error)
+		} else {
+			p.bitcoinTxApi = bitcoinTxApi
+		}
+		p.pubkeyApi = key.NewPubkeyApi()
 	}
-	p.descriptorApi = descriptorApi
-	p.elementsAddressApi = elementsAddressApi
-	p.bitcoinTxApi = bitcoinTxApi
-	p.elementsTxApi = elementsTxApi
-	p.pubkeyApi = pubkeyApi
-	return obj, nil
-}
-
-func (t *PeginService) getDescriptorApi() (api descriptor.DescriptorApi, err error) {
-	api = t.descriptorApi
-	if t.descriptorApi == nil {
-		if api, err = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network}); err != nil {
-			return nil, errors.Wrap(err, "create DescriptorApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PeginService) getElementsAddressApi() (api address.ElementsAddressApi, err error) {
-	api = t.elementsAddressApi
-	if t.elementsAddressApi == nil {
-		if api, err = address.NewAddressApi().WithConfig(config.CfdConfig{
-			Network: *t.network}); err != nil {
-			return nil, errors.Wrap(err, "create ElementsAddressApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PeginService) getBitcoinTxApi() (api transaction.TransactionApi, err error) {
-	api = t.bitcoinTxApi
-	if t.bitcoinTxApi == nil {
-		conf := config.CfdConfig{Network: t.network.ToBitcoinType()}
-		if api, err = transaction.NewTransactionApi().WithConfig(conf); err != nil {
-			return nil, errors.Wrap(err, "create TransactionApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PeginService) getElementsTxApi() (api transaction.ConfidentialTxApi, err error) {
-	api = t.elementsTxApi
-	if t.elementsTxApi == nil {
-		apis := make([]interface{}, 0, 2)
-		if t.descriptorApi != nil {
-			apis = append(apis, t.descriptorApi)
-		}
-		if t.bitcoinTxApi != nil {
-			apis = append(apis, t.bitcoinTxApi)
-		}
-		if api, err = transaction.NewConfidentialTxApi().WithConfig(*t.getConfig(), apis...); err != nil {
-			return nil, errors.Wrap(err, "create ConfidentialTxApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PeginService) getPubkeyApi() (api key.PubkeyApi, err error) {
-	api = t.pubkeyApi
-	if t.pubkeyApi == nil {
-		api = key.NewPubkeyApi()
-	}
-	return api, nil
+	return p
 }
 
 // GetPubkeyFromExtPubkey This function get the pubkey from xpubkey.
@@ -281,11 +316,7 @@ func (p *PeginService) CreatePeginAddress(
 		return nil, nil, errors.Errorf("CFD Error: Invalid pegin address type")
 	}
 
-	addrApi, err := p.getElementsAddressApi()
-	if err != nil {
-		return nil, nil, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	peginAddress, claimScript, err = addrApi.GetPeginAddressByPubkey(addressType, fedpegScript.ToHex(), pubkey.Hex)
+	peginAddress, claimScript, err = p.elementsAddressApi.GetPeginAddressByPubkey(addressType, fedpegScript.ToHex(), pubkey.Hex)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "get pegin address error")
 	}
@@ -303,10 +334,6 @@ func (p *PeginService) CreatePeginTransaction(
 ) (tx *types.ConfidentialTx, unblindTx *types.ConfidentialTx, err error) {
 	if err = p.validConfig(); err != nil {
 		return nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
-	}
-	txApi, err := p.getElementsTxApi()
-	if err != nil {
-		return nil, nil, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
 	}
 
 	// validation utxoList, peginData
@@ -345,7 +372,7 @@ func (p *PeginService) CreatePeginTransaction(
 			PeginInput: peginData,
 		},
 	}
-	tx, err = txApi.Create(uint32(2), uint32(0), &txins, &sendList, nil)
+	tx, err = p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &sendList, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Pegin CT.Create error")
 	}
@@ -435,7 +462,7 @@ func (p *PeginService) CreatePeginTransaction(
 	}
 	tx.Hex = outputTx
 
-	_, inputs, _, err := txApi.GetAll(tx, false)
+	_, inputs, _, err := p.elementsTxApi.GetAll(tx, false)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Pegin GetTxAll error")
 	}
@@ -464,7 +491,7 @@ func (p *PeginService) CreatePeginTransaction(
 		blindOption.MinimumRangeValue = option.MinimumRangeValue
 		blindOption.Exponent = option.Exponent
 		blindOption.MinimumBits = option.MinimumBits
-		err = txApi.Blind(tx, blindInputList, nil, &blindOption)
+		err = p.elementsTxApi.Blind(tx, blindInputList, nil, &blindOption)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Pegin Blind error")
 		}
@@ -486,38 +513,25 @@ func (p *PeginService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegin utxoData validate error")
 	}
 
-	txApi, err := p.getElementsTxApi()
-	if err != nil {
-		return false, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	descApi, err := p.getDescriptorApi()
-	if err != nil {
-		return false, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	pubkeyApi, err := p.getPubkeyApi()
-	if err != nil {
-		return false, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-
 	sig, cfdSighashType, _, err := cfd.CfdGoDecodeSignatureFromDer(signature.ToHex())
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin decode signature error")
 	}
 	sighashType := types.NewSigHashType(cfdSighashType)
 	utxoList := []types.ElementsUtxoData{*utxoData}
-	sighash, err := txApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
+	sighash, err := p.elementsTxApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin decode signature error")
 	}
 	desc := types.Descriptor{OutputDescriptor: utxoData.Descriptor}
-	descData, _, _, err := descApi.Parse(&desc)
+	descData, _, _, err := p.descriptorApi.Parse(&desc)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin parse descriptor error")
 	} else if descData.KeyType == int(cfd.KCfdDescriptorKeyNull) {
 		return false, errors.Wrap(err, "Pegin descriptor unsupport key type")
 	}
 	pubkey := types.Pubkey{Hex: descData.Pubkey}
-	isVerify, err = pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	isVerify, err = p.pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin verify signature error")
 	}
@@ -535,22 +549,15 @@ func (p *PeginService) GetPeginUtxoData(
 	} else if proposalTx == nil || peginOutPoint == nil || pubkey == nil {
 		return nil, cfdErrors.ParameterNilError
 	}
-	txApi, err := p.getElementsTxApi()
-	if err != nil {
-		return nil, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	btcTxApi, err := p.getBitcoinTxApi()
-	if err != nil {
-		return nil, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	input, err := txApi.GetTxIn(proposalTx.Hex, peginOutPoint)
+
+	input, err := p.elementsTxApi.GetTxIn(proposalTx.Hex, peginOutPoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegin get txin index error")
 	} else if len(input.PeginWitness.Stack) < 6 {
 		return nil, errors.Wrap(err, "Target outpoint is not pegin")
 	}
 	btcTx := types.Transaction{Hex: input.PeginWitness.Stack[4]}
-	output, err := btcTxApi.GetTxOut(&btcTx, peginOutPoint.Vout)
+	output, err := p.bitcoinTxApi.GetTxOut(&btcTx, peginOutPoint.Vout)
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegin get btc tx error")
 	}
@@ -738,11 +745,7 @@ func (p *PeginService) validatePeginData(peginOutPoint *types.OutPoint, peginDat
 		return errors.Errorf("CFD Error: peginData.BitcoinTransaction is empty")
 	}
 
-	btcTxApi, err := p.getBitcoinTxApi()
-	if err != nil {
-		return errors.Wrap(err, "Pegin internal error")
-	}
-	txid := btcTxApi.GetTxid(&types.Transaction{Hex: peginData.BitcoinTransaction})
+	txid := p.bitcoinTxApi.GetTxid(&types.Transaction{Hex: peginData.BitcoinTransaction})
 	if len(txid) == 0 {
 		return errors.Errorf("CFD Error: peginData.BitcoinTransaction is invalid")
 	} else if txid != peginOutPoint.Txid {

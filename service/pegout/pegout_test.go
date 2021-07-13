@@ -297,16 +297,14 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	var xprvApi key.ExtPrivkeyApi
 	var privkeyApi key.PrivkeyApi
-	var txApi transaction.ConfidentialTxApi
-	var pegoutApi Pegout
 	xprvApi, err := key.NewExtPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
 	privkeyApi, err = key.NewPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	txApi, err = transaction.NewConfidentialTxApi().WithConfig(curConfig)
-	assert.NoError(t, err)
-	pegoutApi, err = NewPegoutService().WithConfig(curConfig)
-	assert.NoError(t, err)
+	txApi := transaction.NewConfidentialTxApi().WithConfig(curConfig)
+	assert.NoError(t, txApi.Error)
+	pegoutApi := NewPegoutService().WithConfig(curConfig)
+	assert.NoError(t, pegoutApi.Error)
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7
@@ -436,7 +434,6 @@ func TestCreatePegoutOverrideApis(t *testing.T) {
 	btcConfig := config.CfdConfig{Network: types.Mainnet}
 	var btcAddrApi address.AddressApi
 	var btcDescApi descriptor.DescriptorApi
-	var btcTxApi transaction.TransactionApi
 	var elmDescApi descriptor.DescriptorApi
 	btcAddrApi, err := address.NewAddressApi().WithConfig(btcConfig)
 	assert.NoError(t, err)
@@ -444,21 +441,22 @@ func TestCreatePegoutOverrideApis(t *testing.T) {
 	assert.NoError(t, err)
 	elmDescApi, err = descriptor.NewDescriptorApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	btcTxApi, err = transaction.NewTransactionApi().WithConfig(btcConfig, btcDescApi)
-	assert.NoError(t, err)
+	btcTxApi := transaction.NewTransactionApi().WithConfig(btcConfig).WithBitcoinDescriptorApi(btcDescApi)
+	assert.NoError(t, btcTxApi.Error)
 	pubkeyApi := key.NewPubkeyApi()
 	var xprvApi key.ExtPrivkeyApi
 	var privkeyApi key.PrivkeyApi
-	var txApi transaction.ConfidentialTxApi
-	var pegoutApi Pegout
 	xprvApi, err = key.NewExtPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
 	privkeyApi, err = key.NewPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	txApi, err = transaction.NewConfidentialTxApi().WithConfig(curConfig, elmDescApi, btcAddrApi, btcTxApi)
-	assert.NoError(t, err)
-	pegoutApi, err = NewPegoutService().WithConfig(curConfig, btcAddrApi, elmDescApi, txApi, pubkeyApi)
-	assert.NoError(t, err)
+	txApi := transaction.NewConfidentialTxApi().WithConfig(curConfig).WithElementsDescriptorApi(
+		elmDescApi).WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
+	assert.NoError(t, txApi.Error)
+	pegoutApi := NewPegoutService().WithConfig(curConfig).WithBitcoinAddressApi(
+		btcAddrApi).WithElementsDescriptorApi(elmDescApi).WithConfidentialTxApi(
+		txApi).WithPubkeyApi(pubkeyApi)
+	assert.NoError(t, pegoutApi.Error)
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7
@@ -607,16 +605,14 @@ func TestPegoutServiceOverrideApiByMock(t *testing.T) {
 	myDescObj := NewDescriptorApiParserMock(curConfig.Network)
 	var xprvApi key.ExtPrivkeyApi
 	var privkeyApi key.PrivkeyApi
-	var txApi transaction.ConfidentialTxApi
-	var pegoutApi Pegout
 	xprvApi, err := key.NewExtPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
 	privkeyApi, err = key.NewPrivkeyApi().WithConfig(curConfig)
 	assert.NoError(t, err)
-	txApi, err = transaction.NewConfidentialTxApi().WithConfig(curConfig)
-	assert.NoError(t, err)
-	pegoutApi, err = NewPegoutService(myDescObj).WithConfig(curConfig)
-	assert.NoError(t, err)
+	txApi := transaction.NewConfidentialTxApi().WithConfig(curConfig)
+	assert.NoError(t, txApi.Error)
+	pegoutApi := NewPegoutService().WithConfig(curConfig).WithElementsDescriptorApi(myDescObj)
+	assert.NoError(t, pegoutApi.Error)
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7

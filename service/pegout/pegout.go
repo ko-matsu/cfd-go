@@ -50,18 +50,21 @@ type Pegout interface {
 }
 
 // NewPegoutService This function returns an object that defines the API for Pegout.
-func NewPegoutService(overrideInterfaces ...interface{}) *PegoutService {
+func NewPegoutService() *PegoutService {
 	cfdConfig := config.GetCurrentCfdConfig()
 	service := PegoutService{}
+	network := types.Unknown
 	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network
-		// At this point, we do not check if the network is Elements or not.
+		network = cfdConfig.Network
+		if !network.IsElements() {
+			service.Error = cfdErrors.ElementsNetworkError
+		}
 		service.network = &network
 	}
 	if len(cfdConfig.BitcoinAssetId) == 64 {
 		tempBytes, err := types.NewByteDataFromHex(cfdConfig.BitcoinAssetId)
 		if err != nil {
-			// unuse
+			service.setError(err)
 		} else {
 			service.bitcoinAssetId = &tempBytes
 		}
@@ -74,7 +77,31 @@ func NewPegoutService(overrideInterfaces ...interface{}) *PegoutService {
 			service.bitcoinGenesisBlockHash = &tempBytes
 		}
 	}
-	service.WithInterfaces(overrideInterfaces...)
+
+	if network.Valid() {
+		// TODO(k-matsuzawa): To be changed after finalization.
+		conf := service.getConfig()
+		descriptorApi, err := descriptor.NewDescriptorApi().WithConfig(*conf)
+		if err != nil {
+			service.setError(err)
+		} else {
+			service.descriptorApi = descriptorApi
+		}
+		txApi := transaction.NewConfidentialTxApi().WithConfig(*conf)
+		if txApi.Error != nil {
+			service.setError(txApi.Error)
+		} else {
+			service.elementsTxApi = txApi
+		}
+		btcConfig := config.CfdConfig{Network: network.ToBitcoinType()}
+		bitcoinAddrApi, err := address.NewAddressApi().WithConfig(btcConfig)
+		if err != nil {
+			service.setError(err)
+		} else {
+			service.bitcoinAddressApi = bitcoinAddrApi
+		}
+		service.pubkeyApi = key.NewPubkeyApi()
+	}
 	return &service
 }
 
@@ -84,6 +111,7 @@ func NewPegoutService(overrideInterfaces ...interface{}) *PegoutService {
 
 // PegoutService This struct is implements pegout api.
 type PegoutService struct {
+	Error                   error
 	network                 *types.NetworkType
 	bitcoinGenesisBlockHash *types.ByteData
 	bitcoinAssetId          *types.ByteData
@@ -93,14 +121,64 @@ type PegoutService struct {
 	pubkeyApi               key.PubkeyApi
 }
 
+// WithConfig This function set a elements descriptor api.
+func (p *PegoutService) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *PegoutService {
+	if descriptorApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.LiquidV1) {
+		p.Error = errors.New(string(cfdErrors.ElementsNetworkError))
+	} else {
+		p.descriptorApi = descriptorApi
+	}
+	return p
+}
+
+// WithBitcoinAddressApi This function set a bitcoin address api.
+func (p *PegoutService) WithBitcoinAddressApi(addressApi address.AddressApi) *PegoutService {
+	if addressApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else if !utils.ValidNetworkTypes(addressApi.GetNetworkTypes(), types.Mainnet) {
+		p.Error = errors.New(string(cfdErrors.ElementsNetworkError))
+	} else {
+		p.bitcoinAddressApi = addressApi
+	}
+	return p
+}
+
+// WithConfidentialTxApi This function set a confidential transaction api.
+func (p *PegoutService) WithConfidentialTxApi(confidentialTxApi transaction.ConfidentialTxApi) *PegoutService {
+	if confidentialTxApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else {
+		p.elementsTxApi = confidentialTxApi
+	}
+	return p
+}
+
+// WithPubkeyApi This function set a pubkey api.
+func (p *PegoutService) WithPubkeyApi(pubkeyApi key.PubkeyApi) *PegoutService {
+	if pubkeyApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else {
+		p.pubkeyApi = pubkeyApi
+	}
+	return p
+}
+
+func (p *PegoutService) setError(err error) {
+	if p.Error == nil {
+		p.Error = err
+	}
+}
+
 // WithConfig This function set a configuration.
-func (p *PegoutService) WithConfig(conf config.CfdConfig, overrideInterfaces ...interface{}) (obj *PegoutService, err error) {
+func (p *PegoutService) WithConfig(conf config.CfdConfig) *PegoutService {
 	if !conf.Network.Valid() {
-		return p, cfdErrors.NetworkConfigError
+		p.Error = cfdErrors.NetworkConfigError
+		return p
 	} else if !conf.Network.IsElements() {
-		return p, cfdErrors.ElementsNetworkError
-	} else if _, err = p.WithInterfaces(overrideInterfaces...); err != nil {
-		return obj, errors.Wrap(err, cfdErrors.InterfaceSettingErrorMessage)
+		p.Error = cfdErrors.ElementsNetworkError
+		return p
 	}
 	network := conf.Network
 	tempAssetId := p.bitcoinAssetId
@@ -108,97 +186,48 @@ func (p *PegoutService) WithConfig(conf config.CfdConfig, overrideInterfaces ...
 	if len(conf.BitcoinAssetId) != 0 {
 		tempBytes, err := utils.ValidAssetId(conf.BitcoinAssetId)
 		if err != nil {
-			return p, errors.Wrap(err, "Invalid BitcoinAssetId")
+			p.Error = errors.Wrap(err, "Invalid BitcoinAssetId")
+			return p
 		}
 		tempAssetId = tempBytes
 	}
 	if len(conf.BitcoinGenesisBlockHash) != 0 {
 		tempBytes, err := utils.ValidBlockHash(conf.BitcoinGenesisBlockHash)
 		if err != nil {
-			return p, errors.Wrap(err, "Invalid BitcoinGenesisBlockHash")
+			p.Error = errors.Wrap(err, "Invalid BitcoinGenesisBlockHash")
+			return p
 		}
 		tempBlockHash = tempBytes
 	}
 	p.network = &network
 	p.bitcoinAssetId = tempAssetId
 	p.bitcoinGenesisBlockHash = tempBlockHash
-	return p, nil
-}
 
-// WithInterfaces This function set a interface.
-func (p *PegoutService) WithInterfaces(interfaces ...interface{}) (obj *PegoutService, err error) {
-	obj = p
-	if len(interfaces) == 0 {
-		return obj, nil
-	}
-	descriptorApi := p.descriptorApi
-	bitcoinAddressApi := p.bitcoinAddressApi
-	elementsTxApi := p.elementsTxApi
-	pubkeyApi := p.pubkeyApi
-	for _, apiInterface := range interfaces {
-		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.LiquidV1) {
-			descriptorApi = descApi
-		} else if addrApi, ok := apiInterface.(address.AddressApi); ok && utils.ValidNetworkTypes(addrApi.GetNetworkTypes(), types.Mainnet) {
-			bitcoinAddressApi = addrApi
-		} else if elmTxApi, ok := apiInterface.(transaction.ConfidentialTxApi); ok {
-			elementsTxApi = elmTxApi
-		} else if keyApi, ok := apiInterface.(key.PubkeyApi); ok {
-			pubkeyApi = keyApi
+	if network.Valid() {
+		// TODO(k-matsuzawa): Temporarily stated.
+		conf := p.getConfig()
+		descriptorApi, err := descriptor.NewDescriptorApi().WithConfig(*conf)
+		if err != nil {
+			p.setError(err)
 		} else {
-			return obj, cfdErrors.InterfaceSettingError
+			p.descriptorApi = descriptorApi
 		}
+		txApi := transaction.NewConfidentialTxApi().WithConfig(*conf)
+		if txApi.Error != nil {
+			p.setError(txApi.Error)
+		} else {
+			p.elementsTxApi = txApi
+		}
+		btcConfig := config.CfdConfig{Network: network.ToBitcoinType()}
+		bitcoinAddrApi, err := address.NewAddressApi().WithConfig(btcConfig)
+		if err != nil {
+			p.setError(err)
+		} else {
+			p.bitcoinAddressApi = bitcoinAddrApi
+		}
+		p.pubkeyApi = key.NewPubkeyApi()
 	}
-	p.descriptorApi = descriptorApi
-	p.bitcoinAddressApi = bitcoinAddressApi
-	p.elementsTxApi = elementsTxApi
-	p.pubkeyApi = pubkeyApi
-	return obj, nil
-}
-
-func (t *PegoutService) getDescriptorApi() (api descriptor.DescriptorApi, err error) {
-	api = t.descriptorApi
-	if t.descriptorApi == nil {
-		if api, err = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network}); err != nil {
-			return nil, errors.Wrap(err, "create DescriptorApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PegoutService) getBitcoinAddressApi() (api address.AddressApi, err error) {
-	api = t.bitcoinAddressApi
-	if t.bitcoinAddressApi == nil {
-		if api, err = address.NewAddressApi().WithConfig(config.CfdConfig{
-			Network: t.network.ToBitcoinType()}); err != nil {
-			return nil, errors.Wrap(err, "create AddressApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PegoutService) getElementsTxApi() (api transaction.ConfidentialTxApi, err error) {
-	api = t.elementsTxApi
-	if t.elementsTxApi == nil {
-		apis := make([]interface{}, 0, 2)
-		if t.descriptorApi != nil {
-			apis = append(apis, t.descriptorApi)
-		}
-		if t.bitcoinAddressApi != nil {
-			apis = append(apis, t.bitcoinAddressApi)
-		}
-		if api, err = transaction.NewConfidentialTxApi().WithConfig(*t.getConfig(), apis...); err != nil {
-			return nil, errors.Wrap(err, "create ConfidentialTxApi error")
-		}
-	}
-	return api, nil
-}
-
-func (t *PegoutService) getPubkeyApi() (api key.PubkeyApi, err error) {
-	api = t.pubkeyApi
-	if t.pubkeyApi == nil {
-		api = key.NewPubkeyApi()
-	}
-	return api, nil
+	return p
 }
 
 // CreateOnlinePrivateKey This function generate random private key for online key.
@@ -317,15 +346,6 @@ func (p *PegoutService) CreatePegoutTransaction(
 		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
 
-	txApi, err := p.getElementsTxApi()
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	btcAddrApi, err := p.getBitcoinAddressApi()
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-
 	// validation utxoList, pegoutData
 	if err = p.validateUtxoList(&utxoList); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout utxoList validation error")
@@ -375,13 +395,13 @@ func (p *PegoutService) CreatePegoutTransaction(
 		}
 	}
 	pegoutAddrList := []string{}
-	tx, err = txApi.Create(uint32(2), uint32(0), &txins, &txouts, &pegoutAddrList)
+	tx, err = p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, &pegoutAddrList)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
 	} else if len(pegoutAddrList) != 1 {
 		return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create pegoutAddress error")
 	}
-	pegoutAddress, err = btcAddrApi.ParseAddress(pegoutAddrList[0])
+	pegoutAddress, err = p.bitcoinAddressApi.ParseAddress(pegoutAddrList[0])
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout parse address error")
 	}
@@ -440,7 +460,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 	}
 
 	// 4. check to need append dummy output
-	_, inputs, outputs, err := txApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
+	_, inputs, outputs, err := p.elementsTxApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 	}
@@ -463,7 +483,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 			if err != nil {
 				return nil, nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
 			}
-			_, inputs, _, err = txApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
+			_, inputs, _, err = p.elementsTxApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
 			if err != nil {
 				return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 			}
@@ -490,7 +510,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 		blindOption.MinimumRangeValue = option.MinimumRangeValue
 		blindOption.Exponent = option.Exponent
 		blindOption.MinimumBits = option.MinimumBits
-		err = txApi.Blind(tx, blindInputList, nil, &blindOption)
+		err = p.elementsTxApi.Blind(tx, blindInputList, nil, &blindOption)
 		if err != nil {
 			return nil, nil, nil, errors.Wrapf(err, "Pegout Blind error: tx=%s", tx.Hex)
 		}
@@ -513,38 +533,25 @@ func (p *PegoutService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegout utxoData validate error")
 	}
 
-	txApi, err := p.getElementsTxApi()
-	if err != nil {
-		return false, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	descApi, err := p.getDescriptorApi()
-	if err != nil {
-		return false, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	pubkeyApi, err := p.getPubkeyApi()
-	if err != nil {
-		return false, errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-
 	sig, cfdSighashType, _, err := cfd.CfdGoDecodeSignatureFromDer(signature.ToHex())
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
 	sighashType := types.NewSigHashType(cfdSighashType)
 	utxoList := []types.ElementsUtxoData{*utxoData}
-	sighash, err := txApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
+	sighash, err := p.elementsTxApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
 	desc := types.Descriptor{OutputDescriptor: utxoData.Descriptor}
-	descData, _, _, err := descApi.Parse(&desc)
+	descData, _, _, err := p.descriptorApi.Parse(&desc)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout parse descriptor error")
 	} else if descData.KeyType == int(cfd.KCfdDescriptorKeyNull) {
 		return false, errors.Wrap(err, "Pegout descriptor unsupport key type")
 	}
 	pubkey := types.Pubkey{Hex: descData.Pubkey}
-	return pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	return p.pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
 }
 
 func (p *PegoutService) validConfig() error {

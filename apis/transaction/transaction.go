@@ -25,14 +25,22 @@ type TransactionApi interface {
 	GetTxOut(tx *types.Transaction, vout uint32) (txout *types.TxOut, err error)
 }
 
-func NewTransactionApi(overrideInterfaces ...interface{}) *TransactionApiImpl {
+// NewTransactionApi This function returns a struct that implements TransactionApi.
+func NewTransactionApi() *TransactionApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := TransactionApiImpl{}
+	network := types.Unknown
 	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network.ToBitcoinType()
+		network = cfdConfig.Network.ToBitcoinType()
 		api.network = &network
 	}
-	api.WithInterfaces(overrideInterfaces...)
+
+	if network.Valid() {
+		// TODO(k-matsuzawa): To be changed after finalization.
+		api.descriptorApi, _ = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{
+			Network: network,
+		})
+	}
 	return &api
 }
 
@@ -41,49 +49,42 @@ func NewTransactionApi(overrideInterfaces ...interface{}) *TransactionApiImpl {
 // -------------------------------------
 
 type TransactionApiImpl struct {
+	Error         error
 	network       *types.NetworkType
 	descriptorApi descriptor.DescriptorApi
 }
 
+// WithBitcoinDescriptorApi This function set a bitcoin descriptor api.
+func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.DescriptorApi) *TransactionApiImpl {
+	if descriptorApi == nil {
+		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.Mainnet) {
+		p.Error = errors.New(string(cfdErrors.BitcoinNetworkError))
+	} else {
+		p.descriptorApi = descriptorApi
+	}
+	return p
+}
+
 // WithConfig This function set a configuration.
-func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig, overrideInterfaces ...interface{}) (obj *TransactionApiImpl, err error) {
-	obj = p
+func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig) *TransactionApiImpl {
 	if !conf.Network.Valid() {
-		return obj, cfdErrors.NetworkConfigError
-	} else if _, err = p.WithInterfaces(overrideInterfaces...); err != nil {
-		return obj, errors.Wrap(err, cfdErrors.InterfaceSettingErrorMessage)
+		p.Error = cfdErrors.NetworkConfigError
+		return p
 	}
 	network := conf.Network.ToBitcoinType()
 	p.network = &network
-	return obj, nil
-}
 
-// WithInterfaces This function set a interface.
-func (p *TransactionApiImpl) WithInterfaces(interfaces ...interface{}) (obj *TransactionApiImpl, err error) {
-	obj = p
-	if len(interfaces) == 0 {
-		return obj, nil
+	// TODO(k-matsuzawa): Temporarily stated.
+	descApi, err := descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{
+		Network: network,
+	})
+	if err != nil {
+		p.Error = err
+	} else {
+		p.descriptorApi = descApi
 	}
-	descriptorApi := p.descriptorApi
-	for _, apiInterface := range interfaces {
-		if descApi, ok := apiInterface.(descriptor.DescriptorApi); ok && utils.ValidNetworkTypes(descApi.GetNetworkTypes(), types.Mainnet) {
-			descriptorApi = descApi
-		} else {
-			return obj, cfdErrors.InterfaceSettingError
-		}
-	}
-	p.descriptorApi = descriptorApi
-	return obj, nil
-}
-
-func (t *TransactionApiImpl) getDescriptorApi() (api descriptor.DescriptorApi, err error) {
-	api = t.descriptorApi
-	if t.descriptorApi == nil {
-		if api, err = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{Network: *t.network}); err != nil {
-			return nil, errors.Wrap(err, "create DescriptorApi error")
-		}
-	}
-	return api, nil
+	return p
 }
 
 func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
@@ -160,11 +161,7 @@ func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, ou
 	if err = t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	descUtil, err := t.getDescriptorApi()
-	if err != nil {
-		return errors.Wrap(err, cfdErrors.CreateDefaultApiErrorMessage)
-	}
-	data, _, _, err := descUtil.Parse(outputDescriptor)
+	data, _, _, err := t.descriptorApi.Parse(outputDescriptor)
 	if err != nil {
 		return errors.Wrap(err, "parse descriptor error")
 	}
