@@ -452,7 +452,7 @@ func (p *PeginService) CreatePeginTransaction(
 			} else {
 				utxo, ok := utxoMap[txin.OutPoint]
 				if !ok {
-					return nil, nil, errors.Errorf(cfdErrors.InternalErrorMessage)
+					return nil, nil, cfdErrors.InternalErrorMessage
 				}
 				blindInputList[i].Amount = utxo.Amount
 				blindInputList[i].Asset = utxo.Asset

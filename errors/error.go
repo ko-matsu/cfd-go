@@ -10,12 +10,12 @@ const (
 	BitcoinNetworkError   CfdError = "CFD Error: Network configuration is not bitcoin"
 	ParameterNilError     CfdError = "CFD Error: Parameter is nil"
 	UnmatchNetworkError   CfdError = "CFD Error: network type is unmatching"
+	InternalErrorMessage  CfdError = "CFD Error: Internal error"
 
 	// text
 	InterfaceSettingErrorMessage string = "Failed to set interfaces"
 	InvalidConfigErrorMessage    string = "Invalid configuration"
 	CreateDefaultApiErrorMessage string = "create default api error"
-	InternalErrorMessage         string = "CFD Error: Internal error"
 )
 
 // Error This function implements the error interface.
