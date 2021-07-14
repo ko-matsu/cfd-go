@@ -39,42 +39,63 @@ type HdWalletApi interface {
 	GetMnemonicFromEntropy(entropy *types.ByteData, language string) (mnemonic *[]string, err error)
 }
 
-func NewExtPubkeyApi() *ExtPubkeyApiImpl {
+func NewExtPubkeyApi(conf *config.CfdConfig) *ExtPubkeyApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := ExtPubkeyApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network.ToBitcoinType()
-		if network == types.Regtest {
-			network = types.Testnet
-		}
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+
+	network := cfdConfig.Network.ToBitcoinType()
+	if network == types.Regtest {
+		network = types.Testnet
+	}
+	api.network = &network
 	return &api
 }
 
-func NewExtPrivkeyApi() *ExtPrivkeyApiImpl {
+func NewExtPrivkeyApi(conf *config.CfdConfig) *ExtPrivkeyApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := ExtPrivkeyApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network.ToBitcoinType()
-		if network == types.Regtest {
-			network = types.Testnet
-		}
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+
+	network := cfdConfig.Network.ToBitcoinType()
+	if network == types.Regtest {
+		network = types.Testnet
+	}
+	api.network = &network
 	return &api
 }
 
-func NewHdWalletApi() *HdWalletApiImpl {
+func NewHdWalletApi(conf *config.CfdConfig) *HdWalletApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := HdWalletApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network.ToBitcoinType()
-		if network == types.Regtest {
-			network = types.Testnet
-		}
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+
+	network := cfdConfig.Network.ToBitcoinType()
+	if network == types.Regtest {
+		network = types.Testnet
+	}
+	api.network = &network
 	return &api
 }
 
@@ -84,34 +105,25 @@ func NewHdWalletApi() *HdWalletApiImpl {
 
 //
 type ExtPubkeyApiImpl struct {
+	Error   error
 	network *types.NetworkType
 }
 
 //
 type ExtPrivkeyApiImpl struct {
+	Error   error
 	network *types.NetworkType
 }
 
 //
 type HdWalletApiImpl struct {
+	Error   error
 	network *types.NetworkType
 }
 
 // -------------------------------------
 // implement ExtPubkey
 // -------------------------------------
-
-// WithConfig This function set a configuration.
-func (p *ExtPubkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *ExtPubkeyApiImpl, err error) {
-	obj = p
-	if !conf.Network.Valid() {
-		err = cfdErrors.NetworkConfigError
-		return obj, err
-	}
-	network := conf.Network.ToBitcoinType()
-	p.network = &network
-	return obj, nil
-}
 
 // GetPubkey ...
 func (k *ExtPubkeyApiImpl) GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error) {
@@ -194,18 +206,6 @@ func (k *ExtPubkeyApiImpl) validConfig() error {
 // -------------------------------------
 // implement ExtPrivkey
 // -------------------------------------
-
-// WithConfig This function set a configuration.
-func (p *ExtPrivkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *ExtPrivkeyApiImpl, err error) {
-	obj = p
-	if !conf.Network.Valid() {
-		err = cfdErrors.NetworkConfigError
-		return obj, err
-	}
-	network := conf.Network.ToBitcoinType()
-	p.network = &network
-	return obj, nil
-}
 
 // GetPubkey ...
 func (k *ExtPrivkeyApiImpl) GetPubkey(extPrivkey *types.ExtPrivkey) (pubkey *types.Pubkey, err error) {
@@ -322,18 +322,6 @@ func (k *ExtPrivkeyApiImpl) validConfig() error {
 // -------------------------------------
 // implement HdWalletApiImpl
 // -------------------------------------
-
-// WithConfig This function set a configuration.
-func (p *HdWalletApiImpl) WithConfig(conf config.CfdConfig) (obj *HdWalletApiImpl, err error) {
-	obj = p
-	if !conf.Network.Valid() {
-		err = cfdErrors.NetworkConfigError
-		return obj, err
-	}
-	network := conf.Network.ToBitcoinType()
-	p.network = &network
-	return obj, nil
-}
 
 func (h *HdWalletApiImpl) GetExtPrivkey(seed *types.ByteData) (privkey *types.ExtPrivkey, err error) {
 	if err := h.validConfig(); err != nil {

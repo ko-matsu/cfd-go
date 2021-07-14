@@ -20,13 +20,20 @@ type BlockApi interface {
 	ExistTxid(block *types.Block, txid string) (exist bool, err error)
 }
 
-func NewBlockApi() *BlockApiImpl {
+func NewBlockApi(conf *config.CfdConfig) *BlockApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := BlockApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network.ToBitcoinType()
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+
+	network := cfdConfig.Network.ToBitcoinType()
+	api.network = &network
 	return &api
 }
 
@@ -36,18 +43,8 @@ func NewBlockApi() *BlockApiImpl {
 
 // BlockApiImpl The bitcoin block utility.
 type BlockApiImpl struct {
+	Error   error
 	network *types.NetworkType
-}
-
-// WithConfig This function set a configuration.
-func (p *BlockApiImpl) WithConfig(conf config.CfdConfig) (obj *BlockApiImpl, err error) {
-	if !conf.Network.Valid() {
-		return p, cfdErrors.NetworkConfigError
-	}
-	network := conf.Network.ToBitcoinType()
-	p.network = &network
-	obj = p
-	return obj, nil
 }
 
 // GetHeaderData ...

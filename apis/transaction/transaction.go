@@ -26,21 +26,28 @@ type TransactionApi interface {
 }
 
 // NewTransactionApi This function returns a struct that implements TransactionApi.
-func NewTransactionApi() *TransactionApiImpl {
+func NewTransactionApi(conf *config.CfdConfig) *TransactionApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := TransactionApiImpl{}
-	network := types.Unknown
-	if cfdConfig.Network.Valid() {
-		network = cfdConfig.Network.ToBitcoinType()
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
 
-	if network.Valid() {
-		// TODO(k-matsuzawa): To be changed after finalization.
-		api.descriptorApi, _ = descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{
-			Network: network,
-		})
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
 	}
+
+	network := cfdConfig.Network.ToBitcoinType()
+	api.network = &network
+	descriptorApi := descriptor.NewDescriptorApi(&config.CfdConfig{
+		Network: network,
+	})
+	if descriptorApi.Error != nil {
+		api.Error = errors.Wrap(descriptorApi.Error, cfdErrors.CreateDefaultApiErrorMessage)
+		return &api
+	}
+	api.descriptorApi = descriptorApi
 	return &api
 }
 
@@ -62,27 +69,6 @@ func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.D
 		p.Error = errors.New(string(cfdErrors.BitcoinNetworkError))
 	} else {
 		p.descriptorApi = descriptorApi
-	}
-	return p
-}
-
-// WithConfig This function set a configuration.
-func (p *TransactionApiImpl) WithConfig(conf config.CfdConfig) *TransactionApiImpl {
-	if !conf.Network.Valid() {
-		p.Error = cfdErrors.NetworkConfigError
-		return p
-	}
-	network := conf.Network.ToBitcoinType()
-	p.network = &network
-
-	// TODO(k-matsuzawa): Temporarily stated.
-	descApi, err := descriptor.NewDescriptorApi().WithConfig(config.CfdConfig{
-		Network: network,
-	})
-	if err != nil {
-		p.Error = err
-	} else {
-		p.descriptorApi = descApi
 	}
 	return p
 }

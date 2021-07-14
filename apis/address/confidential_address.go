@@ -25,6 +25,7 @@ func NewConfidentialAddressApi() *ConfidentialAddressApiImpl {
 
 // ConfidentialAddressApiImpl ...
 type ConfidentialAddressApiImpl struct {
+	Error error
 }
 
 // Create ...

@@ -52,13 +52,20 @@ type DescriptorApi interface {
 }
 
 // NewDescriptorApi This function returns an object that defines the API for output descriptor.
-func NewDescriptorApi() *DescriptorApiImpl {
+func NewDescriptorApi(conf *config.CfdConfig) *DescriptorApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := DescriptorApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+
+	network := cfdConfig.Network
+	api.network = &network
 	return &api
 }
 
@@ -68,19 +75,8 @@ func NewDescriptorApi() *DescriptorApiImpl {
 
 // Descriptor This struct use for the output descriptor.
 type DescriptorApiImpl struct {
-	// Network Type
-	network *types.NetworkType
-}
-
-// WithConfig This function set a configuration.
-func (p *DescriptorApiImpl) WithConfig(conf config.CfdConfig) (obj *DescriptorApiImpl, err error) {
-	if !conf.Network.Valid() {
-		return p, cfdErrors.NetworkConfigError
-	}
-	network := conf.Network
-	p.network = &network
-	obj = p
-	return obj, nil
+	Error   error              // Last Error
+	network *types.NetworkType // Network Type
 }
 
 // GetNetworkTypes This function returns the available network types.

@@ -30,13 +30,20 @@ type ElementsAddressApi interface {
 }
 
 // NewAddressApi This function returns an object that defines the API for address.
-func NewAddressApi() *AddressApiImpl {
+func NewAddressApi(conf *config.CfdConfig) *AddressApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := AddressApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+
+	network := cfdConfig.Network
+	api.network = &network
 	return &api
 }
 
@@ -46,17 +53,8 @@ func NewAddressApi() *AddressApiImpl {
 
 // AddressApiImpl ...
 type AddressApiImpl struct {
+	Error   error
 	network *types.NetworkType
-}
-
-// WithConfig This function set a configuration.
-func (p *AddressApiImpl) WithConfig(conf config.CfdConfig) (obj *AddressApiImpl, err error) {
-	if !conf.Network.Valid() {
-		return p, cfdErrors.NetworkConfigError
-	}
-	network := conf.Network
-	p.network = &network
-	return p, nil
 }
 
 // GetNetworkTypes This function returns the available network types.

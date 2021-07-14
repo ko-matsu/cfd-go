@@ -14,15 +14,15 @@ func TestCfdExtkey(t *testing.T) {
 	network := types.Mainnet
 	cfdCfg := config.CfdConfig{Network: network}
 
-	var hdwalletApi HdWalletApi
-	var extPrivkeyApi ExtPrivkeyApi
-	var extPubkeyApi ExtPubkeyApi
-	hdwalletApi, err := NewHdWalletApi().WithConfig(cfdCfg)
-	assert.NoError(t, err)
-	extPrivkeyApi, err = NewExtPrivkeyApi().WithConfig(cfdCfg)
-	assert.NoError(t, err)
-	extPubkeyApi, err = NewExtPubkeyApi().WithConfig(cfdCfg)
-	assert.NoError(t, err)
+	hdwalletApiImpl := NewHdWalletApi(&cfdCfg)
+	assert.NoError(t, hdwalletApiImpl.Error)
+	extPrivkeyApiImpl := NewExtPrivkeyApi(&cfdCfg)
+	assert.NoError(t, extPrivkeyApiImpl.Error)
+	extPubkeyApiImpl := NewExtPubkeyApi(&cfdCfg)
+	assert.NoError(t, extPubkeyApiImpl.Error)
+	hdwalletApi := (HdWalletApi)(hdwalletApiImpl)
+	extPrivkeyApi := (ExtPrivkeyApi)(extPrivkeyApiImpl)
+	extPubkeyApi := (ExtPubkeyApi)(extPubkeyApiImpl)
 
 	extprivkey1, err := hdwalletApi.GetExtPrivkey(seed)
 	assert.NoError(t, err)

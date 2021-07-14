@@ -24,13 +24,19 @@ func NewPubkeyApi() *PubkeyApiImpl {
 	return &PubkeyApiImpl{}
 }
 
-func NewPrivkeyApi() *PrivkeyApiImpl {
+func NewPrivkeyApi(conf *config.CfdConfig) *PrivkeyApiImpl {
 	cfdConfig := config.GetCurrentCfdConfig()
 	api := PrivkeyApiImpl{}
-	if cfdConfig.Network.Valid() {
-		network := cfdConfig.Network.ToBitcoinType()
-		api.network = &network
+	if conf != nil {
+		cfdConfig = *conf
 	}
+
+	if !cfdConfig.Network.Valid() {
+		api.Error = cfdErrors.NetworkConfigError
+		return &api
+	}
+	network := cfdConfig.Network.ToBitcoinType()
+	api.network = &network
 	return &api
 }
 
@@ -44,6 +50,7 @@ type PubkeyApiImpl struct {
 
 //
 type PrivkeyApiImpl struct {
+	Error   error
 	network *types.NetworkType
 }
 
@@ -63,18 +70,6 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 // -------------------------------------
 // implement Privkey
 // -------------------------------------
-
-// WithConfig This function set a configuration.
-func (p *PrivkeyApiImpl) WithConfig(conf config.CfdConfig) (obj *PrivkeyApiImpl, err error) {
-	obj = p
-	if !conf.Network.Valid() {
-		err = cfdErrors.NetworkConfigError
-		return obj, err
-	}
-	network := conf.Network.ToBitcoinType()
-	p.network = &network
-	return obj, nil
-}
 
 // GetPrivkeyFromWif ...
 func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {

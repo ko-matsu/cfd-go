@@ -12,10 +12,10 @@ import (
 func TestCfdPrivkeyAndPubkey(t *testing.T) {
 	// pubkeyApi := (PubkeyApi)(NewPubkeyApi())
 
-	var privkeyApi PrivkeyApi
 	network := types.Regtest
-	privkeyApi, err := NewPrivkeyApi().WithConfig(config.CfdConfig{Network: network})
-	assert.NoError(t, err)
+	privkeyApiImpl := NewPrivkeyApi(&config.CfdConfig{Network: network})
+	assert.NoError(t, privkeyApiImpl.Error)
+	privkeyApi := (PrivkeyApi)(privkeyApiImpl)
 
 	// compress
 	pubkeyHex, privkeyHex, wif, err := cfd.CfdGoCreateKeyPair(true, network.ToCfdValue())
