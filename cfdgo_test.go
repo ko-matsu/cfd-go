@@ -1828,6 +1828,49 @@ func TestTaprootDescriptorStruct(t *testing.T) {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
 
+	// taproot tapscript tapbranch2
+	networkType = (int)(KCfdNetworkRegtest)
+	desc = NewDescriptorFromString(
+		"tr(ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a,{1717a480c2e3a474eed8dba83f684731243cff8ef384521936cf3a730dd0a286,{1717a480c2e3a474eed8dba83f684731243cff8ef384521936cf3a730dd0a286,80039cda864c4f2f1c87f161b0038e57fb7a4a59ff37517048696b85cdaaf911}})",
+		networkType)
+	rootData, descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("1")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
+	assert.Equal(t, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", rootData.LockingScript)
+	assert.Equal(t, "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv", rootData.Address)
+	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", rootData.SchnorrPubkey)
+	assert.Equal(t, "{1717a480c2e3a474eed8dba83f684731243cff8ef384521936cf3a730dd0a286,{1717a480c2e3a474eed8dba83f684731243cff8ef384521936cf3a730dd0a286,80039cda864c4f2f1c87f161b0038e57fb7a4a59ff37517048696b85cdaaf911}}", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", descriptorDataList[0].SchnorrPubkey)
+		assert.Equal(t, "", descriptorDataList[0].TreeString)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
