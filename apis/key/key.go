@@ -24,19 +24,17 @@ func NewPubkeyApi() *PubkeyApiImpl {
 	return &PubkeyApiImpl{}
 }
 
-func NewPrivkeyApi(conf *config.CfdConfig) *PrivkeyApiImpl {
-	cfdConfig := config.GetCurrentCfdConfig()
+func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 	api := PrivkeyApiImpl{}
-	if conf != nil {
-		cfdConfig = *conf
-	}
+	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.InitializeError = errs
 
-	if !cfdConfig.Network.Valid() {
-		api.Error = cfdErrors.NetworkConfigError
-		return &api
+	if !conf.Network.Valid() {
+		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+	} else {
+		network := conf.Network.ToBitcoinType()
+		api.network = &network
 	}
-	network := cfdConfig.Network.ToBitcoinType()
-	api.network = &network
 	return &api
 }
 
@@ -50,8 +48,8 @@ type PubkeyApiImpl struct {
 
 //
 type PrivkeyApiImpl struct {
-	Error   error
-	network *types.NetworkType
+	InitializeError cfdErrors.MultiError
+	network         *types.NetworkType
 }
 
 // -------------------------------------

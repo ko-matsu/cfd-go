@@ -26,28 +26,24 @@ type TransactionApi interface {
 }
 
 // NewTransactionApi This function returns a struct that implements TransactionApi.
-func NewTransactionApi(conf *config.CfdConfig) *TransactionApiImpl {
-	cfdConfig := config.GetCurrentCfdConfig()
+func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 	api := TransactionApiImpl{}
-	if conf != nil {
-		cfdConfig = *conf
-	}
+	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.InitializeError = errs
 
-	if !cfdConfig.Network.Valid() {
-		api.Error = cfdErrors.NetworkConfigError
-		return &api
-	}
+	if !conf.Network.Valid() {
+		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+	} else {
+		network := conf.Network.ToBitcoinType()
+		api.network = &network
 
-	network := cfdConfig.Network.ToBitcoinType()
-	api.network = &network
-	descriptorApi := descriptor.NewDescriptorApi(&config.CfdConfig{
-		Network: network,
-	})
-	if descriptorApi.Error != nil {
-		api.Error = errors.Wrap(descriptorApi.Error, cfdErrors.CreateDefaultApiErrorMessage)
-		return &api
+		descriptorApi := descriptor.NewDescriptorApi(config.NetworkOpt(network))
+		if descriptorApi.InitializeError.Exist() {
+			api.InitializeError.Append(descriptorApi.InitializeError)
+		} else {
+			api.descriptorApi = descriptorApi
+		}
 	}
-	api.descriptorApi = descriptorApi
 	return &api
 }
 
@@ -56,17 +52,17 @@ func NewTransactionApi(conf *config.CfdConfig) *TransactionApiImpl {
 // -------------------------------------
 
 type TransactionApiImpl struct {
-	Error         error
-	network       *types.NetworkType
-	descriptorApi descriptor.DescriptorApi
+	InitializeError cfdErrors.MultiError
+	network         *types.NetworkType
+	descriptorApi   descriptor.DescriptorApi
 }
 
 // WithBitcoinDescriptorApi This function set a bitcoin descriptor api.
 func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.DescriptorApi) *TransactionApiImpl {
 	if descriptorApi == nil {
-		p.Error = errors.New(string(cfdErrors.ParameterNilError))
+		p.InitializeError.Add(errors.New(string(cfdErrors.ParameterNilError)))
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.Mainnet) {
-		p.Error = errors.New(string(cfdErrors.BitcoinNetworkError))
+		p.InitializeError.Add(errors.New(string(cfdErrors.BitcoinNetworkError)))
 	} else {
 		p.descriptorApi = descriptorApi
 	}

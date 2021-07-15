@@ -12,14 +12,20 @@ func TestCfdExtkey(t *testing.T) {
 	seed := types.NewByteDataFromHexIgnoreError(
 		"0e09fbdd00e575b654d480ae979f24da45ef4dee645c7dc2e3b30b2e093d38dda0202357754cc856f8920b8e31dd02e9d34f6a2b20dc825c6ba90f90009085e1")
 	network := types.Mainnet
-	cfdCfg := config.CfdConfig{Network: network}
+	cfdCfg := config.NetworkOpt(network)
 
-	hdwalletApiImpl := NewHdWalletApi(&cfdCfg)
-	assert.NoError(t, hdwalletApiImpl.Error)
-	extPrivkeyApiImpl := NewExtPrivkeyApi(&cfdCfg)
-	assert.NoError(t, extPrivkeyApiImpl.Error)
-	extPubkeyApiImpl := NewExtPubkeyApi(&cfdCfg)
-	assert.NoError(t, extPubkeyApiImpl.Error)
+	hdwalletApiImpl := NewHdWalletApi(cfdCfg)
+	for _, errItem := range hdwalletApiImpl.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	extPrivkeyApiImpl := NewExtPrivkeyApi(cfdCfg)
+	for _, errItem := range extPrivkeyApiImpl.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	extPubkeyApiImpl := NewExtPubkeyApi(cfdCfg)
+	for _, errItem := range extPubkeyApiImpl.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	hdwalletApi := (HdWalletApi)(hdwalletApiImpl)
 	extPrivkeyApi := (ExtPrivkeyApi)(extPrivkeyApiImpl)
 	extPubkeyApi := (ExtPubkeyApi)(extPubkeyApiImpl)

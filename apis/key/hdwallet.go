@@ -39,63 +39,45 @@ type HdWalletApi interface {
 	GetMnemonicFromEntropy(entropy *types.ByteData, language string) (mnemonic *[]string, err error)
 }
 
-func NewExtPubkeyApi(conf *config.CfdConfig) *ExtPubkeyApiImpl {
-	cfdConfig := config.GetCurrentCfdConfig()
+func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
 	api := ExtPubkeyApiImpl{}
-	if conf != nil {
-		cfdConfig = *conf
-	}
+	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.InitializeError = errs
 
-	if !cfdConfig.Network.Valid() {
-		api.Error = cfdErrors.NetworkConfigError
-		return &api
+	if !conf.Network.Valid() {
+		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+	} else {
+		network := conf.Network.ToBitcoinType()
+		api.network = &network
 	}
-
-	network := cfdConfig.Network.ToBitcoinType()
-	if network == types.Regtest {
-		network = types.Testnet
-	}
-	api.network = &network
 	return &api
 }
 
-func NewExtPrivkeyApi(conf *config.CfdConfig) *ExtPrivkeyApiImpl {
-	cfdConfig := config.GetCurrentCfdConfig()
+func NewExtPrivkeyApi(options ...config.CfdConfigOption) *ExtPrivkeyApiImpl {
 	api := ExtPrivkeyApiImpl{}
-	if conf != nil {
-		cfdConfig = *conf
-	}
+	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.InitializeError = errs
 
-	if !cfdConfig.Network.Valid() {
-		api.Error = cfdErrors.NetworkConfigError
-		return &api
+	if !conf.Network.Valid() {
+		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+	} else {
+		network := conf.Network.ToBitcoinType()
+		api.network = &network
 	}
-
-	network := cfdConfig.Network.ToBitcoinType()
-	if network == types.Regtest {
-		network = types.Testnet
-	}
-	api.network = &network
 	return &api
 }
 
-func NewHdWalletApi(conf *config.CfdConfig) *HdWalletApiImpl {
-	cfdConfig := config.GetCurrentCfdConfig()
+func NewHdWalletApi(options ...config.CfdConfigOption) *HdWalletApiImpl {
 	api := HdWalletApiImpl{}
-	if conf != nil {
-		cfdConfig = *conf
-	}
+	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.InitializeError = errs
 
-	if !cfdConfig.Network.Valid() {
-		api.Error = cfdErrors.NetworkConfigError
-		return &api
+	if !conf.Network.Valid() {
+		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+	} else {
+		network := conf.Network.ToBitcoinType()
+		api.network = &network
 	}
-
-	network := cfdConfig.Network.ToBitcoinType()
-	if network == types.Regtest {
-		network = types.Testnet
-	}
-	api.network = &network
 	return &api
 }
 
@@ -105,20 +87,20 @@ func NewHdWalletApi(conf *config.CfdConfig) *HdWalletApiImpl {
 
 //
 type ExtPubkeyApiImpl struct {
-	Error   error
-	network *types.NetworkType
+	InitializeError cfdErrors.MultiError
+	network         *types.NetworkType
 }
 
 //
 type ExtPrivkeyApiImpl struct {
-	Error   error
-	network *types.NetworkType
+	InitializeError cfdErrors.MultiError
+	network         *types.NetworkType
 }
 
 //
 type HdWalletApiImpl struct {
-	Error   error
-	network *types.NetworkType
+	InitializeError cfdErrors.MultiError
+	network         *types.NetworkType
 }
 
 // -------------------------------------

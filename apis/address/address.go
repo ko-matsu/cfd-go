@@ -29,21 +29,18 @@ type ElementsAddressApi interface {
 	GetPegoutAddress(addressType types.AddressType, descriptorOrXpub string, bip32Counter uint32) (pegoutAddress *types.Address, baseDescriptor *string, err error)
 }
 
-// NewAddressApi This function returns an object that defines the API for address.
-func NewAddressApi(conf *config.CfdConfig) *AddressApiImpl {
-	cfdConfig := config.GetCurrentCfdConfig()
+// NewAddressApi returns an object that defines the API for address.
+func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 	api := AddressApiImpl{}
-	if conf != nil {
-		cfdConfig = *conf
-	}
+	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.InitializeError = errs
 
-	if !cfdConfig.Network.Valid() {
-		api.Error = cfdErrors.NetworkConfigError
-		return &api
+	if !conf.Network.Valid() {
+		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+	} else {
+		network := conf.Network
+		api.network = &network
 	}
-
-	network := cfdConfig.Network
-	api.network = &network
 	return &api
 }
 
@@ -53,8 +50,8 @@ func NewAddressApi(conf *config.CfdConfig) *AddressApiImpl {
 
 // AddressApiImpl ...
 type AddressApiImpl struct {
-	Error   error
-	network *types.NetworkType
+	InitializeError cfdErrors.MultiError
+	network         *types.NetworkType
 }
 
 // GetNetworkTypes This function returns the available network types.

@@ -13,8 +13,10 @@ func TestBlock(t *testing.T) {
 
 	network := types.Mainnet
 	block := types.Block{Hex: blockHex}
-	blockUtil := NewBlockApi(&config.CfdConfig{Network: network})
-	assert.NoError(t, blockUtil.Error)
+	blockUtil := NewBlockApi(config.NetworkOpt(network))
+	for _, errItem := range blockUtil.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	hash, header, err := blockUtil.GetHeaderData(&block)
 	assert.NoError(t, err)
 	assert.Equal(t, "0ae1754425645e84cf354366150db602bd1ca38a5b64b6d7949ffc7f5480ab41", hash)

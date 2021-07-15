@@ -31,6 +31,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 		BitcoinGenesisBlockHash: genesisBlockHash,
 		BitcoinAssetId:          asset,
 	}
+	opts := conf.GetOptions()
 
 	// fedpeg script
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
@@ -41,8 +42,10 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 
 	// create pegin address
-	addrUtil := address.NewAddressApi(&conf)
-	assert.NoError(t, addrUtil.Error)
+	addrUtil := address.NewAddressApi(opts...)
+	for _, errItem := range addrUtil.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
 	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddr.Address)
@@ -52,8 +55,10 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	amount := int64(100000000)
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
-	btcTxUtil := NewTransactionApi(&conf)
-	assert.NoError(t, btcTxUtil.Error)
+	btcTxUtil := NewTransactionApi(opts...)
+	for _, errItem := range btcTxUtil.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
@@ -92,8 +97,10 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
 
 	// create pegin tx
-	txUtil := NewConfidentialTxApi(&conf)
-	assert.NoError(t, txUtil.Error)
+	txUtil := NewConfidentialTxApi(opts...)
+	for _, errItem := range txUtil.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
@@ -160,7 +167,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 		OutputDescriptor: peginUtxos[0].Descriptor,
 		Network:          &network,
 	}
-	privkeyUtil := key.NewPrivkeyApi(nil)
+	privkeyUtil := key.NewPrivkeyApi()
 	signature, err := privkeyUtil.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
 	assert.NoError(t, err)
 
@@ -199,16 +206,21 @@ func TestCreatePegoutTx(t *testing.T) {
 	whitelist := pakEntry
 
 	// pegout address
-	addrUtil := address.NewAddressApi(&config.CfdConfig{Network: network})
-	assert.NoError(t, addrUtil.Error)
+	networkOpt := config.NetworkOpt(network)
+	addrUtil := address.NewAddressApi(networkOpt)
+	for _, errItem := range addrUtil.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddr.Address)
 	assert.Equal(t, "pkh("+mainchainXpubkey+")", *baseDescriptor)
 
 	// create pegout tx
-	txUtil := NewConfidentialTxApi(&config.CfdConfig{Network: network})
-	assert.NoError(t, txUtil.Error)
+	txUtil := NewConfidentialTxApi(networkOpt)
+	for _, errItem := range txUtil.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{
 		{
@@ -272,7 +284,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// create pegin address
-	addrUtil := address.NewAddressApi(nil)
+	addrUtil := address.NewAddressApi()
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
 	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddr.Address)
@@ -282,7 +294,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	amount := int64(100000000)
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
-	btcTxUtil := NewTransactionApi(nil)
+	btcTxUtil := NewTransactionApi()
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
@@ -322,7 +334,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
 
 	// create pegin tx
-	txUtil := NewConfidentialTxApi(nil)
+	txUtil := NewConfidentialTxApi()
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
@@ -418,14 +430,14 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	whitelist := pakEntry
 
 	// pegout address
-	addrUtil := address.NewAddressApi(nil)
+	addrUtil := address.NewAddressApi()
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddr.Address)
 	assert.Equal(t, "pkh("+mainchainXpubkey+")", *baseDescriptor)
 
 	// create pegout tx
-	txUtil := NewConfidentialTxApi(nil)
+	txUtil := NewConfidentialTxApi()
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{
 		{

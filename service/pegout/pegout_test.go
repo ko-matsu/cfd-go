@@ -33,10 +33,10 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(nil))
-	privkeyApi := (key.PrivkeyApi)(key.NewPrivkeyApi(nil))
-	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi(nil))
-	pegoutApi := (Pegout)(NewPegoutService(nil))
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
+	privkeyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
+	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
+	pegoutApi := (Pegout)(NewPegoutService())
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7
@@ -160,10 +160,10 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(nil))
-	privkeyApi := (key.PrivkeyApi)(key.NewPrivkeyApi(nil))
-	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi(nil))
-	pegoutApi := (Pegout)(NewPegoutService(nil))
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
+	privkeyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
+	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
+	pegoutApi := (Pegout)(NewPegoutService())
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7
@@ -292,17 +292,26 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 		BitcoinGenesisBlockHash: "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	}
+	opts := curConfig.GetOptions()
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	xprvApi := key.NewExtPrivkeyApi(&curConfig)
-	assert.NoError(t, xprvApi.Error)
-	privkeyApi := key.NewPrivkeyApi(&curConfig)
-	assert.NoError(t, privkeyApi.Error)
-	txApi := transaction.NewConfidentialTxApi(&curConfig)
-	assert.NoError(t, txApi.Error)
-	pegoutApi := NewPegoutService(&curConfig)
-	assert.NoError(t, pegoutApi.Error)
+	xprvApi := key.NewExtPrivkeyApi(opts...)
+	for _, errItem := range xprvApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	privkeyApi := key.NewPrivkeyApi(opts...)
+	for _, errItem := range privkeyApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	txApi := transaction.NewConfidentialTxApi(opts...)
+	for _, errItem := range txApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	pegoutApi := NewPegoutService(opts...)
+	for _, errItem := range pegoutApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7
@@ -426,30 +435,49 @@ func TestCreatePegoutOverrideApis(t *testing.T) {
 		BitcoinGenesisBlockHash: "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	}
+	confOpts := curConfig.GetOptions()
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	btcConfig := config.CfdConfig{Network: types.Mainnet}
-	btcAddrApi := address.NewAddressApi(&btcConfig)
-	assert.NoError(t, btcAddrApi.Error)
-	btcDescApi := descriptor.NewDescriptorApi(&btcConfig)
-	assert.NoError(t, btcDescApi.Error)
-	elmDescApi := descriptor.NewDescriptorApi(&curConfig)
-	assert.NoError(t, elmDescApi.Error)
-	btcTxApi := transaction.NewTransactionApi(&btcConfig).WithBitcoinDescriptorApi(btcDescApi)
-	assert.NoError(t, btcTxApi.Error)
+	btcNetworkConf := config.NetworkOpt(types.Mainnet)
+	btcAddrApi := address.NewAddressApi(btcNetworkConf)
+	for _, errItem := range btcAddrApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	btcDescApi := descriptor.NewDescriptorApi(btcNetworkConf)
+	for _, errItem := range btcDescApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	elmDescApi := descriptor.NewDescriptorApi(confOpts...)
+	for _, errItem := range elmDescApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	btcTxApi := transaction.NewTransactionApi(btcNetworkConf).WithBitcoinDescriptorApi(btcDescApi)
+	for _, errItem := range btcTxApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 	pubkeyApi := key.NewPubkeyApi()
-	xprvApi := key.NewExtPrivkeyApi(&curConfig)
-	assert.NoError(t, xprvApi.Error)
-	privkeyApi := key.NewPrivkeyApi(&curConfig)
-	assert.NoError(t, privkeyApi.Error)
-	txApi := transaction.NewConfidentialTxApi(&curConfig).WithElementsDescriptorApi(
-		elmDescApi).WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
-	assert.NoError(t, txApi.Error)
-	pegoutApi := NewPegoutService(&curConfig).WithBitcoinAddressApi(
-		btcAddrApi).WithElementsDescriptorApi(elmDescApi).WithConfidentialTxApi(
-		txApi).WithPubkeyApi(pubkeyApi)
-	assert.NoError(t, pegoutApi.Error)
+	xprvApi := key.NewExtPrivkeyApi(confOpts...)
+	for _, errItem := range xprvApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	privkeyApi := key.NewPrivkeyApi(confOpts...)
+	for _, errItem := range privkeyApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	txApi := transaction.NewConfidentialTxApi(confOpts...).
+		WithElementsDescriptorApi(elmDescApi).
+		WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
+	for _, errItem := range txApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	pegoutApi := NewPegoutService(confOpts...).
+		WithBitcoinAddressApi(btcAddrApi).
+		WithElementsDescriptorApi(elmDescApi).
+		WithConfidentialTxApi(txApi).WithPubkeyApi(pubkeyApi)
+	for _, errItem := range pegoutApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7
@@ -569,9 +597,7 @@ type DescriptorApiParserMock struct {
 }
 
 func NewDescriptorApiParserMock(network types.NetworkType) *DescriptorApiParserMock {
-	descObj := descriptor.NewDescriptorApi(&config.CfdConfig{
-		Network: network,
-	})
+	descObj := descriptor.NewDescriptorApi(config.NetworkOpt(network))
 	obj := DescriptorApiParserMock{descObj}
 	return &obj
 }
@@ -591,18 +617,27 @@ func TestPegoutServiceOverrideApiByMock(t *testing.T) {
 		BitcoinGenesisBlockHash: "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	}
+	confOpts := curConfig.GetOptions()
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	myDescObj := NewDescriptorApiParserMock(curConfig.Network)
-	xprvApi := key.NewExtPrivkeyApi(&curConfig)
-	assert.NoError(t, xprvApi.Error)
-	privkeyApi := key.NewPrivkeyApi(&curConfig)
-	assert.NoError(t, privkeyApi.Error)
-	txApi := transaction.NewConfidentialTxApi(&curConfig)
-	assert.NoError(t, txApi.Error)
-	pegoutApi := NewPegoutService(&curConfig).WithElementsDescriptorApi(myDescObj)
-	assert.NoError(t, pegoutApi.Error)
+	xprvApi := key.NewExtPrivkeyApi(confOpts...)
+	for _, errItem := range xprvApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	privkeyApi := key.NewPrivkeyApi(confOpts...)
+	for _, errItem := range privkeyApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	txApi := transaction.NewConfidentialTxApi(confOpts...)
+	for _, errItem := range txApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	pegoutApi := NewPegoutService(confOpts...).WithElementsDescriptorApi(myDescObj)
+	for _, errItem := range pegoutApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 
 	// key
 	// root: xprv9s21ZrQH143K4SS9fUBooJcNan78y4SxCHjma2238tm8pGourqqBZh6pDJHEkksojBRQU4m4kgB1n1dK98tKHKPjxnLyLCUNRK7RgyqDZj7

@@ -31,11 +31,16 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	})
 
-	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi(nil))
-	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(nil))
-	peginApi := (Pegin)(NewPeginService(nil))
-	btcTxApi := (transaction.TransactionApi)(transaction.NewTransactionApi(nil))
-	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi(nil))
+	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
+	btcTxApi := (transaction.TransactionApi)(transaction.NewTransactionApi())
+	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
+	peginApiImpl := NewPeginService()
+	assert.Empty(t, peginApiImpl.InitializeError.GetErrors())
+	for _, errItem := range peginApiImpl.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	peginApi := (Pegin)(peginApiImpl)
 
 	// key
 	// root: tprv8ZgxMBicQKsPeWHBt7a68nPnvgTnuDhUgDWC8wZCgA8GahrQ3f3uWpq7wE7Uc1dLBnCe1hhCZ886K6ND37memRDWqsA9HgSKDXtwh2Qxo6J
@@ -207,27 +212,45 @@ func TestCreateClaimPeginTxOverrideApi(t *testing.T) {
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	}
 	config.SetCfdConfig(conf)
+	// opts := conf.GetOptions()
+	networkOpt := config.NetworkOpt(conf.Network)
+	blockHashOpt := config.BitcoinGenesisBlockHashOpt(conf.BitcoinGenesisBlockHash)
+	assetIdOpt := config.BitcoinAssetIdOpt(conf.BitcoinAssetId)
 
-	btcConfig := config.CfdConfig{Network: types.Regtest}
-	btcDescApi := descriptor.NewDescriptorApi(&btcConfig)
-	assert.NoError(t, btcDescApi.Error)
-	btcAddrApi := address.NewAddressApi(&btcConfig)
-	assert.NoError(t, btcAddrApi.Error)
-	elmAddrApi := address.NewAddressApi(nil)
-	assert.NoError(t, elmAddrApi.Error)
-	elmDescApi := (descriptor.DescriptorApi)(descriptor.NewDescriptorApi(nil))
+	btcNetworkOpt := config.NetworkOpt(types.Regtest)
+	btcDescApi := descriptor.NewDescriptorApi(btcNetworkOpt)
+	for _, errItem := range btcDescApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	btcAddrApi := address.NewAddressApi(btcNetworkOpt)
+	for _, errItem := range btcAddrApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	elmAddrApi := address.NewAddressApi()
+	for _, errItem := range elmAddrApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	elmDescApi := (descriptor.DescriptorApi)(descriptor.NewDescriptorApi())
 	pubkeyApi := (key.PubkeyApi)(key.NewPubkeyApi())
-	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi(nil))
-	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(nil))
-	btcTxApi := transaction.NewTransactionApi(&conf).WithBitcoinDescriptorApi(btcDescApi)
-	assert.NoError(t, btcTxApi.Error)
-	txApi := transaction.NewConfidentialTxApi(&conf).WithElementsDescriptorApi(
-		elmDescApi).WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
-	assert.NoError(t, txApi.Error)
-	peginApi := NewPeginService(&conf).WithElementsAddressApi(
-		elmAddrApi).WithBitcoinTxApi(btcTxApi).WithConfidentialTxApi(
-		txApi).WithElementsDescriptorApi(elmDescApi).WithPubkeyApi(pubkeyApi)
-	assert.NoError(t, peginApi.Error)
+	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
+	btcTxApi := transaction.NewTransactionApi(networkOpt).WithBitcoinDescriptorApi(btcDescApi)
+	for _, errItem := range btcTxApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	txApi := transaction.NewConfidentialTxApi(networkOpt).
+		WithElementsDescriptorApi(elmDescApi).
+		WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
+	for _, errItem := range txApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
+	peginApi := NewPeginService(networkOpt, blockHashOpt, assetIdOpt).
+		WithElementsAddressApi(elmAddrApi).WithBitcoinTxApi(btcTxApi).
+		WithConfidentialTxApi(txApi).
+		WithElementsDescriptorApi(elmDescApi).WithPubkeyApi(pubkeyApi)
+	for _, errItem := range peginApi.InitializeError.GetErrors() {
+		assert.NoError(t, errItem)
+	}
 
 	// key
 	// root: tprv8ZgxMBicQKsPeWHBt7a68nPnvgTnuDhUgDWC8wZCgA8GahrQ3f3uWpq7wE7Uc1dLBnCe1hhCZ886K6ND37memRDWqsA9HgSKDXtwh2Qxo6J
@@ -349,9 +372,7 @@ type DescriptorApiParserMock struct {
 }
 
 func NewDescriptorApiParserMock(network types.NetworkType) *DescriptorApiParserMock {
-	descObj := descriptor.NewDescriptorApi(&config.CfdConfig{
-		Network: network,
-	})
+	descObj := descriptor.NewDescriptorApi(config.NetworkOpt(network))
 	obj := DescriptorApiParserMock{descObj}
 	return &obj
 }
@@ -368,11 +389,11 @@ func TestCreateClaimPeginTxOverrideApiByMock(t *testing.T) {
 	})
 
 	descMock := NewDescriptorApiParserMock(types.ElementsRegtest)
-	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi(nil))
-	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(nil))
-	peginApi := (Pegin)(NewPeginService(nil).WithElementsDescriptorApi(descMock))
-	btcTxApi := (transaction.TransactionApi)(transaction.NewTransactionApi(nil))
-	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi(nil))
+	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
+	peginApi := (Pegin)(NewPeginService().WithElementsDescriptorApi(descMock))
+	btcTxApi := (transaction.TransactionApi)(transaction.NewTransactionApi())
+	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
 
 	// key
 	// root: tprv8ZgxMBicQKsPeWHBt7a68nPnvgTnuDhUgDWC8wZCgA8GahrQ3f3uWpq7wE7Uc1dLBnCe1hhCZ886K6ND37memRDWqsA9HgSKDXtwh2Qxo6J

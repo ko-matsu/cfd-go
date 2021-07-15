@@ -6,7 +6,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GlobalConfig This struct is cfd's global configuration.
+// ConfigType This type is cfd's configuration type.
+type CfdConfigType int
+
+const (
+	NetworkConfig CfdConfigType = iota
+	BitcoinGenesisBlockHashConfig
+	BitcoinAssetIdConfig
+)
+
+// CfdConfig This struct is cfd's configuration.
 type CfdConfig struct {
 	Network                 types.NetworkType
 	BitcoinGenesisBlockHash string
@@ -44,4 +53,25 @@ func SetCfdConfig(config CfdConfig) error {
 		cfdConfig.BitcoinAssetId = config.BitcoinAssetId
 	}
 	return nil
+}
+
+// GetConfigOptions ...
+func (config CfdConfig) GetOptions() []CfdConfigOption {
+	result := make([]CfdConfigOption, 0, 3)
+	if config.Network.Valid() {
+		result = append(result, NetworkOpt(config.Network))
+	}
+	if _, err := utils.ValidBlockHash(config.BitcoinGenesisBlockHash); err == nil {
+		result = append(result, BitcoinGenesisBlockHashOpt(config.BitcoinGenesisBlockHash))
+	}
+	if _, err := utils.ValidAssetId(config.BitcoinAssetId); err == nil {
+		result = append(result, BitcoinAssetIdOpt(config.BitcoinAssetId))
+	}
+	return result
+}
+
+// GetGlobalConfigOptions ...
+func GetGlobalConfigOptions() []CfdConfigOption {
+	result := cfdConfig.GetOptions()
+	return result
 }

@@ -10,7 +10,8 @@ const (
 	BitcoinNetworkError   CfdError = "CFD Error: Network configuration is not bitcoin"
 	ParameterNilError     CfdError = "CFD Error: Parameter is nil"
 	UnmatchNetworkError   CfdError = "CFD Error: network type is unmatching"
-	InternalErrorMessage  CfdError = "CFD Error: Internal error"
+	DuplicateOptionError  CfdError = "CFD Error: duplicate configuration option"
+	InternalError         CfdError = "CFD Error: Internal error"
 
 	// text
 	InterfaceSettingErrorMessage string = "Failed to set interfaces"
