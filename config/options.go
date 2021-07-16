@@ -38,7 +38,9 @@ func BitcoinAssetIdOpt(bitcoinAssetId string) CfdConfigOption {
 }
 
 // ConvertOptionsWithCurrentCfdConfig ...
-func ConvertOptionsWithCurrentCfdConfig(options ...CfdConfigOption) (conf CfdConfig, errs cfdErrors.MultiError) {
+func ConvertOptionsWithCurrentCfdConfig(options ...CfdConfigOption) (conf CfdConfig, err error) {
+	errs := cfdErrors.NewMultiError(
+		cfdErrors.CfdError("Failed to ConvertOptionsWithCurrentCfdConfig"))
 	opts := make(map[CfdConfigType]CfdConfigOption)
 	if len(options) > 0 {
 		for _, option := range options {
@@ -65,5 +67,8 @@ func ConvertOptionsWithCurrentCfdConfig(options ...CfdConfigOption) (conf CfdCon
 	for _, optFunc := range opts {
 		optFunc(&conf)
 	}
-	return conf, errs
+	if errs.Exist() {
+		err = errs
+	}
+	return conf, err
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/apis/transaction"
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -297,19 +298,23 @@ func TestCreatePegoutTxWithAppendDummyByCfdConf(t *testing.T) {
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	xprvApi := key.NewExtPrivkeyApi(opts...)
-	for _, errItem := range xprvApi.InitializeError.GetErrors() {
+	assert.NoError(t, xprvApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(xprvApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	privkeyApi := key.NewPrivkeyApi(opts...)
-	for _, errItem := range privkeyApi.InitializeError.GetErrors() {
+	assert.NoError(t, privkeyApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(privkeyApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	txApi := transaction.NewConfidentialTxApi(opts...)
-	for _, errItem := range txApi.InitializeError.GetErrors() {
+	assert.NoError(t, txApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(txApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	pegoutApi := NewPegoutService(opts...)
-	for _, errItem := range pegoutApi.InitializeError.GetErrors() {
+	assert.NoError(t, pegoutApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(pegoutApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 
@@ -441,41 +446,49 @@ func TestCreatePegoutOverrideApis(t *testing.T) {
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	btcNetworkConf := config.NetworkOpt(types.Mainnet)
 	btcAddrApi := address.NewAddressApi(btcNetworkConf)
-	for _, errItem := range btcAddrApi.InitializeError.GetErrors() {
+	assert.NoError(t, btcAddrApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(btcAddrApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	btcDescApi := descriptor.NewDescriptorApi(btcNetworkConf)
-	for _, errItem := range btcDescApi.InitializeError.GetErrors() {
+	assert.NoError(t, btcDescApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(btcDescApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	elmDescApi := descriptor.NewDescriptorApi(confOpts...)
-	for _, errItem := range elmDescApi.InitializeError.GetErrors() {
+	assert.NoError(t, elmDescApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(elmDescApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	btcTxApi := transaction.NewTransactionApi(btcNetworkConf).WithBitcoinDescriptorApi(btcDescApi)
-	for _, errItem := range btcTxApi.InitializeError.GetErrors() {
+	assert.NoError(t, btcTxApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(btcTxApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	pubkeyApi := key.NewPubkeyApi()
 	xprvApi := key.NewExtPrivkeyApi(confOpts...)
-	for _, errItem := range xprvApi.InitializeError.GetErrors() {
+	assert.NoError(t, xprvApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(xprvApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	privkeyApi := key.NewPrivkeyApi(confOpts...)
-	for _, errItem := range privkeyApi.InitializeError.GetErrors() {
+	assert.NoError(t, privkeyApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(privkeyApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	txApi := transaction.NewConfidentialTxApi(confOpts...).
 		WithElementsDescriptorApi(elmDescApi).
 		WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
-	for _, errItem := range txApi.InitializeError.GetErrors() {
+	assert.NoError(t, txApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(txApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	pegoutApi := NewPegoutService(confOpts...).
 		WithBitcoinAddressApi(btcAddrApi).
 		WithElementsDescriptorApi(elmDescApi).
 		WithConfidentialTxApi(txApi).WithPubkeyApi(pubkeyApi)
-	for _, errItem := range pegoutApi.InitializeError.GetErrors() {
+	assert.NoError(t, pegoutApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(pegoutApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 
@@ -623,19 +636,23 @@ func TestPegoutServiceOverrideApiByMock(t *testing.T) {
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	myDescObj := NewDescriptorApiParserMock(curConfig.Network)
 	xprvApi := key.NewExtPrivkeyApi(confOpts...)
-	for _, errItem := range xprvApi.InitializeError.GetErrors() {
+	assert.NoError(t, xprvApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(xprvApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	privkeyApi := key.NewPrivkeyApi(confOpts...)
-	for _, errItem := range privkeyApi.InitializeError.GetErrors() {
+	assert.NoError(t, privkeyApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(privkeyApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	txApi := transaction.NewConfidentialTxApi(confOpts...)
-	for _, errItem := range txApi.InitializeError.GetErrors() {
+	assert.NoError(t, txApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(txApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	pegoutApi := NewPegoutService(confOpts...).WithElementsDescriptorApi(myDescObj)
-	for _, errItem := range pegoutApi.InitializeError.GetErrors() {
+	assert.NoError(t, pegoutApi.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(pegoutApi.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 

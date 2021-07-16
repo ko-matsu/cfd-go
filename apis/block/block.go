@@ -23,11 +23,11 @@ type BlockApi interface {
 // NewPeginService returns an object that defines the API for Block.
 func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 	api := BlockApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.InitializeError = errs
+	conf, err := config.ConvertOptionsWithCurrentCfdConfig(options...)
+	api.setError(err)
 
 	if !conf.Network.Valid() {
-		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.NetworkConfigError)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -41,8 +41,21 @@ func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 
 // BlockApiImpl The bitcoin block utility.
 type BlockApiImpl struct {
-	InitializeError cfdErrors.MultiError
+	InitializeError error
 	network         *types.NetworkType
+}
+
+func (b *BlockApiImpl) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := b.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: BlockApiImpl initialize error"))
+	}
+	multiError.Add(err)
+	b.InitializeError = multiError
 }
 
 // GetHeaderData ...

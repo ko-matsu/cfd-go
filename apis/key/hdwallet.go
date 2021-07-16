@@ -42,10 +42,10 @@ type HdWalletApi interface {
 func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
 	api := ExtPubkeyApiImpl{}
 	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.InitializeError = errs
+	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.NetworkConfigError)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -56,10 +56,10 @@ func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
 func NewExtPrivkeyApi(options ...config.CfdConfigOption) *ExtPrivkeyApiImpl {
 	api := ExtPrivkeyApiImpl{}
 	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.InitializeError = errs
+	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.NetworkConfigError)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -70,10 +70,10 @@ func NewExtPrivkeyApi(options ...config.CfdConfigOption) *ExtPrivkeyApiImpl {
 func NewHdWalletApi(options ...config.CfdConfigOption) *HdWalletApiImpl {
 	api := HdWalletApiImpl{}
 	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.InitializeError = errs
+	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.NetworkConfigError)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -87,19 +87,19 @@ func NewHdWalletApi(options ...config.CfdConfigOption) *HdWalletApiImpl {
 
 //
 type ExtPubkeyApiImpl struct {
-	InitializeError cfdErrors.MultiError
+	InitializeError error
 	network         *types.NetworkType
 }
 
 //
 type ExtPrivkeyApiImpl struct {
-	InitializeError cfdErrors.MultiError
+	InitializeError error
 	network         *types.NetworkType
 }
 
 //
 type HdWalletApiImpl struct {
-	InitializeError cfdErrors.MultiError
+	InitializeError error
 	network         *types.NetworkType
 }
 
@@ -183,6 +183,19 @@ func (k *ExtPubkeyApiImpl) validConfig() error {
 		return cfdErrors.BitcoinNetworkError
 	}
 	return nil
+}
+
+func (k *ExtPubkeyApiImpl) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := k.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: ExtPubkeyApiImpl initialize error"))
+	}
+	multiError.Add(err)
+	k.InitializeError = multiError
 }
 
 // -------------------------------------
@@ -301,6 +314,19 @@ func (k *ExtPrivkeyApiImpl) validConfig() error {
 	return nil
 }
 
+func (k *ExtPrivkeyApiImpl) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := k.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: ExtPrivkeyApiImpl initialize error"))
+	}
+	multiError.Add(err)
+	k.InitializeError = multiError
+}
+
 // -------------------------------------
 // implement HdWalletApiImpl
 // -------------------------------------
@@ -403,6 +429,19 @@ func (h *HdWalletApiImpl) validConfig() error {
 		return cfdErrors.BitcoinNetworkError
 	}
 	return nil
+}
+
+func (h *HdWalletApiImpl) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := h.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: HdWalletApiImpl initialize error"))
+	}
+	multiError.Add(err)
+	h.InitializeError = multiError
 }
 
 // internal --------------------------------------------------------------------

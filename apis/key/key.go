@@ -27,10 +27,10 @@ func NewPubkeyApi() *PubkeyApiImpl {
 func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 	api := PrivkeyApiImpl{}
 	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.InitializeError = errs
+	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.NetworkConfigError)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -48,7 +48,7 @@ type PubkeyApiImpl struct {
 
 //
 type PrivkeyApiImpl struct {
-	InitializeError cfdErrors.MultiError
+	InitializeError error
 	network         *types.NetworkType
 }
 
@@ -115,4 +115,17 @@ func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *type
 	}
 	signature = types.NewByteDataFromHexIgnoreError(derSig)
 	return signature, nil
+}
+
+func (k *PrivkeyApiImpl) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := k.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: PrivkeyApiImpl initialize error"))
+	}
+	multiError.Add(err)
+	k.InitializeError = multiError
 }

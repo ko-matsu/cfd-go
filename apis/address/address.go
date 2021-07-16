@@ -33,10 +33,10 @@ type ElementsAddressApi interface {
 func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 	api := AddressApiImpl{}
 	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.InitializeError = errs
+	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.InitializeError.Add(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.NetworkConfigError)
 	} else {
 		network := conf.Network
 		api.network = &network
@@ -50,8 +50,21 @@ func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 
 // AddressApiImpl ...
 type AddressApiImpl struct {
-	InitializeError cfdErrors.MultiError
+	InitializeError error
 	network         *types.NetworkType
+}
+
+func (u *AddressApiImpl) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := u.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: BlockApiImpl initialize error"))
+	}
+	multiError.Add(err)
+	u.InitializeError = multiError
 }
 
 // GetNetworkTypes This function returns the available network types.

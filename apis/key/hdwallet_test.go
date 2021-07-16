@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,15 +16,18 @@ func TestCfdExtkey(t *testing.T) {
 	cfdCfg := config.NetworkOpt(network)
 
 	hdwalletApiImpl := NewHdWalletApi(cfdCfg)
-	for _, errItem := range hdwalletApiImpl.InitializeError.GetErrors() {
+	assert.NoError(t, hdwalletApiImpl.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(hdwalletApiImpl.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	extPrivkeyApiImpl := NewExtPrivkeyApi(cfdCfg)
-	for _, errItem := range extPrivkeyApiImpl.InitializeError.GetErrors() {
+	assert.NoError(t, extPrivkeyApiImpl.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(extPrivkeyApiImpl.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	extPubkeyApiImpl := NewExtPubkeyApi(cfdCfg)
-	for _, errItem := range extPubkeyApiImpl.InitializeError.GetErrors() {
+	assert.NoError(t, extPubkeyApiImpl.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(extPubkeyApiImpl.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	hdwalletApi := (HdWalletApi)(hdwalletApiImpl)

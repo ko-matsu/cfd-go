@@ -10,6 +10,7 @@ import (
 	"github.com/cryptogarageinc/cfd-go/apis/address"
 	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,7 +44,8 @@ func TestCreateClaimPeginTx(t *testing.T) {
 
 	// create pegin address
 	addrUtil := address.NewAddressApi(opts...)
-	for _, errItem := range addrUtil.InitializeError.GetErrors() {
+	assert.NoError(t, addrUtil.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(addrUtil.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
@@ -56,7 +58,8 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
 	btcTxUtil := NewTransactionApi(opts...)
-	for _, errItem := range btcTxUtil.InitializeError.GetErrors() {
+	assert.NoError(t, btcTxUtil.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(btcTxUtil.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	utxoOutPoint := types.OutPoint{
@@ -98,7 +101,8 @@ func TestCreateClaimPeginTx(t *testing.T) {
 
 	// create pegin tx
 	txUtil := NewConfidentialTxApi(opts...)
-	for _, errItem := range txUtil.InitializeError.GetErrors() {
+	assert.NoError(t, txUtil.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(txUtil.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	peginOutPoint := types.OutPoint{
@@ -208,7 +212,8 @@ func TestCreatePegoutTx(t *testing.T) {
 	// pegout address
 	networkOpt := config.NetworkOpt(network)
 	addrUtil := address.NewAddressApi(networkOpt)
-	for _, errItem := range addrUtil.InitializeError.GetErrors() {
+	assert.NoError(t, addrUtil.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(addrUtil.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
@@ -218,7 +223,8 @@ func TestCreatePegoutTx(t *testing.T) {
 
 	// create pegout tx
 	txUtil := NewConfidentialTxApi(networkOpt)
-	for _, errItem := range txUtil.InitializeError.GetErrors() {
+	assert.NoError(t, txUtil.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(txUtil.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	pegoutAddrList := []string{}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	types "github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,8 @@ func TestBlock(t *testing.T) {
 	network := types.Mainnet
 	block := types.Block{Hex: blockHex}
 	blockUtil := NewBlockApi(config.NetworkOpt(network))
-	for _, errItem := range blockUtil.InitializeError.GetErrors() {
+	assert.NoError(t, blockUtil.InitializeError)
+	for _, errItem := range cfdErrors.GetErrors(blockUtil.InitializeError) {
 		assert.NoError(t, errItem)
 	}
 	hash, header, err := blockUtil.GetHeaderData(&block)

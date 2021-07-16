@@ -54,13 +54,13 @@ func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 	service := PegoutService{}
 	var err error
 	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	service.InitializeError = errs
+	service.setError(errs)
 
 	network := types.Unknown
 	if !conf.Network.Valid() {
-		service.InitializeError.Add(cfdErrors.NetworkConfigError)
+		service.setError(cfdErrors.NetworkConfigError)
 	} else if !conf.Network.IsElements() {
-		service.InitializeError.Add(cfdErrors.ElementsNetworkError)
+		service.setError(cfdErrors.ElementsNetworkError)
 	} else {
 		network = conf.Network
 	}
@@ -68,13 +68,13 @@ func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 	var bitcoinAssetId *types.ByteData
 	if len(conf.BitcoinAssetId) != 0 {
 		if bitcoinAssetId, err = utils.ValidAssetId(conf.BitcoinAssetId); err != nil {
-			service.InitializeError.Add(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
+			service.setError(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
 		}
 	}
 	var bitcoinGenesisBlockHash *types.ByteData
 	if len(conf.BitcoinGenesisBlockHash) != 0 {
 		if bitcoinGenesisBlockHash, err = utils.ValidBlockHash(conf.BitcoinGenesisBlockHash); err != nil {
-			service.InitializeError.Add(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
+			service.setError(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
 		}
 	}
 
@@ -85,23 +85,23 @@ func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 
 		elementsConfOpts := service.getConfig().GetOptions()
 		descriptorApi := descriptor.NewDescriptorApi(elementsConfOpts...)
-		if descriptorApi.InitializeError.Exist() {
-			service.InitializeError.Append(descriptorApi.InitializeError)
+		if descriptorApi.InitializeError != nil {
+			service.setError(descriptorApi.InitializeError)
 		} else {
 			service.descriptorApi = descriptorApi
 		}
 
 		txApi := transaction.NewConfidentialTxApi(elementsConfOpts...)
-		if txApi.InitializeError.Exist() {
-			service.InitializeError.Append(txApi.InitializeError)
+		if txApi.InitializeError != nil {
+			service.setError(txApi.InitializeError)
 		} else {
 			service.elementsTxApi = txApi
 		}
 
 		btcNetworkOpt := config.NetworkOpt(network.ToBitcoinType())
 		bitcoinAddrApi := address.NewAddressApi(btcNetworkOpt)
-		if bitcoinAddrApi.InitializeError.Exist() {
-			service.InitializeError.Append(bitcoinAddrApi.InitializeError)
+		if bitcoinAddrApi.InitializeError != nil {
+			service.setError(bitcoinAddrApi.InitializeError)
 		} else {
 			service.bitcoinAddressApi = bitcoinAddrApi
 		}
@@ -117,7 +117,7 @@ func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 
 // PegoutService This struct is implements pegout api.
 type PegoutService struct {
-	InitializeError         cfdErrors.MultiError
+	InitializeError         error
 	network                 *types.NetworkType
 	bitcoinGenesisBlockHash *types.ByteData
 	bitcoinAssetId          *types.ByteData
@@ -130,9 +130,9 @@ type PegoutService struct {
 // WithConfig This function set a elements descriptor api.
 func (p *PegoutService) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *PegoutService {
 	if descriptorApi == nil {
-		p.InitializeError.Add(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.LiquidV1) {
-		p.InitializeError.Add(errors.New(string(cfdErrors.ElementsNetworkError)))
+		p.setError(errors.New(string(cfdErrors.ElementsNetworkError)))
 	} else {
 		p.descriptorApi = descriptorApi
 	}
@@ -142,9 +142,9 @@ func (p *PegoutService) WithElementsDescriptorApi(descriptorApi descriptor.Descr
 // WithBitcoinAddressApi This function set a bitcoin address api.
 func (p *PegoutService) WithBitcoinAddressApi(addressApi address.AddressApi) *PegoutService {
 	if addressApi == nil {
-		p.InitializeError.Add(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
 	} else if !utils.ValidNetworkTypes(addressApi.GetNetworkTypes(), types.Mainnet) {
-		p.InitializeError.Add(errors.New(string(cfdErrors.ElementsNetworkError)))
+		p.setError(errors.New(string(cfdErrors.ElementsNetworkError)))
 	} else {
 		p.bitcoinAddressApi = addressApi
 	}
@@ -154,7 +154,7 @@ func (p *PegoutService) WithBitcoinAddressApi(addressApi address.AddressApi) *Pe
 // WithConfidentialTxApi This function set a confidential transaction api.
 func (p *PegoutService) WithConfidentialTxApi(confidentialTxApi transaction.ConfidentialTxApi) *PegoutService {
 	if confidentialTxApi == nil {
-		p.InitializeError.Add(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
 	} else {
 		p.elementsTxApi = confidentialTxApi
 	}
@@ -164,11 +164,24 @@ func (p *PegoutService) WithConfidentialTxApi(confidentialTxApi transaction.Conf
 // WithPubkeyApi This function set a pubkey api.
 func (p *PegoutService) WithPubkeyApi(pubkeyApi key.PubkeyApi) *PegoutService {
 	if pubkeyApi == nil {
-		p.InitializeError.Add(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
 	} else {
 		p.pubkeyApi = pubkeyApi
 	}
 	return p
+}
+
+func (p *PegoutService) setError(err error) {
+	if err == nil {
+		return
+	}
+	multiError, ok := p.InitializeError.(*cfdErrors.MultiError)
+	if !ok {
+		multiError = cfdErrors.NewMultiError(
+			cfdErrors.CfdError("CFD Error: PegoutService initialize error"))
+	}
+	multiError.Add(err)
+	p.InitializeError = multiError
 }
 
 // CreateOnlinePrivateKey This function generate random private key for online key.
