@@ -42,8 +42,7 @@ type ConfidentialTxApi interface {
 func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiImpl {
 	api := ConfidentialTxApiImpl{}
 	var err error
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	network := types.Unknown
 	if !conf.Network.Valid() {

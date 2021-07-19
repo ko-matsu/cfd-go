@@ -32,8 +32,7 @@ type ElementsAddressApi interface {
 // NewAddressApi returns an object that defines the API for address.
 func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 	api := AddressApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)

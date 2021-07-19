@@ -62,8 +62,7 @@ type Pegin interface {
 func NewPeginService(options ...config.CfdConfigOption) *PeginService {
 	service := PeginService{}
 	var err error
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	service.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	network := types.Unknown
 	if !conf.Network.Valid() {

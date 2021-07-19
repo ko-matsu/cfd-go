@@ -54,8 +54,7 @@ type DescriptorApi interface {
 // NewDescriptorApi returns an object that defines the API for output descriptor.
 func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 	api := DescriptorApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)

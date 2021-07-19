@@ -23,8 +23,7 @@ type BlockApi interface {
 // NewPeginService returns an object that defines the API for Block.
 func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 	api := BlockApiImpl{}
-	conf, err := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(err)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)

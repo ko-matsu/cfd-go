@@ -26,8 +26,7 @@ func NewPubkeyApi() *PubkeyApiImpl {
 
 func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 	api := PrivkeyApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)

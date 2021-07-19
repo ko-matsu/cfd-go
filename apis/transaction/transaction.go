@@ -28,8 +28,7 @@ type TransactionApi interface {
 // NewTransactionApi This function returns a struct that implements TransactionApi.
 func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 	api := TransactionApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)

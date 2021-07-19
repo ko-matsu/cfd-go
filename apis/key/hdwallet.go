@@ -41,8 +41,7 @@ type HdWalletApi interface {
 
 func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
 	api := ExtPubkeyApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)
@@ -55,8 +54,7 @@ func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
 
 func NewExtPrivkeyApi(options ...config.CfdConfigOption) *ExtPrivkeyApiImpl {
 	api := ExtPrivkeyApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)
@@ -69,8 +67,7 @@ func NewExtPrivkeyApi(options ...config.CfdConfigOption) *ExtPrivkeyApiImpl {
 
 func NewHdWalletApi(options ...config.CfdConfigOption) *HdWalletApiImpl {
 	api := HdWalletApiImpl{}
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	api.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
 		api.setError(cfdErrors.ErrNetworkConfig)

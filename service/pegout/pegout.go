@@ -53,8 +53,7 @@ type Pegout interface {
 func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 	service := PegoutService{}
 	var err error
-	conf, errs := config.ConvertOptionsWithCurrentCfdConfig(options...)
-	service.setError(errs)
+	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	network := types.Unknown
 	if !conf.Network.Valid() {
