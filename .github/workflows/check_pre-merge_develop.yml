@@ -67,7 +67,7 @@ jobs:
         cd build
         sudo make install
         cd ..
-        LD_LIBRARY_PATH=/usr/local/lib go test
+        ./go_test_installed.sh
     - name: go_test-ubuntu
       if: runner.os == 'Linux'
       run: ./go_test.sh

@@ -39,10 +39,12 @@ func TestMultiError(t *testing.T) {
 	assert.True(t, appendError.Exist())
 	appendError = Append(appendError, multiError)
 	assert.Len(t, GetErrors(appendError), 6)
+	appendError = Append(appendError, emptyError)
+	assert.Len(t, GetErrors(appendError), 6)
 
 	changeMsgError := NewMultiError(CfdError("msg error"))
 	changeMsgError.SetError(CfdError("change error"))
-	assert.Contains(t, changeMsgError, "change error")
+	assert.Contains(t, changeMsgError.Error(), "change error")
 
 	// empty check
 	assert.Empty(t, GetErrors(nil))
@@ -54,4 +56,5 @@ func TestMultiError(t *testing.T) {
 	// nil
 	var nilMultiError *MultiError
 	assert.Empty(t, GetErrors(nilMultiError))
+	assert.False(t, nilMultiError.Exist())
 }
