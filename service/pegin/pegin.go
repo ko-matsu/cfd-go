@@ -113,7 +113,7 @@ func NewPeginService(options ...config.CfdConfigOption) *PeginService {
 			service.elementsTxApi = txApi
 		}
 
-		btcNetworkOpt := config.NetworkOpt(network.ToBitcoinType())
+		btcNetworkOpt := config.NetworkOption(network.ToBitcoinType())
 		bitcoinTxApi := transaction.NewTransactionApi(btcNetworkOpt)
 		if bitcoinTxApi.InitializeError != nil {
 			service.setError(bitcoinTxApi.InitializeError)

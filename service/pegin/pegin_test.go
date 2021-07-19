@@ -214,11 +214,11 @@ func TestCreateClaimPeginTxOverrideApi(t *testing.T) {
 	}
 	config.SetCfdConfig(conf)
 	// opts := conf.GetOptions()
-	networkOpt := config.NetworkOpt(conf.Network)
-	blockHashOpt := config.BitcoinGenesisBlockHashOpt(conf.BitcoinGenesisBlockHash)
-	assetIdOpt := config.BitcoinAssetIdOpt(conf.BitcoinAssetId)
+	networkOpt := config.NetworkOption(conf.Network)
+	blockHashOpt := config.BitcoinGenesisBlockHashOption(conf.BitcoinGenesisBlockHash)
+	assetIdOpt := config.BitcoinAssetIdOption(conf.BitcoinAssetId)
 
-	btcNetworkOpt := config.NetworkOpt(types.Regtest)
+	btcNetworkOpt := config.NetworkOption(types.Regtest)
 	btcDescApi := descriptor.NewDescriptorApi(btcNetworkOpt)
 	assert.NoError(t, btcDescApi.InitializeError)
 	for _, errItem := range cfdErrors.GetErrors(btcDescApi.InitializeError) {
@@ -379,7 +379,7 @@ type DescriptorApiParserMock struct {
 }
 
 func NewDescriptorApiParserMock(network types.NetworkType) *DescriptorApiParserMock {
-	descObj := descriptor.NewDescriptorApi(config.NetworkOpt(network))
+	descObj := descriptor.NewDescriptorApi(config.NetworkOption(network))
 	obj := DescriptorApiParserMock{descObj}
 	return &obj
 }

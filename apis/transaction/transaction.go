@@ -36,7 +36,7 @@ func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
 
-		descriptorApi := descriptor.NewDescriptorApi(config.NetworkOpt(network))
+		descriptorApi := descriptor.NewDescriptorApi(config.NetworkOption(network))
 		if descriptorApi.InitializeError != nil {
 			api.setError(descriptorApi.InitializeError)
 		} else {

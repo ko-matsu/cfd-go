@@ -210,7 +210,7 @@ func TestCreatePegoutTx(t *testing.T) {
 	whitelist := pakEntry
 
 	// pegout address
-	networkOpt := config.NetworkOpt(network)
+	networkOpt := config.NetworkOption(network)
 	addrUtil := address.NewAddressApi(networkOpt)
 	assert.NoError(t, addrUtil.InitializeError)
 	for _, errItem := range cfdErrors.GetErrors(addrUtil.InitializeError) {

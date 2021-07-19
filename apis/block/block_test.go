@@ -14,7 +14,7 @@ func TestBlock(t *testing.T) {
 
 	network := types.Mainnet
 	block := types.Block{Hex: blockHex}
-	blockUtil := NewBlockApi(config.NetworkOpt(network))
+	blockUtil := NewBlockApi(config.NetworkOption(network))
 	assert.NoError(t, blockUtil.InitializeError)
 	for _, errItem := range cfdErrors.GetErrors(blockUtil.InitializeError) {
 		assert.NoError(t, errItem)

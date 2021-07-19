@@ -444,7 +444,7 @@ func TestCreatePegoutOverrideApis(t *testing.T) {
 
 	// pegoutApi := (Pegout)(NewPegoutService())
 	// keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
-	btcNetworkConf := config.NetworkOpt(types.Mainnet)
+	btcNetworkConf := config.NetworkOption(types.Mainnet)
 	btcAddrApi := address.NewAddressApi(btcNetworkConf)
 	assert.NoError(t, btcAddrApi.InitializeError)
 	for _, errItem := range cfdErrors.GetErrors(btcAddrApi.InitializeError) {
@@ -610,7 +610,7 @@ type DescriptorApiParserMock struct {
 }
 
 func NewDescriptorApiParserMock(network types.NetworkType) *DescriptorApiParserMock {
-	descObj := descriptor.NewDescriptorApi(config.NetworkOpt(network))
+	descObj := descriptor.NewDescriptorApi(config.NetworkOption(network))
 	obj := DescriptorApiParserMock{descObj}
 	return &obj
 }

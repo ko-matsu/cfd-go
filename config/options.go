@@ -6,8 +6,8 @@ import (
 
 type CfdConfigOption func(*CfdConfig)
 
-// NetworkOpt returns configuration option function.
-func NetworkOpt(networkType types.NetworkType) CfdConfigOption {
+// NetworkOption returns configuration option function.
+func NetworkOption(networkType types.NetworkType) CfdConfigOption {
 	return func(conf *CfdConfig) {
 		if conf != nil {
 			conf.Network = networkType
@@ -15,8 +15,8 @@ func NetworkOpt(networkType types.NetworkType) CfdConfigOption {
 	}
 }
 
-// BitcoinGenesisBlockHashOpt returns configuration option function.
-func BitcoinGenesisBlockHashOpt(genesisBlockHash string) CfdConfigOption {
+// BitcoinGenesisBlockHashOption returns configuration option function.
+func BitcoinGenesisBlockHashOption(genesisBlockHash string) CfdConfigOption {
 	return func(conf *CfdConfig) {
 		if conf != nil {
 			conf.BitcoinGenesisBlockHash = genesisBlockHash
@@ -24,8 +24,8 @@ func BitcoinGenesisBlockHashOpt(genesisBlockHash string) CfdConfigOption {
 	}
 }
 
-// BitcoinAssetIdOpt returns configuration option function.
-func BitcoinAssetIdOpt(bitcoinAssetId string) CfdConfigOption {
+// BitcoinAssetIdOption returns configuration option function.
+func BitcoinAssetIdOption(bitcoinAssetId string) CfdConfigOption {
 	return func(conf *CfdConfig) {
 		if conf != nil {
 			conf.BitcoinAssetId = bitcoinAssetId

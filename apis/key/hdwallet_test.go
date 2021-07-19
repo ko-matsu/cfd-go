@@ -13,7 +13,7 @@ func TestCfdExtkey(t *testing.T) {
 	seed := types.NewByteDataFromHexIgnoreError(
 		"0e09fbdd00e575b654d480ae979f24da45ef4dee645c7dc2e3b30b2e093d38dda0202357754cc856f8920b8e31dd02e9d34f6a2b20dc825c6ba90f90009085e1")
 	network := types.Mainnet
-	cfdCfg := config.NetworkOpt(network)
+	cfdCfg := config.NetworkOption(network)
 
 	hdwalletApiImpl := NewHdWalletApi(cfdCfg)
 	assert.NoError(t, hdwalletApiImpl.InitializeError)

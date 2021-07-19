@@ -97,7 +97,7 @@ func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 			service.elementsTxApi = txApi
 		}
 
-		btcNetworkOpt := config.NetworkOpt(network.ToBitcoinType())
+		btcNetworkOpt := config.NetworkOption(network.ToBitcoinType())
 		bitcoinAddrApi := address.NewAddressApi(btcNetworkOpt)
 		if bitcoinAddrApi.InitializeError != nil {
 			service.setError(bitcoinAddrApi.InitializeError)

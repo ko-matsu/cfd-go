@@ -79,7 +79,7 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 			api.descriptorApi = descriptorApi
 		}
 
-		btcNetworkOpt := config.NetworkOpt(network.ToBitcoinType())
+		btcNetworkOpt := config.NetworkOption(network.ToBitcoinType())
 		bitcoinAddressApi := address.NewAddressApi(btcNetworkOpt)
 		if bitcoinAddressApi.InitializeError != nil {
 			api.setError(bitcoinAddressApi.InitializeError)

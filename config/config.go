@@ -61,13 +61,13 @@ func (config *CfdConfig) WithOptions(options ...CfdConfigOption) *CfdConfig {
 func (config CfdConfig) GetOptions() []CfdConfigOption {
 	result := make([]CfdConfigOption, 0, 3)
 	if config.Network.Valid() {
-		result = append(result, NetworkOpt(config.Network))
+		result = append(result, NetworkOption(config.Network))
 	}
 	if _, err := utils.ValidBlockHash(config.BitcoinGenesisBlockHash); err == nil {
-		result = append(result, BitcoinGenesisBlockHashOpt(config.BitcoinGenesisBlockHash))
+		result = append(result, BitcoinGenesisBlockHashOption(config.BitcoinGenesisBlockHash))
 	}
 	if _, err := utils.ValidAssetId(config.BitcoinAssetId); err == nil {
-		result = append(result, BitcoinAssetIdOpt(config.BitcoinAssetId))
+		result = append(result, BitcoinAssetIdOption(config.BitcoinAssetId))
 	}
 	return result
 }
