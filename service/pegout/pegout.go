@@ -529,8 +529,10 @@ func (p *PegoutService) getConfig() *config.CfdConfig {
 }
 
 func validateOnlinePrivkey(privkey *types.Privkey, network types.NetworkType) error {
-	if (privkey == nil) || (privkey.Hex == "" && privkey.Wif == "") {
-		return errors.Errorf("CFD Error: Pegout privkey is nil or empty")
+	if privkey == nil {
+		return errors.Errorf("CFD Error: Pegout privkey is nil")
+	} else if privkey.Hex == "" && privkey.Wif == "" {
+		return errors.Errorf("CFD Error: Pegout privkey is empty")
 	} else if len(privkey.Wif) > 0 {
 		keyApi := &key.PrivkeyApiImpl{}
 		tmpPrivkey, err := keyApi.GetPrivkeyFromWif(privkey.Wif)
