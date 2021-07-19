@@ -127,7 +127,7 @@ type PegoutService struct {
 	pubkeyApi               key.PubkeyApi
 }
 
-// WithConfig This function set a elements descriptor api.
+// WithElementsDescriptorApi This function set a elements descriptor api.
 func (p *PegoutService) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *PegoutService {
 	if descriptorApi == nil {
 		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
