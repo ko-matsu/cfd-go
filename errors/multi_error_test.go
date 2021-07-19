@@ -27,10 +27,10 @@ func TestMultiError(t *testing.T) {
 	assert.True(t, multiError.Exist())
 
 	copyError := NewMultiError(CfdError("copy error"))
-	copyError.Append(multiError)
+	copyError = Append(copyError, multiError)
 	assert.Len(t, copyError.GetErrors(), 3)
 	assert.True(t, copyError.Exist())
-	copyError.Append(nil)
+	copyError = Append(copyError, nil)
 	assert.Len(t, copyError.GetErrors(), 3)
 
 	appendError := Append(nil, multiError.GetErrors()...)

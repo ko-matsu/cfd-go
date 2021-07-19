@@ -14,12 +14,15 @@ func NewMultiError(err error, errors ...error) *MultiError {
 	return &multiErr
 }
 
-func (e MultiError) Exist() bool {
+func (e *MultiError) Exist() bool {
+	if e == nil {
+		return false
+	}
 	return len(e.errs) > 0
 }
 
-func (e MultiError) GetErrors() []error {
-	if len(e.errs) == 0 {
+func (e *MultiError) GetErrors() []error {
+	if e == nil || len(e.errs) == 0 {
 		return []error{}
 	}
 	result := make([]error, 0, len(e.errs))
@@ -28,7 +31,7 @@ func (e MultiError) GetErrors() []error {
 }
 
 func (e *MultiError) Add(err error) {
-	if err == nil {
+	if e == nil || err == nil {
 		return
 	}
 	if e.errs == nil {
@@ -39,8 +42,8 @@ func (e *MultiError) Add(err error) {
 	}
 }
 
-func (e *MultiError) Append(errs *MultiError) {
-	if errs == nil || len(errs.errs) == 0 {
+func (e *MultiError) append(errs *MultiError) {
+	if e == nil || errs == nil || len(errs.errs) == 0 {
 		return
 	}
 	if e.errs == nil {
@@ -50,7 +53,7 @@ func (e *MultiError) Append(errs *MultiError) {
 }
 
 func (e *MultiError) SetError(err error) {
-	if err != nil {
+	if e != nil && err != nil {
 		e.error = err
 	}
 }
@@ -70,7 +73,7 @@ func Append(err *MultiError, appendErrors ...error) *MultiError {
 		if appendErr == nil {
 			// do nothing
 		} else if multiErr, ok := appendErr.(*MultiError); ok {
-			errObj.Append(multiErr)
+			errObj.append(multiErr)
 		} else {
 			errObj.Add(appendErr)
 		}
@@ -82,12 +85,10 @@ func Append(err *MultiError, appendErrors ...error) *MultiError {
 func GetErrors(err error) []error {
 	if err == nil {
 		return []error{}
-	} else if multiErr, ok := err.(*MultiError); ok {
-		if multiErr == nil {
-			return []error{}
-		}
-		return multiErr.GetErrors()
-	} else {
+	}
+	multiErr, ok := err.(*MultiError)
+	if !ok {
 		return []error{err}
 	}
+	return multiErr.GetErrors()
 }
