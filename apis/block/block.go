@@ -27,7 +27,7 @@ func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 	api.setError(err)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -126,7 +126,7 @@ func (b *BlockApiImpl) ExistTxid(block *types.Block, txid string) (exist bool, e
 // validConfig ...
 func (b *BlockApiImpl) validConfig() error {
 	if b.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	} else if !b.network.IsBitcoin() {
 		return cfdErrors.BitcoinNetworkError
 	}

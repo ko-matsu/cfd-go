@@ -36,7 +36,7 @@ func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network
 		api.network = &network
@@ -203,7 +203,7 @@ func (u *AddressApiImpl) GetPegoutAddress(addressType types.AddressType, descrip
 // validConfig ...
 func (u *AddressApiImpl) validConfig() error {
 	if u.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	}
 	return nil
 }

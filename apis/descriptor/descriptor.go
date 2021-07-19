@@ -58,7 +58,7 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network
 		api.network = &network
@@ -158,7 +158,7 @@ func (d *DescriptorApiImpl) NewDescriptorFromAddress(address string) *types.Desc
 
 func (d *DescriptorApiImpl) validConfig() error {
 	if d.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	}
 	return nil
 }

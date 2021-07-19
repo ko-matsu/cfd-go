@@ -45,7 +45,7 @@ func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
 	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -59,7 +59,7 @@ func NewExtPrivkeyApi(options ...config.CfdConfigOption) *ExtPrivkeyApiImpl {
 	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -73,7 +73,7 @@ func NewHdWalletApi(options ...config.CfdConfigOption) *HdWalletApiImpl {
 	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -178,7 +178,7 @@ func (k *ExtPubkeyApiImpl) validExtkeyInfo(extPubkey *types.ExtPubkey) (data *ty
 // validConfig ...
 func (k *ExtPubkeyApiImpl) validConfig() error {
 	if k.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	} else if !k.network.IsBitcoin() {
 		return cfdErrors.BitcoinNetworkError
 	}
@@ -307,7 +307,7 @@ func (k *ExtPrivkeyApiImpl) validExtkeyInfo(extPrivkey *types.ExtPrivkey) (data 
 // validConfig ...
 func (k *ExtPrivkeyApiImpl) validConfig() error {
 	if k.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	} else if !k.network.IsBitcoin() {
 		return cfdErrors.BitcoinNetworkError
 	}
@@ -424,7 +424,7 @@ func (h *HdWalletApiImpl) GetMnemonicFromEntropy(entropy *types.ByteData, langua
 // validConfig ...
 func (h *HdWalletApiImpl) validConfig() error {
 	if h.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	} else if !h.network.IsBitcoin() {
 		return cfdErrors.BitcoinNetworkError
 	}

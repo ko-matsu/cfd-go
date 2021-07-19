@@ -67,7 +67,7 @@ func NewPeginService(options ...config.CfdConfigOption) *PeginService {
 
 	network := types.Unknown
 	if !conf.Network.Valid() {
-		service.setError(cfdErrors.NetworkConfigError)
+		service.setError(cfdErrors.ErrNetworkConfig)
 	} else if !conf.Network.IsElements() {
 		service.setError(cfdErrors.ElementsNetworkError)
 	} else {
@@ -146,9 +146,9 @@ type PeginService struct {
 // WithElementsDescriptorApi This function set a elements descriptor api.
 func (p *PeginService) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *PeginService {
 	if descriptorApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.LiquidV1) {
-		p.setError(errors.New(string(cfdErrors.ElementsNetworkError)))
+		p.setError(cfdErrors.ElementsNetworkError)
 	} else {
 		p.descriptorApi = descriptorApi
 	}
@@ -158,9 +158,9 @@ func (p *PeginService) WithElementsDescriptorApi(descriptorApi descriptor.Descri
 // WithElementsAddressApi This function set a elements address api.
 func (p *PeginService) WithElementsAddressApi(addressApi address.ElementsAddressApi) *PeginService {
 	if addressApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else if !utils.ValidNetworkTypes(addressApi.GetNetworkTypes(), types.LiquidV1) {
-		p.setError(errors.New(string(cfdErrors.ElementsNetworkError)))
+		p.setError(cfdErrors.ElementsNetworkError)
 	} else {
 		p.elementsAddressApi = addressApi
 	}
@@ -170,7 +170,7 @@ func (p *PeginService) WithElementsAddressApi(addressApi address.ElementsAddress
 // WithBitcoinTxApi This function set a bitcoin transaction api.
 func (p *PeginService) WithBitcoinTxApi(transactionApi transaction.TransactionApi) *PeginService {
 	if transactionApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else {
 		p.bitcoinTxApi = transactionApi
 	}
@@ -180,7 +180,7 @@ func (p *PeginService) WithBitcoinTxApi(transactionApi transaction.TransactionAp
 // WithConfidentialTxApi This function set a confidential transaction api.
 func (p *PeginService) WithConfidentialTxApi(confidentialTxApi transaction.ConfidentialTxApi) *PeginService {
 	if confidentialTxApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else {
 		p.elementsTxApi = confidentialTxApi
 	}
@@ -190,7 +190,7 @@ func (p *PeginService) WithConfidentialTxApi(confidentialTxApi transaction.Confi
 // WithPubkeyApi This function set a pubkey api.
 func (p *PeginService) WithPubkeyApi(pubkeyApi key.PubkeyApi) *PeginService {
 	if pubkeyApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else {
 		p.pubkeyApi = pubkeyApi
 	}
@@ -533,7 +533,7 @@ func (p *PeginService) GetPeginUtxoData(
 
 func (p *PeginService) validConfig() error {
 	if p.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	} else if !p.network.IsElements() {
 		return cfdErrors.ElementsNetworkError
 	}

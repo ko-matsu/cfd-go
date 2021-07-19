@@ -30,7 +30,7 @@ func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 	api.setError(errs)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.NetworkConfigError)
+		api.setError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network

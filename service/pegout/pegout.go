@@ -58,7 +58,7 @@ func NewPegoutService(options ...config.CfdConfigOption) *PegoutService {
 
 	network := types.Unknown
 	if !conf.Network.Valid() {
-		service.setError(cfdErrors.NetworkConfigError)
+		service.setError(cfdErrors.ErrNetworkConfig)
 	} else if !conf.Network.IsElements() {
 		service.setError(cfdErrors.ElementsNetworkError)
 	} else {
@@ -130,9 +130,9 @@ type PegoutService struct {
 // WithElementsDescriptorApi This function set a elements descriptor api.
 func (p *PegoutService) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *PegoutService {
 	if descriptorApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.LiquidV1) {
-		p.setError(errors.New(string(cfdErrors.ElementsNetworkError)))
+		p.setError(cfdErrors.ElementsNetworkError)
 	} else {
 		p.descriptorApi = descriptorApi
 	}
@@ -142,9 +142,9 @@ func (p *PegoutService) WithElementsDescriptorApi(descriptorApi descriptor.Descr
 // WithBitcoinAddressApi This function set a bitcoin address api.
 func (p *PegoutService) WithBitcoinAddressApi(addressApi address.AddressApi) *PegoutService {
 	if addressApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else if !utils.ValidNetworkTypes(addressApi.GetNetworkTypes(), types.Mainnet) {
-		p.setError(errors.New(string(cfdErrors.ElementsNetworkError)))
+		p.setError(cfdErrors.ElementsNetworkError)
 	} else {
 		p.bitcoinAddressApi = addressApi
 	}
@@ -154,7 +154,7 @@ func (p *PegoutService) WithBitcoinAddressApi(addressApi address.AddressApi) *Pe
 // WithConfidentialTxApi This function set a confidential transaction api.
 func (p *PegoutService) WithConfidentialTxApi(confidentialTxApi transaction.ConfidentialTxApi) *PegoutService {
 	if confidentialTxApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else {
 		p.elementsTxApi = confidentialTxApi
 	}
@@ -164,7 +164,7 @@ func (p *PegoutService) WithConfidentialTxApi(confidentialTxApi transaction.Conf
 // WithPubkeyApi This function set a pubkey api.
 func (p *PegoutService) WithPubkeyApi(pubkeyApi key.PubkeyApi) *PegoutService {
 	if pubkeyApi == nil {
-		p.setError(errors.New(string(cfdErrors.ParameterNilError)))
+		p.setError(cfdErrors.ParameterNilError)
 	} else {
 		p.pubkeyApi = pubkeyApi
 	}
@@ -510,7 +510,7 @@ func (p *PegoutService) VerifyPubkeySignature(
 
 func (p *PegoutService) validConfig() error {
 	if p.network == nil {
-		return cfdErrors.NetworkConfigError
+		return cfdErrors.ErrNetworkConfig
 	} else if !p.network.IsElements() {
 		return cfdErrors.ElementsNetworkError
 	}

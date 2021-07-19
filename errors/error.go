@@ -4,8 +4,8 @@ type CfdError string
 
 const (
 	// error
+	ErrNetworkConfig      CfdError = "CFD Error: Invalid network configuration"
 	InterfaceSettingError CfdError = "CFD Error: Invalid interfaces"
-	NetworkConfigError    CfdError = "CFD Error: Invalid network configuration"
 	ElementsNetworkError  CfdError = "CFD Error: Network configuration is not elements"
 	BitcoinNetworkError   CfdError = "CFD Error: Network configuration is not bitcoin"
 	ParameterNilError     CfdError = "CFD Error: Parameter is nil"
