@@ -16,7 +16,48 @@ const (
 	InvalidConfigErrorMessage string = "Invalid configuration"
 )
 
-// Error This function implements the error interface.
+// Error returns the error string.
 func (e CfdError) Error() string {
 	return string(e)
+}
+
+// HasInitializeError has a InitializeError object.
+type HasInitializeError struct {
+	InitializeError error
+}
+
+// SetError returns HasInitializeError pointer.
+func (e *HasInitializeError) SetError(err error) *HasInitializeError {
+	if err == nil {
+		return e
+	}
+	var multiError *MultiError
+	if e == nil {
+		e = &HasInitializeError{}
+		multiError = NewMultiError(CfdError("CFD Error: initialize error"))
+	} else {
+		var ok bool
+		if multiError, ok = e.InitializeError.(*MultiError); !ok {
+			multiError = NewMultiError(CfdError("CFD Error: initialize error"))
+		}
+	}
+	multiError.Add(err)
+	e.InitializeError = multiError
+	return e
+}
+
+// GetError returns error interface.
+func (e *HasInitializeError) GetError() error {
+	if e == nil {
+		return nil
+	}
+	return e.InitializeError
+}
+
+// HasError returns error exist flag.
+func (e *HasInitializeError) HasError() bool {
+	if e == nil {
+		return false
+	}
+	return e.InitializeError != nil
 }

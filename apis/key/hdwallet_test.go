@@ -16,19 +16,34 @@ func TestCfdExtkey(t *testing.T) {
 	cfdCfg := config.NetworkOption(network)
 
 	hdwalletApiImpl := NewHdWalletApi(cfdCfg)
-	assert.NoError(t, hdwalletApiImpl.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(hdwalletApiImpl.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, hdwalletApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(hdwalletApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	extPrivkeyApiImpl := NewExtPrivkeyApi(cfdCfg)
-	assert.NoError(t, extPrivkeyApiImpl.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(extPrivkeyApiImpl.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, extPrivkeyApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(extPrivkeyApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	extPubkeyApiImpl := NewExtPubkeyApi(cfdCfg)
-	assert.NoError(t, extPubkeyApiImpl.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(extPubkeyApiImpl.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, extPubkeyApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(extPubkeyApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	hdwalletApi := (HdWalletApi)(hdwalletApiImpl)
 	extPrivkeyApi := (ExtPrivkeyApi)(extPrivkeyApiImpl)

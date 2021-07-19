@@ -15,9 +15,14 @@ func TestBlock(t *testing.T) {
 	network := types.Mainnet
 	block := types.Block{Hex: blockHex}
 	blockUtil := NewBlockApi(config.NetworkOption(network))
-	assert.NoError(t, blockUtil.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(blockUtil.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, blockUtil.GetError())
+	for _, errItem := range cfdErrors.GetErrors(blockUtil.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	hash, header, err := blockUtil.GetHeaderData(&block)
 	assert.NoError(t, err)

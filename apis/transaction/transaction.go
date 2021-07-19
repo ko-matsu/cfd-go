@@ -31,14 +31,14 @@ func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.ErrNetworkConfig)
+		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
 
 		descriptorApi := descriptor.NewDescriptorApi(config.NetworkOption(network))
-		if descriptorApi.InitializeError != nil {
-			api.setError(descriptorApi.InitializeError)
+		if descriptorApi.GetError() != nil {
+			api.HasInitializeError = api.SetError(descriptorApi.GetError())
 		} else {
 			api.descriptorApi = descriptorApi
 		}
@@ -51,34 +51,21 @@ func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 // -------------------------------------
 
 type TransactionApiImpl struct {
-	InitializeError error
-	network         *types.NetworkType
-	descriptorApi   descriptor.DescriptorApi
+	*cfdErrors.HasInitializeError
+	network       *types.NetworkType
+	descriptorApi descriptor.DescriptorApi
 }
 
 // WithBitcoinDescriptorApi This function set a bitcoin descriptor api.
 func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.DescriptorApi) *TransactionApiImpl {
 	if descriptorApi == nil {
-		p.setError(cfdErrors.ParameterNilError)
+		p.HasInitializeError = p.SetError(cfdErrors.ParameterNilError)
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.Mainnet) {
-		p.setError(cfdErrors.BitcoinNetworkError)
+		p.HasInitializeError = p.SetError(cfdErrors.BitcoinNetworkError)
 	} else {
 		p.descriptorApi = descriptorApi
 	}
 	return p
-}
-
-func (p *TransactionApiImpl) setError(err error) {
-	if err == nil {
-		return
-	}
-	multiError, ok := p.InitializeError.(*cfdErrors.MultiError)
-	if !ok {
-		multiError = cfdErrors.NewMultiError(
-			cfdErrors.CfdError("CFD Error: TransactionApiImpl initialize error"))
-	}
-	multiError.Add(err)
-	p.InitializeError = multiError
 }
 
 func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {

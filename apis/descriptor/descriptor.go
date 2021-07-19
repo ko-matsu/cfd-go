@@ -57,7 +57,7 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.ErrNetworkConfig)
+		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network
 		api.network = &network
@@ -71,21 +71,8 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 
 // Descriptor This struct use for the output descriptor.
 type DescriptorApiImpl struct {
-	InitializeError error
-	network         *types.NetworkType // Network Type
-}
-
-func (d *DescriptorApiImpl) setError(err error) {
-	if err == nil {
-		return
-	}
-	multiError, ok := d.InitializeError.(*cfdErrors.MultiError)
-	if !ok {
-		multiError = cfdErrors.NewMultiError(
-			cfdErrors.CfdError("CFD Error: DescriptorApiImpl initialize error"))
-	}
-	multiError.Add(err)
-	d.InitializeError = multiError
+	*cfdErrors.HasInitializeError
+	network *types.NetworkType // Network Type
 }
 
 // GetNetworkTypes This function returns the available network types.

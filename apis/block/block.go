@@ -26,7 +26,7 @@ func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.setError(cfdErrors.ErrNetworkConfig)
+		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -40,21 +40,8 @@ func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 
 // BlockApiImpl The bitcoin block utility.
 type BlockApiImpl struct {
-	InitializeError error
-	network         *types.NetworkType
-}
-
-func (b *BlockApiImpl) setError(err error) {
-	if err == nil {
-		return
-	}
-	multiError, ok := b.InitializeError.(*cfdErrors.MultiError)
-	if !ok {
-		multiError = cfdErrors.NewMultiError(
-			cfdErrors.CfdError("CFD Error: BlockApiImpl initialize error"))
-	}
-	multiError.Add(err)
-	b.InitializeError = multiError
+	*cfdErrors.HasInitializeError
+	network *types.NetworkType
 }
 
 // GetHeaderData ...

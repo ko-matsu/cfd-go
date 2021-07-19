@@ -37,9 +37,14 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	btcTxApi := (transaction.TransactionApi)(transaction.NewTransactionApi())
 	txApi := (transaction.ConfidentialTxApi)(transaction.NewConfidentialTxApi())
 	peginApiImpl := NewPeginService()
-	assert.NoError(t, peginApiImpl.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(peginApiImpl.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, peginApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(peginApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	peginApi := (Pegin)(peginApiImpl)
 
@@ -220,43 +225,73 @@ func TestCreateClaimPeginTxOverrideApi(t *testing.T) {
 
 	btcNetworkOpt := config.NetworkOption(types.Regtest)
 	btcDescApi := descriptor.NewDescriptorApi(btcNetworkOpt)
-	assert.NoError(t, btcDescApi.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(btcDescApi.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, btcDescApi.GetError())
+	for _, errItem := range cfdErrors.GetErrors(btcDescApi.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	btcAddrApi := address.NewAddressApi(btcNetworkOpt)
-	assert.NoError(t, btcAddrApi.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(btcAddrApi.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, btcAddrApi.GetError())
+	for _, errItem := range cfdErrors.GetErrors(btcAddrApi.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	elmAddrApi := address.NewAddressApi()
-	assert.NoError(t, elmAddrApi.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(elmAddrApi.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, elmAddrApi.GetError())
+	for _, errItem := range cfdErrors.GetErrors(elmAddrApi.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	elmDescApi := (descriptor.DescriptorApi)(descriptor.NewDescriptorApi())
 	pubkeyApi := (key.PubkeyApi)(key.NewPubkeyApi())
 	keyApi := (key.PrivkeyApi)(key.NewPrivkeyApi())
 	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi())
 	btcTxApi := transaction.NewTransactionApi(networkOpt).WithBitcoinDescriptorApi(btcDescApi)
-	assert.NoError(t, btcTxApi.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(btcTxApi.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, btcTxApi.GetError())
+	for _, errItem := range cfdErrors.GetErrors(btcTxApi.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	txApi := transaction.NewConfidentialTxApi(networkOpt).
 		WithElementsDescriptorApi(elmDescApi).
 		WithBitcoinAddressApi(btcAddrApi).WithBitcoinTxApi(btcTxApi)
-	assert.NoError(t, txApi.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(txApi.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, txApi.GetError())
+	for _, errItem := range cfdErrors.GetErrors(txApi.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	peginApi := NewPeginService(networkOpt, blockHashOpt, assetIdOpt).
 		WithElementsAddressApi(elmAddrApi).WithBitcoinTxApi(btcTxApi).
 		WithConfidentialTxApi(txApi).
 		WithElementsDescriptorApi(elmDescApi).WithPubkeyApi(pubkeyApi)
-	assert.NoError(t, peginApi.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(peginApi.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, peginApi.GetError())
+	for _, errItem := range cfdErrors.GetErrors(peginApi.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 
 	// key

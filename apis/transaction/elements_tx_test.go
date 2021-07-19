@@ -44,9 +44,14 @@ func TestCreateClaimPeginTx(t *testing.T) {
 
 	// create pegin address
 	addrUtil := address.NewAddressApi(opts...)
-	assert.NoError(t, addrUtil.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(addrUtil.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, addrUtil.GetError())
+	for _, errItem := range cfdErrors.GetErrors(addrUtil.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
@@ -58,9 +63,14 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
 	btcTxUtil := NewTransactionApi(opts...)
-	assert.NoError(t, btcTxUtil.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(btcTxUtil.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, btcTxUtil.GetError())
+	for _, errItem := range cfdErrors.GetErrors(btcTxUtil.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
@@ -101,9 +111,14 @@ func TestCreateClaimPeginTx(t *testing.T) {
 
 	// create pegin tx
 	txUtil := NewConfidentialTxApi(opts...)
-	assert.NoError(t, txUtil.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(txUtil.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, txUtil.GetError())
+	for _, errItem := range cfdErrors.GetErrors(txUtil.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
@@ -212,9 +227,14 @@ func TestCreatePegoutTx(t *testing.T) {
 	// pegout address
 	networkOpt := config.NetworkOption(network)
 	addrUtil := address.NewAddressApi(networkOpt)
-	assert.NoError(t, addrUtil.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(addrUtil.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, addrUtil.GetError())
+	for _, errItem := range cfdErrors.GetErrors(addrUtil.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
@@ -223,9 +243,14 @@ func TestCreatePegoutTx(t *testing.T) {
 
 	// create pegout tx
 	txUtil := NewConfidentialTxApi(networkOpt)
-	assert.NoError(t, txUtil.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(txUtil.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, txUtil.GetError())
+	for _, errItem := range cfdErrors.GetErrors(txUtil.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{

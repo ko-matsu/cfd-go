@@ -15,9 +15,14 @@ func TestCfdPrivkeyAndPubkey(t *testing.T) {
 
 	network := types.Regtest
 	privkeyApiImpl := NewPrivkeyApi(config.NetworkOption(network))
-	assert.NoError(t, privkeyApiImpl.InitializeError)
-	for _, errItem := range cfdErrors.GetErrors(privkeyApiImpl.InitializeError) {
-		assert.NoError(t, errItem)
+	assert.NoError(t, privkeyApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(privkeyApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
 	}
 	privkeyApi := (PrivkeyApi)(privkeyApiImpl)
 
