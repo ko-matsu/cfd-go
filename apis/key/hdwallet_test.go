@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,17 +13,41 @@ func TestCfdExtkey(t *testing.T) {
 	seed := types.NewByteDataFromHexIgnoreError(
 		"0e09fbdd00e575b654d480ae979f24da45ef4dee645c7dc2e3b30b2e093d38dda0202357754cc856f8920b8e31dd02e9d34f6a2b20dc825c6ba90f90009085e1")
 	network := types.Mainnet
-	cfdCfg := config.CfdConfig{Network: network}
+	cfdCfg := config.NetworkOption(network)
 
-	var hdwalletApi HdWalletApi
-	var extPrivkeyApi ExtPrivkeyApi
-	var extPubkeyApi ExtPubkeyApi
-	hdwalletApi, err := NewHdWalletApi().WithConfig(cfdCfg)
-	assert.NoError(t, err)
-	extPrivkeyApi, err = NewExtPrivkeyApi().WithConfig(cfdCfg)
-	assert.NoError(t, err)
-	extPubkeyApi, err = NewExtPubkeyApi().WithConfig(cfdCfg)
-	assert.NoError(t, err)
+	hdwalletApiImpl := NewHdWalletApi(cfdCfg)
+	assert.NoError(t, hdwalletApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(hdwalletApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
+	}
+	extPrivkeyApiImpl := NewExtPrivkeyApi(cfdCfg)
+	assert.NoError(t, extPrivkeyApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(extPrivkeyApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
+	}
+	extPubkeyApiImpl := NewExtPubkeyApi(cfdCfg)
+	assert.NoError(t, extPubkeyApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(extPubkeyApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
+	}
+	hdwalletApi := (HdWalletApi)(hdwalletApiImpl)
+	extPrivkeyApi := (ExtPrivkeyApi)(extPrivkeyApiImpl)
+	extPubkeyApi := (ExtPubkeyApi)(extPubkeyApiImpl)
 
 	extprivkey1, err := hdwalletApi.GetExtPrivkey(seed)
 	assert.NoError(t, err)

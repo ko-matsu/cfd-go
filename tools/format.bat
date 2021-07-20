@@ -4,4 +4,4 @@ if exist "format.bat" (
   cd ..
 )
 
-CALL go fmt . ./types/... ./apis/... ./service/...
+CALL go fmt . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests

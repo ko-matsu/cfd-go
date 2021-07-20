@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
+	"github.com/pkg/errors"
 )
 
 // Script This struct holds a script.
@@ -45,7 +46,7 @@ func NewScriptFromAsm(scriptAsm string) (Script, error) {
 	var obj Script
 	hexStr, err := cfd.CfdGoConvertScriptAsmToHex(scriptAsm)
 	if err != nil {
-		return obj, err
+		return obj, errors.Wrap(err, "parse script asm error")
 	}
 	_, osErr := hex.DecodeString(hexStr)
 	if osErr != nil {
@@ -60,7 +61,7 @@ func NewScriptFromAsmList(scriptAsmList []string) (Script, error) {
 	var obj Script
 	hexStr, err := cfd.CfdGoCreateScript(scriptAsmList)
 	if err != nil {
-		return obj, err
+		return obj, errors.Wrap(err, "create script error")
 	}
 	_, osErr := hex.DecodeString(hexStr)
 	if osErr != nil {

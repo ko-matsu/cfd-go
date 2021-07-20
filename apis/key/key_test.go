@@ -5,6 +5,7 @@ import (
 
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/config"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,10 +13,18 @@ import (
 func TestCfdPrivkeyAndPubkey(t *testing.T) {
 	// pubkeyApi := (PubkeyApi)(NewPubkeyApi())
 
-	var privkeyApi PrivkeyApi
 	network := types.Regtest
-	privkeyApi, err := NewPrivkeyApi().WithConfig(config.CfdConfig{Network: network})
-	assert.NoError(t, err)
+	privkeyApiImpl := NewPrivkeyApi(config.NetworkOption(network))
+	assert.NoError(t, privkeyApiImpl.GetError())
+	for _, errItem := range cfdErrors.GetErrors(privkeyApiImpl.GetError()) {
+		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
+			assert.NoError(t, errItem)
+			for _, innerError := range cfdErrors.GetErrors(multiError) {
+				assert.NoError(t, innerError)
+			}
+		}
+	}
+	privkeyApi := (PrivkeyApi)(privkeyApiImpl)
 
 	// compress
 	pubkeyHex, privkeyHex, wif, err := cfd.CfdGoCreateKeyPair(true, network.ToCfdValue())

@@ -3,6 +3,7 @@ package address
 import (
 	cfd "github.com/cryptogarageinc/cfd-go"
 	types "github.com/cryptogarageinc/cfd-go/types"
+	"github.com/pkg/errors"
 )
 
 // -------------------------------------
@@ -24,19 +25,20 @@ func NewConfidentialAddressApi() *ConfidentialAddressApiImpl {
 
 // ConfidentialAddressApiImpl ...
 type ConfidentialAddressApiImpl struct {
+	Error error
 }
 
 // Create ...
 func (u *ConfidentialAddressApiImpl) Create(addressString string, confidentialKey *types.Pubkey) (address *types.ConfidentialAddress, err error) {
 	data, err := cfd.CfdGoGetAddressInfo(addressString)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "parse address error")
 	}
 	addr := ""
 	if confidentialKey != nil {
 		addr, err = cfd.CfdGoCreateConfidentialAddress(addressString, confidentialKey.Hex)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "create confidential address error")
 		}
 	}
 	address = &types.ConfidentialAddress{
@@ -55,7 +57,7 @@ func (u *ConfidentialAddressApiImpl) Parse(addressString string) (address *types
 	if err == nil {
 		data, err := cfd.CfdGoGetAddressInfo(addr)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "parse address error")
 		}
 		address = &types.ConfidentialAddress{
 			ConfidentialAddress: addressString,
@@ -67,7 +69,7 @@ func (u *ConfidentialAddressApiImpl) Parse(addressString string) (address *types
 	} else {
 		data, err := cfd.CfdGoGetAddressInfo(addressString)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "parse address error")
 		}
 		address = &types.ConfidentialAddress{
 			Address: addressString,
