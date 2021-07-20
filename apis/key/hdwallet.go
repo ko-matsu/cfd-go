@@ -177,7 +177,7 @@ func (k *ExtPubkeyApiImpl) validConfig() error {
 	if k.network == nil {
 		return cfdErrors.ErrNetworkConfig
 	} else if !k.network.IsBitcoin() {
-		return cfdErrors.BitcoinNetworkError
+		return cfdErrors.ErrBitcoinNetwork
 	}
 	return nil
 }
@@ -293,7 +293,7 @@ func (k *ExtPrivkeyApiImpl) validConfig() error {
 	if k.network == nil {
 		return cfdErrors.ErrNetworkConfig
 	} else if !k.network.IsBitcoin() {
-		return cfdErrors.BitcoinNetworkError
+		return cfdErrors.ErrBitcoinNetwork
 	}
 	return nil
 }
@@ -397,7 +397,7 @@ func (h *HdWalletApiImpl) validConfig() error {
 	if h.network == nil {
 		return cfdErrors.ErrNetworkConfig
 	} else if !h.network.IsBitcoin() {
-		return cfdErrors.BitcoinNetworkError
+		return cfdErrors.ErrBitcoinNetwork
 	}
 	return nil
 }

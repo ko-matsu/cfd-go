@@ -81,7 +81,7 @@ func (u *AddressApiImpl) ParseAddress(addressString string) (address *types.Addr
 		Type:    types.NewAddressTypeByHashType(data.HashType),
 	}
 	if address.Network.IsBitcoin() != u.network.IsBitcoin() {
-		return address, cfdErrors.UnmatchNetworkError
+		return address, cfdErrors.ErrUnmatchNetwork
 	}
 	return address, nil
 }

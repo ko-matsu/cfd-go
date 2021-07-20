@@ -59,9 +59,9 @@ type TransactionApiImpl struct {
 // WithBitcoinDescriptorApi This function set a bitcoin descriptor api.
 func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.DescriptorApi) *TransactionApiImpl {
 	if descriptorApi == nil {
-		p.HasInitializeError = p.SetError(cfdErrors.ParameterNilError)
+		p.HasInitializeError = p.SetError(cfdErrors.ErrParameterNil)
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.Mainnet) {
-		p.HasInitializeError = p.SetError(cfdErrors.BitcoinNetworkError)
+		p.HasInitializeError = p.SetError(cfdErrors.ErrBitcoinNetwork)
 	} else {
 		p.descriptorApi = descriptorApi
 	}
@@ -257,7 +257,7 @@ func (t *TransactionApiImpl) validConfig() error {
 	if t.network == nil {
 		return cfdErrors.ErrNetworkConfig
 	} else if !t.network.IsBitcoin() {
-		return cfdErrors.BitcoinNetworkError
+		return cfdErrors.ErrBitcoinNetwork
 	}
 	return nil
 }

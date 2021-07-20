@@ -114,7 +114,7 @@ func (b *BlockApiImpl) validConfig() error {
 	if b.network == nil {
 		return cfdErrors.ErrNetworkConfig
 	} else if !b.network.IsBitcoin() {
-		return cfdErrors.BitcoinNetworkError
+		return cfdErrors.ErrBitcoinNetwork
 	}
 	return nil
 }

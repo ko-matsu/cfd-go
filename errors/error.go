@@ -4,13 +4,12 @@ type CfdError string
 
 const (
 	// error
-	ErrNetworkConfig      CfdError = "CFD Error: Invalid network configuration"
-	InterfaceSettingError CfdError = "CFD Error: Invalid interfaces"
-	ElementsNetworkError  CfdError = "CFD Error: Network configuration is not elements"
-	BitcoinNetworkError   CfdError = "CFD Error: Network configuration is not bitcoin"
-	ParameterNilError     CfdError = "CFD Error: Parameter is nil"
-	UnmatchNetworkError   CfdError = "CFD Error: network type is unmatching"
-	InternalError         CfdError = "CFD Error: Internal error"
+	ErrNetworkConfig   CfdError = "CFD Error: Invalid network configuration"
+	ErrElementsNetwork CfdError = "CFD Error: Network configuration is not elements"
+	ErrBitcoinNetwork  CfdError = "CFD Error: Network configuration is not bitcoin"
+	ErrUnmatchNetwork  CfdError = "CFD Error: network type is unmatching"
+	ErrParameterNil    CfdError = "CFD Error: Parameter is nil"
+	InternalError      CfdError = "CFD Error: Internal error"
 
 	// text
 	InvalidConfigErrorMessage string = "Invalid configuration"
