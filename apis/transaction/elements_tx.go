@@ -46,9 +46,9 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 
 	network := types.Unknown
 	if !conf.Network.Valid() {
-		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
+		api.SetError(cfdErrors.ErrNetworkConfig)
 	} else if !conf.Network.IsElements() {
-		api.HasInitializeError = api.SetError(cfdErrors.ErrElementsNetwork)
+		api.SetError(cfdErrors.ErrElementsNetwork)
 	} else {
 		network = conf.Network
 	}
@@ -56,13 +56,13 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 	var bitcoinAssetId *types.ByteData
 	if len(conf.BitcoinAssetId) != 0 {
 		if bitcoinAssetId, err = utils.ValidAssetId(conf.BitcoinAssetId); err != nil {
-			api.HasInitializeError = api.SetError(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
+			api.SetError(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
 		}
 	}
 	var bitcoinGenesisBlockHash *types.ByteData
 	if len(conf.BitcoinGenesisBlockHash) != 0 {
 		if bitcoinGenesisBlockHash, err = utils.ValidBlockHash(conf.BitcoinGenesisBlockHash); err != nil {
-			api.HasInitializeError = api.SetError(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
+			api.SetError(errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage))
 		}
 	}
 
@@ -74,7 +74,7 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 		elementsConfOpts := api.getConfig().GetOptions()
 		descriptorApi := descriptor.NewDescriptorApi(elementsConfOpts...)
 		if descriptorApi.GetError() != nil {
-			api.HasInitializeError = api.SetError(descriptorApi.GetError())
+			api.SetError(descriptorApi.GetError())
 		} else {
 			api.descriptorApi = descriptorApi
 		}
@@ -82,13 +82,13 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 		btcNetworkOpt := config.NetworkOption(network.ToBitcoinType())
 		bitcoinAddressApi := address.NewAddressApi(btcNetworkOpt)
 		if bitcoinAddressApi.GetError() != nil {
-			api.HasInitializeError = api.SetError(bitcoinAddressApi.GetError())
+			api.SetError(bitcoinAddressApi.GetError())
 		} else {
 			api.bitcoinAddressApi = bitcoinAddressApi
 		}
 		bitcoinTxApi := NewTransactionApi(btcNetworkOpt)
 		if bitcoinTxApi.GetError() != nil {
-			api.HasInitializeError = api.SetError(bitcoinTxApi.GetError())
+			api.SetError(bitcoinTxApi.GetError())
 		} else {
 			api.bitcoinTxApi = bitcoinTxApi
 		}
@@ -102,7 +102,7 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 
 // ConfidentialTxApiImpl Create confidential transaction utility.
 type ConfidentialTxApiImpl struct {
-	*cfdErrors.HasInitializeError
+	cfdErrors.HasInitializeError
 	network                 *types.NetworkType
 	bitcoinGenesisBlockHash *types.ByteData
 	bitcoinAssetId          *types.ByteData
@@ -114,9 +114,9 @@ type ConfidentialTxApiImpl struct {
 // WithElementsDescriptorApi This function set a elements descriptor api.
 func (p *ConfidentialTxApiImpl) WithElementsDescriptorApi(descriptorApi descriptor.DescriptorApi) *ConfidentialTxApiImpl {
 	if descriptorApi == nil {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrParameterNil)
+		p.SetError(cfdErrors.ErrParameterNil)
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.LiquidV1) {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrElementsNetwork)
+		p.SetError(cfdErrors.ErrElementsNetwork)
 	} else {
 		p.descriptorApi = descriptorApi
 	}
@@ -126,9 +126,9 @@ func (p *ConfidentialTxApiImpl) WithElementsDescriptorApi(descriptorApi descript
 // WithBitcoinAddressApi This function set a bitcoin address api.
 func (p *ConfidentialTxApiImpl) WithBitcoinAddressApi(addressApi address.AddressApi) *ConfidentialTxApiImpl {
 	if addressApi == nil {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrParameterNil)
+		p.SetError(cfdErrors.ErrParameterNil)
 	} else if !utils.ValidNetworkTypes(addressApi.GetNetworkTypes(), types.Mainnet) {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrBitcoinNetwork)
+		p.SetError(cfdErrors.ErrBitcoinNetwork)
 	} else {
 		p.bitcoinAddressApi = addressApi
 	}
@@ -138,7 +138,7 @@ func (p *ConfidentialTxApiImpl) WithBitcoinAddressApi(addressApi address.Address
 // WithBitcoinTxApi This function set a bitcoin transaction api.
 func (p *ConfidentialTxApiImpl) WithBitcoinTxApi(transactionApi TransactionApi) *ConfidentialTxApiImpl {
 	if transactionApi == nil {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrParameterNil)
+		p.SetError(cfdErrors.ErrParameterNil)
 	} else {
 		p.bitcoinTxApi = transactionApi
 	}

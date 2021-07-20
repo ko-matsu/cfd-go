@@ -29,7 +29,7 @@ func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
+		api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
@@ -47,7 +47,7 @@ type PubkeyApiImpl struct {
 
 //
 type PrivkeyApiImpl struct {
-	*cfdErrors.HasInitializeError
+	cfdErrors.HasInitializeError
 	network *types.NetworkType
 }
 

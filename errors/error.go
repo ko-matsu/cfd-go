@@ -26,23 +26,16 @@ type HasInitializeError struct {
 }
 
 // SetError returns HasInitializeError pointer.
-func (e *HasInitializeError) SetError(err error) *HasInitializeError {
-	if err == nil {
-		return e
+func (e *HasInitializeError) SetError(err error) {
+	if e == nil || err == nil {
+		return
 	}
-	var multiError *MultiError
-	if e == nil {
-		e = &HasInitializeError{}
+	multiError, ok := e.InitializeError.(*MultiError)
+	if !ok {
 		multiError = NewMultiError(CfdError("CFD Error: initialize error"))
-	} else {
-		var ok bool
-		if multiError, ok = e.InitializeError.(*MultiError); !ok {
-			multiError = NewMultiError(CfdError("CFD Error: initialize error"))
-		}
 	}
 	multiError.Add(err)
 	e.InitializeError = multiError
-	return e
 }
 
 // GetError returns error interface.

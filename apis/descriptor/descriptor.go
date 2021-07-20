@@ -57,7 +57,7 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
+		api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network
 		api.network = &network
@@ -71,7 +71,7 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 
 // Descriptor This struct use for the output descriptor.
 type DescriptorApiImpl struct {
-	*cfdErrors.HasInitializeError
+	cfdErrors.HasInitializeError
 	network *types.NetworkType // Network Type
 }
 

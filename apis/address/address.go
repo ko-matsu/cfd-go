@@ -35,7 +35,7 @@ func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
+		api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network
 		api.network = &network
@@ -49,7 +49,7 @@ func NewAddressApi(options ...config.CfdConfigOption) *AddressApiImpl {
 
 // AddressApiImpl ...
 type AddressApiImpl struct {
-	*cfdErrors.HasInitializeError
+	cfdErrors.HasInitializeError
 	network *types.NetworkType
 }
 

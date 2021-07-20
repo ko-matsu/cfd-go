@@ -31,14 +31,14 @@ func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
 
 	if !conf.Network.Valid() {
-		api.HasInitializeError = api.SetError(cfdErrors.ErrNetworkConfig)
+		api.SetError(cfdErrors.ErrNetworkConfig)
 	} else {
 		network := conf.Network.ToBitcoinType()
 		api.network = &network
 
 		descriptorApi := descriptor.NewDescriptorApi(config.NetworkOption(network))
 		if descriptorApi.GetError() != nil {
-			api.HasInitializeError = api.SetError(descriptorApi.GetError())
+			api.SetError(descriptorApi.GetError())
 		} else {
 			api.descriptorApi = descriptorApi
 		}
@@ -51,7 +51,7 @@ func NewTransactionApi(options ...config.CfdConfigOption) *TransactionApiImpl {
 // -------------------------------------
 
 type TransactionApiImpl struct {
-	*cfdErrors.HasInitializeError
+	cfdErrors.HasInitializeError
 	network       *types.NetworkType
 	descriptorApi descriptor.DescriptorApi
 }
@@ -59,9 +59,9 @@ type TransactionApiImpl struct {
 // WithBitcoinDescriptorApi This function set a bitcoin descriptor api.
 func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.DescriptorApi) *TransactionApiImpl {
 	if descriptorApi == nil {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrParameterNil)
+		p.SetError(cfdErrors.ErrParameterNil)
 	} else if !utils.ValidNetworkTypes(descriptorApi.GetNetworkTypes(), types.Mainnet) {
-		p.HasInitializeError = p.SetError(cfdErrors.ErrBitcoinNetwork)
+		p.SetError(cfdErrors.ErrBitcoinNetwork)
 	} else {
 		p.descriptorApi = descriptorApi
 	}
