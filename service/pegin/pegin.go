@@ -460,14 +460,14 @@ func (p *PeginService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegin decode signature error")
 	}
 	desc := types.Descriptor{OutputDescriptor: utxoData.Descriptor}
-	descData, _, _, err := p.descriptorApi.Parse(&desc)
+	descData, _, err := p.descriptorApi.Parse(&desc)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin parse descriptor error")
-	} else if descData.KeyType == int(cfd.KCfdDescriptorKeyNull) {
+	} else if !descData.Key.KeyType.Valid() {
 		return false, errors.Wrap(err, "Pegin descriptor unsupport key type")
 	}
-	pubkey := types.Pubkey{Hex: descData.Pubkey}
-	isVerify, err = p.pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	pubkey := descData.Key.Pubkey
+	isVerify, err = p.pubkeyApi.VerifyEcSignature(pubkey, sighash.ToHex(), sig)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin verify signature error")
 	}

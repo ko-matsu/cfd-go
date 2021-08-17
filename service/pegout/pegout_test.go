@@ -675,8 +675,8 @@ func NewDescriptorApiParserMock(network types.NetworkType) *DescriptorApiParserM
 	return &obj
 }
 
-func (d *DescriptorApiParserMock) Parse(descriptor *types.Descriptor) (data *types.DescriptorData, descriptorDataList []types.DescriptorData, multisigList []types.DescriptorKeyData, err error) {
-	return nil, nil, nil, errors.New(DescriptorParseMockErrorMessage)
+func (d *DescriptorApiParserMock) Parse(descriptor *types.Descriptor) (data *types.DescriptorRootData, descriptorDataList []types.DescriptorData, err error) {
+	return nil, nil, errors.New(DescriptorParseMockErrorMessage)
 }
 
 func TestPegoutServiceOverrideApiByMock(t *testing.T) {

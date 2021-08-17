@@ -486,14 +486,14 @@ func (p *PegoutService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
 	desc := types.Descriptor{OutputDescriptor: utxoData.Descriptor}
-	descData, _, _, err := p.descriptorApi.Parse(&desc)
+	descData, _, err := p.descriptorApi.Parse(&desc)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout parse descriptor error")
-	} else if descData.KeyType == int(cfd.KCfdDescriptorKeyNull) {
+	} else if !descData.Key.KeyType.Valid() {
 		return false, errors.Wrap(err, "Pegout descriptor unsupport key type")
 	}
-	pubkey := types.Pubkey{Hex: descData.Pubkey}
-	return p.pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	pubkey := descData.Key.Pubkey
+	return p.pubkeyApi.VerifyEcSignature(pubkey, sighash.ToHex(), sig)
 }
 
 func (p *PegoutService) validConfig() error {
