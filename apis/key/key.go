@@ -18,6 +18,7 @@ type PrivkeyApi interface {
 	GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error)
 	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
 	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
+	CreateEcSignatureGrindR(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType, grindR bool) (signature *types.ByteData, err error)
 }
 
 func NewPubkeyApi() *PubkeyApiImpl {
@@ -100,7 +101,12 @@ func (k *PrivkeyApiImpl) GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey
 
 // CreateEcSignature ...
 func (k *PrivkeyApiImpl) CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error) {
-	sig, err := cfd.CfdGoCalculateEcSignature(sighash.ToHex(), privkey.Hex, "", privkey.Network.ToCfdValue(), true)
+	return k.CreateEcSignatureGrindR(privkey, sighash, sighashType, true)
+}
+
+// CreateEcSignatureGrindR ...
+func (k *PrivkeyApiImpl) CreateEcSignatureGrindR(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType, grindR bool) (signature *types.ByteData, err error) {
+	sig, err := cfd.CfdGoCalculateEcSignature(sighash.ToHex(), privkey.Hex, privkey.Wif, privkey.Network.ToCfdValue(), grindR)
 	if err != nil {
 		return nil, errors.Wrap(err, "calculate ec signature error")
 	}
