@@ -142,32 +142,17 @@ func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, ou
 	if err = t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	data, _, _, err := t.descriptorApi.Parse(outputDescriptor)
+	data, _, err := t.descriptorApi.Parse(outputDescriptor)
 	if err != nil {
 		return errors.Wrap(err, "parse descriptor error")
 	}
-	if data.HashType != int(cfd.KCfdP2pkh) && data.HashType != int(cfd.KCfdP2wpkh) && data.HashType != int(cfd.KCfdP2shP2wpkh) {
+	if !data.HashType.IsPubkeyHash() {
 		return errors.Errorf("CFD Error: Descriptor hashType is not pubkeyHash")
 	}
 
-	hashType := types.NewHashType(data.HashType)
-	var pubkey types.Pubkey
-	if data.KeyType == int(cfd.KCfdDescriptorKeyPublic) {
-		pubkey.Hex = data.Pubkey
-	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.network.ToBitcoinType().ToCfdValue())
-		if err != nil {
-			return errors.Wrap(err, "get pubkey error")
-		}
-	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32Priv) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.network.ToBitcoinType().ToCfdValue())
-		if err != nil {
-			return errors.Wrap(err, "get pubkey error")
-		}
-	} else {
-		return errors.Errorf("CFD Error: Descriptor keyType is not pubkeyHash")
-	}
-	return t.AddPubkeySign(tx, outpoint, hashType, &pubkey, signature)
+	hashType := data.HashType
+	pubkey := data.Key.Pubkey
+	return t.AddPubkeySign(tx, outpoint, hashType, pubkey, signature)
 }
 
 // SignWithPrivkey ...
