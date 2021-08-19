@@ -1,6 +1,8 @@
 package pegout
 
 import (
+	"strings"
+
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/address"
 	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
@@ -47,6 +49,8 @@ type Pegout interface {
 		utxoData *types.ElementsUtxoData,
 		signature *types.ByteData,
 	) (isVerify bool, err error)
+	// ContainsPakEntry checks if a pakEntry is included in the whitelist.
+	ContainsPakEntry(pakEntry *types.ByteData, whitelist string) (exist bool, err error)
 }
 
 // NewPegoutService returns an object that defines the API for Pegout.
@@ -486,14 +490,43 @@ func (p *PegoutService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
 	desc := types.Descriptor{OutputDescriptor: utxoData.Descriptor}
-	descData, _, _, err := p.descriptorApi.Parse(&desc)
+	descData, _, err := p.descriptorApi.Parse(&desc)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout parse descriptor error")
-	} else if descData.KeyType == int(cfd.KCfdDescriptorKeyNull) {
+	} else if !descData.Key.KeyType.Valid() {
 		return false, errors.Wrap(err, "Pegout descriptor unsupport key type")
 	}
-	pubkey := types.Pubkey{Hex: descData.Pubkey}
-	return p.pubkeyApi.VerifyEcSignature(&pubkey, sighash.ToHex(), sig)
+	pubkey := descData.Key.Pubkey
+	return p.pubkeyApi.VerifyEcSignature(pubkey, sighash.ToHex(), sig)
+}
+
+const pakEntryStrLength int = 66 * 2
+
+func (p *PegoutService) ContainsPakEntry(pakEntry *types.ByteData, whitelist string) (exist bool, err error) {
+	if err = p.validConfig(); err != nil {
+		return false, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	} else if pakEntry == nil {
+		return false, cfdErrors.ErrParameterNil
+	} else if (len(whitelist) % pakEntryStrLength) != 0 {
+		return false, errors.Errorf("Invalid whitelist error")
+	}
+	pakEntryStr := strings.ToLower(pakEntry.ToHex())
+	if len(pakEntryStr) != pakEntryStrLength {
+		return false, errors.Errorf("Invalid pakEntry error")
+	}
+
+	lowerWhitelist := strings.ToLower(whitelist)
+	if !strings.Contains(lowerWhitelist, pakEntryStr) {
+		return false, nil
+	}
+
+	pakEntries := utils.SplitByLength(lowerWhitelist, pakEntryStrLength)
+	for _, entry := range pakEntries {
+		if pakEntryStr == entry {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (p *PegoutService) validConfig() error {

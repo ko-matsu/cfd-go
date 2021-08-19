@@ -29,6 +29,12 @@ type ConfidentialTxApi interface {
 	AddPubkeySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
 	// AddPubkeySign This function add the pubkey hash sign by output descriptor.
 	AddPubkeySignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error
+	// AddScriptSign add script hash sign.
+	AddScriptSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error
+	// AddScriptSign add script hash sign by descriptor.
+	AddScriptSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error
+	AddTxMultisigSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error
+	AddTxMultisigSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error
 	VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.ElementsUtxoData) (isVerify bool, reason string, err error)
 	FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error)
 	GetTxid(tx *types.ConfidentialTx) string
@@ -312,32 +318,98 @@ func (t *ConfidentialTxApiImpl) AddPubkeySignByDescriptor(tx *types.Confidential
 	if err = t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	data, _, _, err := t.descriptorApi.Parse(outputDescriptor)
+	data, _, err := t.descriptorApi.Parse(outputDescriptor)
 	if err != nil {
 		return errors.Wrap(err, "parse descriptor error")
 	}
-	if data.HashType != int(cfd.KCfdP2pkh) && data.HashType != int(cfd.KCfdP2wpkh) && data.HashType != int(cfd.KCfdP2shP2wpkh) {
+	if !data.HashType.IsPubkeyHash() {
 		return errors.Errorf("CFD Error: Descriptor hashType is not pubkeyHash")
 	}
 
-	hashType := types.NewHashType(data.HashType)
-	var pubkey types.Pubkey
-	if data.KeyType == int(cfd.KCfdDescriptorKeyPublic) {
-		pubkey.Hex = data.Pubkey
-	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.network.ToBitcoinType().ToCfdValue())
-		if err != nil {
-			return errors.Wrap(err, "get pubkey error")
-		}
-	} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32Priv) {
-		pubkey.Hex, err = cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.network.ToBitcoinType().ToCfdValue())
-		if err != nil {
-			return errors.Wrap(err, "get pubkey error")
-		}
-	} else {
-		return errors.Errorf("CFD Error: Descriptor keyType is not pubkeyHash")
+	hashType := data.HashType
+	pubkey := data.Key.Pubkey
+	return t.AddPubkeySign(tx, outpoint, hashType, pubkey, signature)
+}
+
+// AddScriptSign ...
+func (t *ConfidentialTxApiImpl) AddScriptSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error {
+	if err := t.validConfig(); err != nil {
+		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	return t.AddPubkeySign(tx, outpoint, hashType, &pubkey, signature)
+	signParams := make([]cfd.CfdSignParameter, len(signList))
+	for i, data := range signList {
+		signParams[i] = cfd.CfdSignParameter{
+			Data:        data.Data.ToHex(),
+			IsDerEncode: data.IsDerEncode,
+			SighashType: data.SigHashType.GetValue(),
+		}
+	}
+	txHex, err := cfd.CfdGoAddTxScriptHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), signParams, redeemScript.ToHex())
+	if err != nil {
+		return errors.Wrap(err, "CT.AddScriptSign error")
+	}
+	tx.Hex = txHex
+	return nil
+}
+
+// AddScriptSignByDescriptor ...
+func (t *ConfidentialTxApiImpl) AddScriptSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error {
+	var err error
+	if err = t.validConfig(); err != nil {
+		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	data, _, err := t.descriptorApi.Parse(outputDescriptor)
+	if err != nil {
+		return errors.Wrap(err, "parse descriptor error")
+	}
+	if !data.HashType.IsScriptHash() {
+		return errors.Errorf("CFD Error: Descriptor hashType is not scriptHash")
+	}
+
+	hashType := data.HashType
+	return t.AddScriptSign(tx, outpoint, hashType, signList, data.RedeemScript)
+}
+
+func (t *ConfidentialTxApiImpl) AddTxMultisigSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error {
+	if err := t.validConfig(); err != nil {
+		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	signParams := make([]cfd.CfdMultisigSignData, len(signList))
+	for i, data := range signList {
+		signParams[i] = cfd.CfdMultisigSignData{
+			Signature:   data.Data.ToHex(),
+			IsDerEncode: data.IsDerEncode,
+			SighashType: data.SigHashType.GetValue(),
+		}
+		if data.RelatedPubkey != nil {
+			signParams[i].RelatedPubkey = data.RelatedPubkey.Hex
+		}
+	}
+	txHex, err := cfd.CfdGoAddTxMultisigSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), signParams, redeemScript.ToHex())
+	if err != nil {
+		return errors.Wrap(err, "CT.AddTxMultisigSign error")
+	}
+	tx.Hex = txHex
+	return nil
+}
+
+func (t *ConfidentialTxApiImpl) AddTxMultisigSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error {
+	var err error
+	if err = t.validConfig(); err != nil {
+		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	data, _, err := t.descriptorApi.Parse(outputDescriptor)
+	if err != nil {
+		return errors.Wrap(err, "parse descriptor error")
+	}
+	if !data.HashType.IsScriptHash() {
+		return errors.Errorf("CFD Error: Descriptor hashType is not scriptHash")
+	} else if !data.HasMultisig() {
+		return errors.Errorf("CFD Error: Descriptor is not multisig")
+	}
+
+	hashType := data.HashType
+	return t.AddTxMultisigSign(tx, outpoint, hashType, signList, data.RedeemScript)
 }
 
 // VerifySign ...
@@ -419,30 +491,15 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 			if desc == nil {
 				return nil, errors.Errorf("CFD Error: Invalid descriptor string")
 			}
-			data, _, _, err := t.descriptorApi.Parse(desc)
+			data, _, err := t.descriptorApi.Parse(desc)
 			if err != nil {
 				return nil, errors.Wrap(err, "parse descriptor error")
 			}
 
-			if data.HashType != int(cfd.KCfdP2pkh) && data.HashType != int(cfd.KCfdP2wpkh) && data.HashType != int(cfd.KCfdP2shP2wpkh) {
-				return nil, errors.Errorf("CFD Error: Descriptor hashType is not pubkeyHash")
-			}
-			if data.KeyType == int(cfd.KCfdDescriptorKeyPublic) {
-				pubkey = cfd.NewByteDataFromHexIgnoreError(data.Pubkey)
-			} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32) {
-				tempPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(data.ExtPubkey, t.network.ToBitcoinType().ToCfdValue())
-				if err != nil {
-					return nil, errors.Wrap(err, "get pubkey error")
-				}
-				pubkey = cfd.NewByteDataFromHexIgnoreError(tempPubkey)
-			} else if data.KeyType == int(cfd.KCfdDescriptorKeyBip32Priv) {
-				tempPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(data.ExtPrivkey, t.network.ToBitcoinType().ToCfdValue())
-				if err != nil {
-					return nil, errors.Wrap(err, "get pubkey error")
-				}
-				pubkey = cfd.NewByteDataFromHexIgnoreError(tempPubkey)
-			} else if len(data.RedeemScript) != 0 {
-				script = cfd.NewScriptFromHexIgnoreError(data.RedeemScript)
+			if data.HashType.IsPubkeyHash() {
+				pubkey = cfd.NewByteDataFromHexIgnoreError(data.Key.Pubkey.Hex)
+			} else if data.HashType.IsScriptHash() {
+				script = cfd.NewScriptFromHexIgnoreError(data.RedeemScript.ToHex())
 			} else {
 				return nil, errors.Errorf("CFD Error: Descriptor invalid")
 			}

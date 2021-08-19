@@ -1,4 +1,4 @@
-package transaction
+package apis
 
 import (
 	"fmt"
@@ -6,11 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	cfdgo "github.com/cryptogarageinc/cfd-go"
-	"github.com/cryptogarageinc/cfd-go/apis/address"
+	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/config"
-	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,6 +31,8 @@ func TestCreateClaimPeginTx(t *testing.T) {
 		BitcoinAssetId:          asset,
 	}
 	opts := conf.GetOptions()
+	factory := NewElementsApiFactory(opts...)
+	assert.NoError(t, factory.GetError())
 
 	// fedpeg script
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
@@ -43,16 +43,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 
 	// create pegin address
-	addrUtil := address.NewAddressApi(opts...)
-	assert.NoError(t, addrUtil.GetError())
-	for _, errItem := range cfdErrors.GetErrors(addrUtil.GetError()) {
-		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
-			assert.NoError(t, errItem)
-			for _, innerError := range cfdErrors.GetErrors(multiError) {
-				assert.NoError(t, innerError)
-			}
-		}
-	}
+	addrUtil := factory.CreateElementsAddressApi()
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
 	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddr.Address)
@@ -62,16 +53,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	amount := int64(100000000)
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
-	btcTxUtil := NewTransactionApi(opts...)
-	assert.NoError(t, btcTxUtil.GetError())
-	for _, errItem := range cfdErrors.GetErrors(btcTxUtil.GetError()) {
-		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
-			assert.NoError(t, errItem)
-			for _, innerError := range cfdErrors.GetErrors(multiError) {
-				assert.NoError(t, innerError)
-			}
-		}
-	}
+	btcTxUtil := factory.CreateBitcoinTxApi()
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
@@ -110,16 +92,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
 
 	// create pegin tx
-	txUtil := NewConfidentialTxApi(opts...)
-	assert.NoError(t, txUtil.GetError())
-	for _, errItem := range cfdErrors.GetErrors(txUtil.GetError()) {
-		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
-			assert.NoError(t, errItem)
-			for _, innerError := range cfdErrors.GetErrors(multiError) {
-				assert.NoError(t, innerError)
-			}
-		}
-	}
+	txUtil := factory.CreateElementsTxApi()
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
@@ -185,7 +158,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	desc := types.Descriptor{
 		OutputDescriptor: peginUtxos[0].Descriptor,
 	}
-	privkeyUtil := key.NewPrivkeyApi()
+	privkeyUtil := factory.CreatePrivkeyApi()
 	signature, err := privkeyUtil.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
 	assert.NoError(t, err)
 
@@ -206,51 +179,35 @@ func TestCreatePegoutTx(t *testing.T) {
 	network := types.LiquidV1
 	genesisBlockHash := "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
 	asset := "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"
+	networkOpt := config.NetworkOption(network)
+	factory := NewElementsApiFactory(networkOpt)
+	assert.NoError(t, factory.GetError())
 
 	// mainchain address descriptor
 	mainchainXpubkey := "xpub6A53gzNdDBQYCtFFpZT7kUpoBGpzWigaukrdF9xoUZt7cYMD2qCAHVLsstNoQEDMFJWdX78KvT6yxpC76aGCN5mENVdWtFGcWZoKdtLq5jW"
-	mainchainPubkey, err := cfdgo.CfdGoGetPubkeyFromExtkey(mainchainXpubkey, int(cfdgo.KCfdNetworkMainnet))
+	mainchainPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(mainchainXpubkey, int(cfd.KCfdNetworkMainnet))
 	assert.NoError(t, err)
-	negateMainchainPubkey, err := cfdgo.CfdGoNegatePubkey(mainchainPubkey)
+	negateMainchainPubkey, err := cfd.CfdGoNegatePubkey(mainchainPubkey)
 	assert.NoError(t, err)
 	mainchainOutputDescriptor := "pkh(" + mainchainXpubkey + "/0/*)"
 	bip32Counter := uint32(0)
 
 	onlinePrivkey := "L52AgshDAE14NHJuovwAw8hyrTNK4YQjuiPC9EES4sfM7oBPzU4o"
-	onlinePubkey, err := cfdgo.CfdGoGetPubkeyFromPrivkey("", onlinePrivkey, true)
+	onlinePubkey, err := cfd.CfdGoGetPubkeyFromPrivkey("", onlinePrivkey, true)
 	assert.NoError(t, err)
 	// whitelist
 	pakEntry := negateMainchainPubkey + onlinePubkey
 	whitelist := pakEntry
 
 	// pegout address
-	networkOpt := config.NetworkOption(network)
-	addrUtil := address.NewAddressApi(networkOpt)
-	assert.NoError(t, addrUtil.GetError())
-	for _, errItem := range cfdErrors.GetErrors(addrUtil.GetError()) {
-		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
-			assert.NoError(t, errItem)
-			for _, innerError := range cfdErrors.GetErrors(multiError) {
-				assert.NoError(t, innerError)
-			}
-		}
-	}
+	addrUtil := factory.CreateElementsAddressApi()
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddr.Address)
 	assert.Equal(t, "pkh("+mainchainXpubkey+")", *baseDescriptor)
 
 	// create pegout tx
-	txUtil := NewConfidentialTxApi(networkOpt)
-	assert.NoError(t, txUtil.GetError())
-	for _, errItem := range cfdErrors.GetErrors(txUtil.GetError()) {
-		if multiError, ok := errItem.(*cfdErrors.MultiError); ok {
-			assert.NoError(t, errItem)
-			for _, innerError := range cfdErrors.GetErrors(multiError) {
-				assert.NoError(t, innerError)
-			}
-		}
-	}
+	txUtil := factory.CreateElementsTxApi()
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{
 		{
@@ -304,6 +261,8 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		BitcoinGenesisBlockHash: "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	})
+	factory := NewElementsApiFactory()
+	assert.NoError(t, factory.GetError())
 
 	// fedpeg script
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
@@ -314,7 +273,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// create pegin address
-	addrUtil := address.NewAddressApi()
+	addrUtil := factory.CreateElementsAddressApi()
 	peginAddr, claimScript, err := addrUtil.GetPeginAddressByPubkey(types.P2shP2wshAddress, fedpegScript, pubkey.Hex)
 	assert.NoError(t, err)
 	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddr.Address)
@@ -324,7 +283,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	amount := int64(100000000)
 	feeAmount := int64(500)
 	peginAmount := amount - feeAmount
-	btcTxUtil := NewTransactionApi()
+	btcTxUtil := factory.CreateBitcoinTxApi()
 	utxoOutPoint := types.OutPoint{
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
@@ -364,7 +323,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
 
 	// create pegin tx
-	txUtil := NewConfidentialTxApi()
+	txUtil := factory.CreateElementsTxApi()
 	peginOutPoint := types.OutPoint{
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
@@ -442,32 +401,34 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 		BitcoinGenesisBlockHash: "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
 		BitcoinAssetId:          "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 	})
+	factory := NewElementsApiFactory()
+	assert.NoError(t, factory.GetError())
 
 	// mainchain address descriptor
 	mainchainXpubkey := "xpub6A53gzNdDBQYCtFFpZT7kUpoBGpzWigaukrdF9xoUZt7cYMD2qCAHVLsstNoQEDMFJWdX78KvT6yxpC76aGCN5mENVdWtFGcWZoKdtLq5jW"
-	mainchainPubkey, err := cfdgo.CfdGoGetPubkeyFromExtkey(mainchainXpubkey, int(cfdgo.KCfdNetworkMainnet))
+	mainchainPubkey, err := cfd.CfdGoGetPubkeyFromExtkey(mainchainXpubkey, int(cfd.KCfdNetworkMainnet))
 	assert.NoError(t, err)
-	negateMainchainPubkey, err := cfdgo.CfdGoNegatePubkey(mainchainPubkey)
+	negateMainchainPubkey, err := cfd.CfdGoNegatePubkey(mainchainPubkey)
 	assert.NoError(t, err)
 	mainchainOutputDescriptor := "pkh(" + mainchainXpubkey + "/0/*)"
 	bip32Counter := uint32(0)
 
 	onlinePrivkey := "L52AgshDAE14NHJuovwAw8hyrTNK4YQjuiPC9EES4sfM7oBPzU4o"
-	onlinePubkey, err := cfdgo.CfdGoGetPubkeyFromPrivkey("", onlinePrivkey, true)
+	onlinePubkey, err := cfd.CfdGoGetPubkeyFromPrivkey("", onlinePrivkey, true)
 	assert.NoError(t, err)
 	// whitelist
 	pakEntry := negateMainchainPubkey + onlinePubkey
 	whitelist := pakEntry
 
 	// pegout address
-	addrUtil := address.NewAddressApi()
+	addrUtil := factory.CreateElementsAddressApi()
 	pegoutAddr, baseDescriptor, err := addrUtil.GetPegoutAddress(types.P2pkhAddress, mainchainOutputDescriptor, bip32Counter)
 	assert.NoError(t, err)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddr.Address)
 	assert.Equal(t, "pkh("+mainchainXpubkey+")", *baseDescriptor)
 
 	// create pegout tx
-	txUtil := NewConfidentialTxApi()
+	txUtil := factory.CreateElementsTxApi()
 	pegoutAddrList := []string{}
 	inputs := []types.InputConfidentialTxIn{
 		{
@@ -507,162 +468,6 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, hasPegout)
 	assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", pegoutAddress.Address)
-
-	fmt.Printf("%s test done.\n", GetFuncName())
-}
-
-func TestCfdAddMultisigSignConfidentialTxManual(t *testing.T) {
-	// TODO(k-matsuzawa): invalid tx...
-	kTxData := "0200000000020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000"
-
-	txid := "57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f"
-	vout := uint32(0)
-
-	pubkey1 := "02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad"
-	privkey1 := "cRVLMWHogUo51WECRykTbeLNbm5c57iEpSegjdxco3oef6o5dbFi"
-	pubkey2 := "02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71"
-	privkey2 := "cQUTZ8VbWNYBEtrB7xwe41kqiKMQPRZshTvBHmkoJGaUfmS5pxzR"
-	networkType := types.ElementsRegtest
-	sigHashType := types.SigHashTypeAll
-	hashType := types.P2wsh
-	btcNwType := networkType.ToBitcoinType()
-	api := NewConfidentialTxApi(config.NetworkOption(networkType))
-	keyApi := key.NewPrivkeyApi(config.NetworkOption(networkType))
-	tx := types.ConfidentialTx{Hex: kTxData}
-	outPoint := types.OutPoint{Txid: txid, Vout: vout}
-
-	// create multisig address
-	pubkeys := []string{pubkey2, pubkey1}
-	addr, scriptsig, multisigScript, err := cfdgo.CfdGoCreateMultisigScript(
-		networkType.ToCfdValue(), hashType.ToCfdValue(), pubkeys, uint32(2))
-	assert.NoError(t, err)
-	assert.Equal(t, "ert1qdenhgyqf6yzkwjshlph8xsesxrh2qcpuqg8myh4q33h6m4kz7cksear3yn", addr)
-	assert.Equal(t, "522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae", multisigScript)
-	assert.Equal(t, "", scriptsig)
-
-	satoshi := int64(13000000000000)
-	utxo := types.ElementsUtxoData{
-		OutPoint:   outPoint,
-		Amount:     satoshi,
-		Asset:      "186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179",
-		Descriptor: "wsh(multi(2,02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71,02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad))",
-	}
-	sighash, err := api.GetSighash(&tx, &outPoint, sigHashType, &[]types.ElementsUtxoData{utxo})
-	assert.NoError(t, err)
-	assert.Equal(t, "d17f091203341a0d1f0101c6d010a40ce0f3cef8a09b2b605b77bb6cfc23359f", sighash.ToHex())
-
-	// user1
-	signature1, err := keyApi.CreateEcSignature(
-		&types.Privkey{Wif: privkey1, Network: btcNwType}, sighash, nil)
-	assert.NoError(t, err)
-
-	// user2
-	derSignature2, err := keyApi.CreateEcSignature(
-		&types.Privkey{Wif: privkey2, Network: btcNwType}, sighash, &sigHashType)
-	assert.NoError(t, err)
-	assert.Equal(t, "30440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a7901", derSignature2.ToHex())
-
-	signDataList := []types.SignParameter{
-		{
-			IsDerEncode: false,
-			SigHashType: sigHashType,
-		},
-		{
-			Data:        *types.NewScriptFromHexIgnoreError(derSignature2.ToHex()),
-			IsDerEncode: false,
-			SigHashType: sigHashType,
-		},
-		{
-			Data:        *types.NewScriptFromHexIgnoreError(signature1.ToHex()),
-			IsDerEncode: true,
-			SigHashType: sigHashType,
-		},
-	}
-	err = api.AddScriptSign(&tx, &outPoint, hashType, signDataList,
-		types.NewScriptFromHexIgnoreError(multisigScript))
-	assert.NoError(t, err)
-	assert.Equal(t, "0200000001020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000000004004730440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a790147304402202ce4acde192e4109832d46970b510158d42fc156c92afff137157ebfc2a03e2a02200b7dfd3a92770d79d29b3c55fb6325b22bce0e1362de74b2dac80d9689b5a89b0147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae00000000000000000000000000", tx.Hex)
-
-	if err != nil {
-		fmt.Print("[error message] " + err.Error() + "\n")
-	}
-
-	fmt.Printf("%s test done.\n", GetFuncName())
-}
-
-func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
-	// TODO(k-matsuzawa): invalid tx...
-	kTxData := "0200000000020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000"
-
-	txid := "57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f"
-	vout := uint32(0)
-
-	pubkey1 := "02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad"
-	privkey1 := "cRVLMWHogUo51WECRykTbeLNbm5c57iEpSegjdxco3oef6o5dbFi"
-	pubkey2 := "02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71"
-	privkey2 := "cQUTZ8VbWNYBEtrB7xwe41kqiKMQPRZshTvBHmkoJGaUfmS5pxzR"
-	networkType := types.ElementsRegtest
-	sigHashType := types.SigHashTypeAll
-	hashType := types.P2wsh
-	btcNwType := networkType.ToBitcoinType()
-	api := NewConfidentialTxApi(config.NetworkOption(networkType))
-	keyApi := key.NewPrivkeyApi(config.NetworkOption(networkType))
-	tx := types.ConfidentialTx{Hex: kTxData}
-	outPoint := types.OutPoint{Txid: txid, Vout: vout}
-
-	// create multisig address
-	pubkeys := []string{pubkey2, pubkey1}
-	addr, scriptsig, multisigScript, err := cfdgo.CfdGoCreateMultisigScript(
-		networkType.ToCfdValue(), hashType.ToCfdValue(), pubkeys, uint32(2))
-	assert.NoError(t, err)
-	assert.Equal(t, "ert1qdenhgyqf6yzkwjshlph8xsesxrh2qcpuqg8myh4q33h6m4kz7cksear3yn", addr)
-	assert.Equal(t, "522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae", multisigScript)
-	assert.Equal(t, "", scriptsig)
-
-	satoshi := int64(13000000000000)
-	utxo := types.ElementsUtxoData{
-		OutPoint:   outPoint,
-		Amount:     satoshi,
-		Asset:      "186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179",
-		Descriptor: "wsh(multi(2,02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71,02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad))",
-	}
-	sighash, err := api.GetSighash(&tx, &outPoint, sigHashType, &[]types.ElementsUtxoData{utxo})
-	assert.NoError(t, err)
-	assert.Equal(t, "d17f091203341a0d1f0101c6d010a40ce0f3cef8a09b2b605b77bb6cfc23359f", sighash.ToHex())
-
-	// user1
-	signature1, err := keyApi.CreateEcSignature(
-		&types.Privkey{Wif: privkey1, Network: btcNwType}, sighash, nil)
-	assert.NoError(t, err)
-
-	// user2
-	derSignature2, err := keyApi.CreateEcSignature(
-		&types.Privkey{Wif: privkey2, Network: btcNwType}, sighash, &sigHashType)
-	assert.NoError(t, err)
-	assert.Equal(t, "30440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a7901", derSignature2.ToHex())
-
-	signDataList := []types.SignParameter{
-		{
-			Data:          *types.NewScriptFromHexIgnoreError(signature1.ToHex()),
-			IsDerEncode:   true,
-			SigHashType:   sigHashType,
-			RelatedPubkey: &types.Pubkey{Hex: pubkey1},
-		},
-		{
-			Data:          *types.NewScriptFromHexIgnoreError(derSignature2.ToHex()),
-			IsDerEncode:   false,
-			SigHashType:   sigHashType,
-			RelatedPubkey: &types.Pubkey{Hex: pubkey2},
-		},
-	}
-	err = api.AddTxMultisigSignByDescriptor(&tx, &outPoint,
-		&types.Descriptor{OutputDescriptor: utxo.Descriptor}, signDataList)
-	assert.NoError(t, err)
-	assert.Equal(t, "0200000001020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000000004004730440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a790147304402202ce4acde192e4109832d46970b510158d42fc156c92afff137157ebfc2a03e2a02200b7dfd3a92770d79d29b3c55fb6325b22bce0e1362de74b2dac80d9689b5a89b0147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae00000000000000000000000000", tx.Hex)
-
-	if err != nil {
-		fmt.Print("[error message] " + err.Error() + "\n")
-	}
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }

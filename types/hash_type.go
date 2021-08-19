@@ -85,3 +85,33 @@ func (n HashType) ToCfdValue() int {
 		return int(cfd.KCfdUnknown)
 	}
 }
+
+// IsPubkeyHash ...
+func (n HashType) IsPubkeyHash() bool {
+	switch n {
+	case P2pkh, P2wpkh, P2shP2wpkh:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsScriptHash ...
+func (n HashType) IsScriptHash() bool {
+	switch n {
+	case P2sh, P2wsh, P2shP2wsh:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsP2shSegwit ...
+func (n HashType) IsP2shSegwit() bool {
+	switch n {
+	case P2shP2wpkh, P2shP2wsh:
+		return true
+	default:
+		return false
+	}
+}
