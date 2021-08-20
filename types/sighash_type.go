@@ -41,6 +41,35 @@ func (obj *SigHashType) GetValue() int {
 	return value
 }
 
+// String ...
+func (obj *SigHashType) String() string {
+	val := obj.GetValue()
+	low := val & 0x0f
+	high := val & 0xf0
+
+	var result string
+	switch low {
+	case 0:
+		return "default"
+	case 1:
+		result = "all"
+	case 2:
+		result = "none"
+	case 3:
+		result = "single"
+	default:
+		return "unknown"
+	}
+
+	if (high & 0x80) != 0 {
+		result += "+anyonecanpay"
+	}
+	if (high & 0x40) != 0 {
+		result += "+rangeproof"
+	}
+	return result
+}
+
 var SigHashTypeDefault SigHashType = *NewSigHashType(0)
 var SigHashTypeAll SigHashType = *NewSigHashType(1)
 var SigHashTypeNone SigHashType = *NewSigHashType(2)

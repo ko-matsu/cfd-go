@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
@@ -86,6 +87,28 @@ func (n HashType) ToCfdValue() int {
 	}
 }
 
+// String ...
+func (n HashType) String() string {
+	switch n {
+	case P2pkh:
+		return "p2pkh"
+	case P2sh:
+		return "p2sh"
+	case P2wpkh:
+		return "p2wpkh"
+	case P2wsh:
+		return "p2wsh"
+	case P2shP2wpkh:
+		return "p2sh-p2wpkh"
+	case P2shP2wsh:
+		return "p2sh-p2wwh"
+	case Taproot:
+		return "taproot"
+	default:
+		return fmt.Sprintf("unknown:%d", int(n))
+	}
+}
+
 // IsPubkeyHash ...
 func (n HashType) IsPubkeyHash() bool {
 	switch n {
@@ -110,6 +133,16 @@ func (n HashType) IsScriptHash() bool {
 func (n HashType) IsP2shSegwit() bool {
 	switch n {
 	case P2shP2wpkh, P2shP2wsh:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsWitness ...
+func (n HashType) IsWitness() bool {
+	switch n {
+	case P2wpkh, P2wsh, P2shP2wpkh, P2shP2wsh, Taproot:
 		return true
 	default:
 		return false

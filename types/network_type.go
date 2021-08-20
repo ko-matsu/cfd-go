@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
@@ -69,6 +70,24 @@ func (n NetworkType) ToCfdValue() int {
 		return int(cfd.KCfdNetworkElementsRegtest)
 	default:
 		return int(cfd.KCfdNetworkMainnet)
+	}
+}
+
+// String ...
+func (n NetworkType) String() string {
+	switch n {
+	case Mainnet:
+		return "Mainnet"
+	case Testnet:
+		return "Testnet"
+	case Regtest:
+		return "Regtest"
+	case LiquidV1:
+		return "LiquidV1"
+	case ElementsRegtest:
+		return "ElementsRegtest"
+	default:
+		return fmt.Sprintf("unknown:%d", int(n))
 	}
 }
 

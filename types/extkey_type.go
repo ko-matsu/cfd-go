@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
@@ -59,5 +60,17 @@ func (n ExtkeyType) Valid() bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// String ...
+func (n ExtkeyType) String() string {
+	switch n {
+	case ExtPrivkeyType:
+		return "extprivkeytype"
+	case ExtPubkeyType:
+		return "extpubkeytype"
+	default:
+		return fmt.Sprintf("unknown:%d", int(n))
 	}
 }
