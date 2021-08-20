@@ -185,10 +185,11 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	option.AppendDummyOutput = true
 	err = txUtil.Blind(tx, blindTxInList, nil, &option)
 	assert.NoError(t, err)
-	_, inList, outList, err := txUtil.GetAll(tx, false)
+	_, inList, outList, err := txUtil.GetAllWithAddress(tx, false)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(inList))
 	assert.Equal(t, 3, len(outList))
+	assert.Equal(t, addr.Address, outList[0].Address)
 
 	// sign
 	peginUtxos := []types.ElementsUtxoData{

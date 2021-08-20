@@ -7120,8 +7120,6 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 
 	tempTxouts := make([]ConfidentialTxOut, txoutCount)
 	for i := uint32(0); i < txoutCount; i++ {
-		var lockingScript string
-
 		if hasWitness {
 			asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, err := CfdGoGetConfidentialTxOutByHandle(handle, i)
 			if err != nil {
@@ -7145,12 +7143,13 @@ func GetConfidentialTxDataAll(txHex string, hasWitness bool, hasAddress bool, ne
 			tempTxouts[i].CommitmentNonce = nonce
 			tempTxouts[i].LockingScript = lockingScript
 		}
-		if hasAddress {
-			addr, err := CfdGoGetAddressFromLockingScript(lockingScript, networkType)
-			if err != nil {
-				return data, txinList, txoutList, err
+		if hasAddress && len(tempTxouts[i].LockingScript) > 0 {
+			addr, tmpErr := CfdGoGetAddressFromLockingScript(tempTxouts[i].LockingScript, networkType)
+			if tmpErr != nil {
+				// do nothing
+			} else {
+				tempTxouts[i].Address = addr
 			}
-			tempTxouts[i].Address = addr
 		}
 	}
 

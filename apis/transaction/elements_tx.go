@@ -42,6 +42,7 @@ type ConfidentialTxApi interface {
 	GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error)
 	GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.ElementsUtxoData) (sighash *types.ByteData, err error)
 	GetAll(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error)
+	GetAllWithAddress(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error)
 	GetTxIn(txHex string, outpoint *types.OutPoint) (txin *types.ConfidentialTxIn, err error)
 }
 
@@ -581,6 +582,18 @@ func (t *ConfidentialTxApiImpl) GetAll(tx *types.ConfidentialTx, hasWitness bool
 		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
 	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxData(tx.Hex, hasWitness)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "parse tx error")
+	}
+	return convertListData(&cfdData, cfdTxins, cfdTxouts)
+}
+
+// GetAllWithAddress ...
+func (t *ConfidentialTxApiImpl) GetAllWithAddress(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
+	if err := t.validConfig(); err != nil {
+		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxDataAll(tx.Hex, hasWitness, true, t.network.ToCfdValue())
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "parse tx error")
 	}
