@@ -280,10 +280,14 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 			}
 		}
 	}
+	blindOpt := types.NewBlindTxOption()
+	if option != nil {
+		blindOpt = *option
+	}
 	blindOption := &cfd.CfdBlindTxOption{
-		MinimumRangeValue: option.MinimumRangeValue,
-		Exponent:          option.Exponent,
-		MinimumBits:       option.MinimumBits,
+		MinimumRangeValue: blindOpt.MinimumRangeValue,
+		Exponent:          blindOpt.Exponent,
+		MinimumBits:       blindOpt.MinimumBits,
 	}
 	outputTx, err := cfd.CfdGoBlindRawTransaction(txHex, blindTxinList, blindOutputList, blindOption)
 	if err != nil {
