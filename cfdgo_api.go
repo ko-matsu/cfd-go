@@ -4094,7 +4094,7 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 	}
 	defer CfdGoFreeHandle(handle)
 
-	var maxIndex uint32
+	maxIndex := uint32(0)
 	var mnemonicHandle uintptr
 	maxIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxIndex)))
 	ret := CfdInitializeMnemonicWordList(handle, language, &mnemonicHandle, maxIndexPtr)
