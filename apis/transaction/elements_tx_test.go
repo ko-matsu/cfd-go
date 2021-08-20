@@ -34,6 +34,26 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	}
 	opts := conf.GetOptions()
 
+	accountExtPriv := types.ExtPrivkey{
+		Key: "tprv8gio6qQZzaVsZkjJY62vfoohmCysvZ9HDPNej342qrMxaV87wH7DQahQMvjXzFyGn1HZwGKMCpiGswAMAqJkB1uPamKKYk7FNsQG4SLnWUA"}
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(opts...))
+	addrApi := address.NewAddressApi(opts...)
+	caApi := address.NewConfidentialAddressApi()
+	accountXpriv, err := xprvApi.GetExtPrivkeyByPath(&accountExtPriv, "0/0")
+	assert.NoError(t, err)
+	blindXpriv, err := xprvApi.GetExtPrivkeyByPath(&accountExtPriv, "0/1")
+	assert.NoError(t, err)
+	accountPubkey, err := xprvApi.GetPubkey(accountXpriv)
+	assert.NoError(t, err)
+	blindingKey, err := xprvApi.GetPrivkey(blindXpriv)
+	assert.NoError(t, err)
+	confidentialKey, err := xprvApi.GetPubkey(blindXpriv)
+	assert.NoError(t, err)
+	addr, err := addrApi.CreateByPubkey(accountPubkey, types.P2wpkhAddress)
+	assert.NoError(t, err)
+	ca, err := caApi.Create(addr.Address, confidentialKey)
+	assert.NoError(t, err)
+
 	// fedpeg script
 	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
 	keyUtil := key.PrivkeyApiImpl{}
@@ -138,8 +158,9 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	}
 	outputs := []types.InputConfidentialTxOut{
 		{
-			Amount:  99998500,
-			Address: "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
+			Amount: 99998500,
+			//Address: "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
+			Address: ca.ConfidentialAddress,
 			Asset:   asset,
 		},
 		{
@@ -150,7 +171,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	}
 	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "0200000001017b9c531679cc8b8310338e350dbfd89bbfaf19fd227e3d1a69f8baf0088570120000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5db2402fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014e794713e386d83f32baa0e9d03e47c0839dc57a8c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000", tx.Hex)
+	assert.Equal(t, "0200000001017b9c531679cc8b8310338e350dbfd89bbfaf19fd227e3d1a69f8baf0088570120000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5db2403b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc160014f3ea0aba73fdb23912ebd21f46e156cdd9e942800125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014e794713e386d83f32baa0e9d03e47c0839dc57a8c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000", tx.Hex)
 
 	// blind
 	blindTxInList := []types.BlindInputData{
@@ -198,6 +219,12 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
+
+	// unblind
+	unblindData, err := txUtil.UnblindTxOut(tx, 0, blindingKey)
+	assert.NoError(t, err)
+	assert.Equal(t, outputs[0].Amount, unblindData.Amount)
+	assert.Equal(t, outputs[0].Asset, unblindData.Asset)
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }

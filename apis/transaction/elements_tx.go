@@ -25,6 +25,7 @@ type ConfidentialTxApi interface {
 	Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error
 	// Blind This function change to the blinded transaction.
 	Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error
+	UnblindTxOut(tx *types.ConfidentialTx, index uint32, blindingKey *types.Privkey) (utxoData *types.ElementsUtxoData, err error)
 	// AddPubkeySign This function add the pubkey hash sign.
 	AddPubkeySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
 	// AddPubkeySign This function add the pubkey hash sign by output descriptor.
@@ -295,6 +296,32 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 	}
 	tx.Hex = outputTx
 	return nil
+}
+
+func (t *ConfidentialTxApiImpl) UnblindTxOut(tx *types.ConfidentialTx, index uint32, blindingKey *types.Privkey) (utxoData *types.ElementsUtxoData, err error) {
+	if err = t.validConfig(); err != nil {
+		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	} else if tx == nil || blindingKey == nil {
+		return nil, cfdErrors.ErrParameterNil
+	}
+
+	asset, satoshi, abf, vbf, err := cfd.CfdGoUnblindTxOut(tx.Hex, index, blindingKey.Hex)
+	if err != nil {
+		return nil, errors.Wrap(err, "unblind error")
+	}
+	txInfo, _, txOuts, err := t.GetAll(tx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse tx error")
+	}
+	utxoData = &types.ElementsUtxoData{
+		OutPoint:         types.OutPoint{Txid: txInfo.Txid, Vout: index},
+		Asset:            asset,
+		Amount:           satoshi,
+		AssetBlindFactor: abf,
+		ValueBlindFactor: vbf,
+		AmountCommitment: txOuts[index].CommitmentValue,
+	}
+	return
 }
 
 // AddPubkeySign ...
