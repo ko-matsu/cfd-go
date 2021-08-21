@@ -129,3 +129,12 @@ func (n AddressType) ToHashType() HashType {
 		return UnknownType
 	}
 }
+
+// String ...
+func (n AddressType) String() string {
+	hashType := n.ToHashType()
+	if hashType == UnknownType {
+		return "WitnessUnknown"
+	}
+	return hashType.String()
+}

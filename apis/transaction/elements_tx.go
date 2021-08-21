@@ -25,6 +25,7 @@ type ConfidentialTxApi interface {
 	Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error
 	// Blind This function change to the blinded transaction.
 	Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error
+	UnblindTxOut(tx *types.ConfidentialTx, index uint32, blindingKey *types.Privkey) (utxoData *types.ElementsUtxoData, err error)
 	// AddPubkeySign This function add the pubkey hash sign.
 	AddPubkeySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
 	// AddPubkeySign This function add the pubkey hash sign by output descriptor.
@@ -41,6 +42,7 @@ type ConfidentialTxApi interface {
 	GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error)
 	GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.ElementsUtxoData) (sighash *types.ByteData, err error)
 	GetAll(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error)
+	GetAllWithAddress(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error)
 	GetTxIn(txHex string, outpoint *types.OutPoint) (txin *types.ConfidentialTxIn, err error)
 }
 
@@ -280,10 +282,14 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 			}
 		}
 	}
+	blindOpt := types.NewBlindTxOption()
+	if option != nil {
+		blindOpt = *option
+	}
 	blindOption := &cfd.CfdBlindTxOption{
-		MinimumRangeValue: option.MinimumRangeValue,
-		Exponent:          option.Exponent,
-		MinimumBits:       option.MinimumBits,
+		MinimumRangeValue: blindOpt.MinimumRangeValue,
+		Exponent:          blindOpt.Exponent,
+		MinimumBits:       blindOpt.MinimumBits,
 	}
 	outputTx, err := cfd.CfdGoBlindRawTransaction(txHex, blindTxinList, blindOutputList, blindOption)
 	if err != nil {
@@ -291,6 +297,32 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 	}
 	tx.Hex = outputTx
 	return nil
+}
+
+func (t *ConfidentialTxApiImpl) UnblindTxOut(tx *types.ConfidentialTx, index uint32, blindingKey *types.Privkey) (utxoData *types.ElementsUtxoData, err error) {
+	if err = t.validConfig(); err != nil {
+		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	} else if tx == nil || blindingKey == nil {
+		return nil, cfdErrors.ErrParameterNil
+	}
+
+	asset, satoshi, abf, vbf, err := cfd.CfdGoUnblindTxOut(tx.Hex, index, blindingKey.Hex)
+	if err != nil {
+		return nil, errors.Wrap(err, "unblind error")
+	}
+	txInfo, _, txOuts, err := t.GetAll(tx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse tx error")
+	}
+	utxoData = &types.ElementsUtxoData{
+		OutPoint:         types.OutPoint{Txid: txInfo.Txid, Vout: index},
+		Asset:            asset,
+		Amount:           satoshi,
+		AssetBlindFactor: abf,
+		ValueBlindFactor: vbf,
+		AmountCommitment: txOuts[index].CommitmentValue,
+	}
+	return
 }
 
 // AddPubkeySign ...
@@ -550,6 +582,18 @@ func (t *ConfidentialTxApiImpl) GetAll(tx *types.ConfidentialTx, hasWitness bool
 		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
 	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxData(tx.Hex, hasWitness)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "parse tx error")
+	}
+	return convertListData(&cfdData, cfdTxins, cfdTxouts)
+}
+
+// GetAllWithAddress ...
+func (t *ConfidentialTxApiImpl) GetAllWithAddress(tx *types.ConfidentialTx, hasWitness bool) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
+	if err := t.validConfig(); err != nil {
+		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxDataAll(tx.Hex, hasWitness, true, t.network.ToCfdValue())
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "parse tx error")
 	}
