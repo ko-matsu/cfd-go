@@ -52,6 +52,25 @@ type DescriptorApi interface {
 		descriptorDataList []types.DescriptorData,
 		err error,
 	)
+	// ParseByFilter returns a Descriptor parsing data by filter.
+	ParseByFilter(
+		descriptor *types.Descriptor,
+		filter *types.DescriptorParseFilter,
+	) (
+		rootData *types.DescriptorRootData,
+		descriptorDataList []types.DescriptorData,
+		err error,
+	)
+	// ParseByFilterWithDerivationPath returns a Descriptor parsing data by filter.
+	ParseByFilterWithDerivationPath(
+		descriptor *types.Descriptor,
+		bip32DerivationPath string,
+		filter *types.DescriptorParseFilter,
+	) (
+		rootData *types.DescriptorRootData,
+		descriptorDataList []types.DescriptorData,
+		err error,
+	)
 	// GetChecksum returns a descriptor adding checksum.
 	GetChecksum(
 		descriptor *types.Descriptor) (descriptorAddedChecksum string, err error)
@@ -223,6 +242,24 @@ func (d *DescriptorApiImpl) ParseWithDerivationPath(descriptor *types.Descriptor
 	}
 
 	return rootData, descriptorDataList, nil
+}
+
+// ParseByFilter returns a Descriptor parsing data by filter.
+func (d *DescriptorApiImpl) ParseByFilter(descriptor *types.Descriptor, filter *types.DescriptorParseFilter) (rootData *types.DescriptorRootData, descriptorDataList []types.DescriptorData, err error) {
+	return d.ParseByFilterWithDerivationPath(descriptor, "", filter)
+}
+
+// ParseByFilterWithDerivationPath returns a Descriptor parsing data by filter.
+func (d *DescriptorApiImpl) ParseByFilterWithDerivationPath(descriptor *types.Descriptor, bip32DerivationPath string, filter *types.DescriptorParseFilter) (rootData *types.DescriptorRootData, descriptorDataList []types.DescriptorData, err error) {
+	data, details, err := d.ParseWithDerivationPath(descriptor, bip32DerivationPath)
+	if err != nil {
+		return
+	} else if err = filter.Check(data); err != nil {
+		return
+	}
+	rootData = data
+	descriptorDataList = details
+	return
 }
 
 // GetChecksum returns a descriptor adding checksum.
