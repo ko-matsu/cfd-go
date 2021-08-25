@@ -148,3 +148,28 @@ func (n HashType) IsWitness() bool {
 		return false
 	}
 }
+
+// IsWitnessV1OrLater ...
+func (n HashType) IsWitnessV1OrLater() bool {
+	switch n {
+	case Taproot:
+		return true
+	default:
+		return false
+	}
+}
+
+type HashTypes []HashType
+
+func (d HashTypes) IsValid() bool {
+	return len(d) > 0
+}
+
+func (d HashTypes) Find(hashType HashType) bool {
+	for _, element := range d {
+		if element == hashType {
+			return true
+		}
+	}
+	return false
+}

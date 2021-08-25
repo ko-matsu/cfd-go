@@ -340,3 +340,53 @@ func NewConfidentialTxOut(cfdTxout *cfd.ConfidentialTxOut) *ConfidentialTxOut {
 	}
 	return &data
 }
+
+type ConfidentialTxOutSet []ConfidentialTxOut
+
+func (c ConfidentialTxOutSet) FindByAddressFirst(address string) (*ConfidentialTxOut, uint32) {
+	for i, txout := range c {
+		if len(txout.Address) > 0 && txout.Address == address {
+			return &txout, uint32(i)
+		}
+	}
+	return nil, 0
+}
+
+func (c ConfidentialTxOutSet) FindByAddress(address string) map[uint32]*ConfidentialTxOut {
+	txouts := make(map[uint32]*ConfidentialTxOut)
+	for i, txout := range c {
+		if len(txout.Address) > 0 && txout.Address == address {
+			txouts[uint32(i)] = &txout
+		}
+	}
+	return txouts
+}
+
+func (c ConfidentialTxOutSet) FindByLockingScriptFirst(lockingScript string) (*ConfidentialTxOut, uint32) {
+	for i, txout := range c {
+		if txout.LockingScript == lockingScript {
+			return &txout, uint32(i)
+		}
+	}
+	return nil, 0
+}
+
+func (c ConfidentialTxOutSet) FindByLockingScript(lockingScript string) map[uint32]*ConfidentialTxOut {
+	txouts := make(map[uint32]*ConfidentialTxOut)
+	for i, txout := range c {
+		if txout.LockingScript == lockingScript {
+			txouts[uint32(i)] = &txout
+		}
+	}
+	return txouts
+}
+
+func (c ConfidentialTxOutSet) GetFeeAmount() int32 {
+	var total int32
+	for _, txout := range c {
+		if txout.LockingScript == "" {
+			total += int32(txout.Amount)
+		}
+	}
+	return total
+}

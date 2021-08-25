@@ -1,6 +1,9 @@
 package types
 
-import cfd "github.com/cryptogarageinc/cfd-go"
+import (
+	cfd "github.com/cryptogarageinc/cfd-go"
+	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
+)
 
 type DescriptorKeyType int
 type DescriptorType int
@@ -153,6 +156,15 @@ func NewDescriptorData(cfdData *cfd.CfdDescriptorData) *DescriptorData {
 		TreeString:    cfdData.TreeString,
 	}
 	return data
+}
+
+// DescriptorParseFilter defines filter conditions for parsing output descriptors.
+type DescriptorParseFilter struct {
+	EnableHashTypes            []HashType
+	DisableHashTypes           []HashType
+	IsMultisigOnlyOnScriptHash bool
+	EnableRootDescriptorTypes  []DescriptorType
+	DisableRootDescriptorTypes []DescriptorType
 }
 
 func NewDescriptorKeyType(keyType int) DescriptorKeyType {
@@ -316,4 +328,44 @@ func (d DescriptorKey) GetPublicKey() string {
 		return d.Pubkey.Hex
 	}
 	return ""
+}
+
+func (f *DescriptorParseFilter) Check(data *DescriptorRootData) error {
+	if f == nil || data == nil {
+		return nil
+	}
+
+	enableHashTypes := HashTypes(f.EnableHashTypes)
+	disableHashTypes := HashTypes(f.DisableHashTypes)
+	enableDescTypes := DescriptorTypes(f.EnableRootDescriptorTypes)
+	disableDescTypes := DescriptorTypes(f.DisableRootDescriptorTypes)
+
+	switch {
+	case enableHashTypes.IsValid() && !enableHashTypes.Find(data.HashType):
+		return cfdErrors.ErrDescriptorFilter
+	case disableHashTypes.IsValid() && disableHashTypes.Find(data.HashType):
+		return cfdErrors.ErrDescriptorFilter
+	case data.HashType.IsScriptHash() && f.IsMultisigOnlyOnScriptHash && !data.HasMultisig():
+		return cfdErrors.ErrDescriptorFilter
+	case enableDescTypes.IsValid() && !enableDescTypes.Find(data.Type):
+		return cfdErrors.ErrDescriptorFilter
+	case disableDescTypes.IsValid() && disableDescTypes.Find(data.Type):
+		return cfdErrors.ErrDescriptorFilter
+	}
+	return nil
+}
+
+type DescriptorTypes []DescriptorType
+
+func (d DescriptorTypes) IsValid() bool {
+	return len(d) > 0
+}
+
+func (d DescriptorTypes) Find(descType DescriptorType) bool {
+	for _, element := range d {
+		if element == descType {
+			return true
+		}
+	}
+	return false
 }

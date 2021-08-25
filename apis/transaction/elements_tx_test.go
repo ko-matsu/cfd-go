@@ -8,6 +8,7 @@ import (
 
 	cfdgo "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/address"
+	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
 	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/config"
 	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
@@ -226,6 +227,18 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, outputs[0].Amount, unblindData.Amount)
 	assert.Equal(t, outputs[0].Asset, unblindData.Asset)
+
+	amountCommitment, assetCommitment, err := txUtil.GetCommitment(unblindData.Amount, unblindData.ValueBlindFactor, unblindData.AssetBlindFactor, unblindData.Asset)
+	assert.NoError(t, err)
+	assert.Equal(t, outList[0].CommitmentValue, amountCommitment)
+	assert.Equal(t, outList[0].Asset, assetCommitment)
+
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &peginOutPoint, &peginUtxos[0], &types.SignParameter{
+		Data:          *types.NewScriptFromHexIgnoreError(signature.ToHex()),
+		RelatedPubkey: pubkey,
+	})
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
@@ -688,9 +701,232 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0200000001020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000000004004730440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a790147304402202ce4acde192e4109832d46970b510158d42fc156c92afff137157ebfc2a03e2a02200b7dfd3a92770d79d29b3c55fb6325b22bce0e1362de74b2dac80d9689b5a89b0147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae00000000000000000000000000", tx.Hex)
 
+	isVerify, err := api.VerifyEcSignatureByUtxo(&tx, &outPoint, &utxo, &signDataList[1])
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestBlindTransaction(t *testing.T) {
+	network := types.ElementsRegtest
+	genesisBlockHash := "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
+	asset := "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"
+	conf := config.CfdConfig{
+		Network:                 network,
+		BitcoinGenesisBlockHash: genesisBlockHash,
+		BitcoinAssetId:          asset,
+	}
+	opts := conf.GetOptions()
+
+	accountExtPriv := types.ExtPrivkey{
+		Key: "tprv8gio6qQZzaVsZkjJY62vfoohmCysvZ9HDPNej342qrMxaV87wH7DQahQMvjXzFyGn1HZwGKMCpiGswAMAqJkB1uPamKKYk7FNsQG4SLnWUA"}
+	xprvApi := (key.ExtPrivkeyApi)(key.NewExtPrivkeyApi(opts...))
+	addrApi := address.NewAddressApi(opts...)
+	caApi := address.NewConfidentialAddressApi()
+	accountXpriv, err := xprvApi.GetExtPrivkeyByPath(&accountExtPriv, "0/0")
+	assert.NoError(t, err)
+	blindXpriv, err := xprvApi.GetExtPrivkeyByPath(&accountExtPriv, "0/1")
+	assert.NoError(t, err)
+	xpriv, err := xprvApi.GetExtPrivkeyByPath(&accountExtPriv, "0/2")
+	assert.NoError(t, err)
+	blindXpriv2, err := xprvApi.GetExtPrivkeyByPath(&accountExtPriv, "0/3")
+	assert.NoError(t, err)
+	accountPrivkey, err := xprvApi.GetPrivkey(accountXpriv)
+	assert.NoError(t, err)
+	accountPubkey, err := xprvApi.GetPubkey(accountXpriv)
+	assert.NoError(t, err)
+	// blindingKey1, err := xprvApi.GetPrivkey(blindXpriv)
+	// assert.NoError(t, err)
+	confidentialKey1, err := xprvApi.GetPubkey(blindXpriv)
+	assert.NoError(t, err)
+	privkey, err := xprvApi.GetPrivkey(xpriv)
+	assert.NoError(t, err)
+	pubkey, err := xprvApi.GetPubkey(xpriv)
+	assert.NoError(t, err)
+	// blindingKey2, err := xprvApi.GetPrivkey(blindXpriv2)
+	// assert.NoError(t, err)
+	confidentialKey2, err := xprvApi.GetPubkey(blindXpriv2)
+	assert.NoError(t, err)
+	addr, err := addrApi.CreateByPubkey(accountPubkey, types.P2wpkhAddress)
+	assert.NoError(t, err)
+	ca1, err := caApi.Create(addr.Address, confidentialKey1)
+	assert.NoError(t, err)
+
+	// create pegin address
+	addrUtil := address.NewAddressApi(opts...)
+	assert.NoError(t, addrUtil.GetError())
+	descUtil := descriptor.NewDescriptorApi(opts...)
+	assert.NoError(t, descUtil.GetError())
+
+	// create bitcoin tx
+	amount1 := int64(100000000)
+	amount2 := int64(80000000)
+	feeAmount := int64(500)
+	outputAmount1 := int64(150000000)
+	outputAmount2 := amount1 + amount2 - feeAmount - outputAmount1
+
+	// create pegin tx
+	txUtil := NewConfidentialTxApi(opts...)
+	assert.NoError(t, txUtil.GetError())
+
+	outpoint1 := types.OutPoint{
+		Txid: "dcb18911fa9faad6632ca43b81739082b0a19588ac0000000000000400473044",
+		Vout: 1,
+	}
+	outpoint2 := types.OutPoint{
+		Txid: "29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc6455",
+		Vout: 2,
+	}
+	utxos := []types.ElementsUtxoData{
+		{
+			OutPoint:   outpoint1,
+			Amount:     amount1,
+			Asset:      asset,
+			Descriptor: "wpkh(" + pubkey.Hex + ")",
+		},
+		{
+			OutPoint:         outpoint2,
+			Amount:           amount2,
+			Asset:            asset,
+			Descriptor:       "wsh(multi(2," + pubkey.Hex + "," + accountPubkey.Hex + "))",
+			AssetBlindFactor: "e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd9",
+			ValueBlindFactor: "c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801fe",
+		},
+	}
+
+	amountCommitment, _, err := txUtil.GetCommitment(utxos[1].Amount, utxos[1].ValueBlindFactor, utxos[1].AssetBlindFactor, utxos[1].Asset)
+	assert.NoError(t, err)
+	utxos[1].AmountCommitment = amountCommitment
+
+	desc, _, err := descUtil.Parse(&types.Descriptor{OutputDescriptor: utxos[1].Descriptor})
+	assert.NoError(t, err)
+	ca2, err := caApi.Create(desc.Address.Address, confidentialKey2)
+	assert.NoError(t, err)
+
+	inputs := []types.InputConfidentialTxIn{
+		{
+			OutPoint: outpoint1,
+		},
+		{
+			OutPoint: outpoint2,
+		},
+	}
+	outputs := []types.InputConfidentialTxOut{
+		{
+			Amount:  outputAmount1,
+			Address: ca1.ConfidentialAddress,
+			Asset:   asset,
+		},
+		{
+			Amount:  outputAmount2,
+			Address: ca2.ConfidentialAddress,
+			Asset:   asset,
+		},
+		{
+			Amount: feeAmount,
+			Asset:  asset,
+			IsFee:  true,
+		},
+	}
+	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000000024430470004000000000000ac8895a1b0829073813ba42c63d6aa9ffa1189b1dc0100000000ffffffff5564cc020027b9290000000001ed6927df918c89b5e3d8b5062acab2c749a3290200000000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000008f0d18003b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc160014f3ea0aba73fdb23912ebd21f46e156cdd9e942800125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000001c9c18c03d5ea88cc41bb5eae228fe83332f9ad1375e3b731b9d0dfc5f37222527c5147d02200205921dfe0a2763e39b3e96f93c8493ede64644a3d1c39882d529fea254546ef6b0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000001f4000000000000", tx.Hex)
+
+	// blind
+	blindTxInList := []types.BlindInputData{
+		{
+			OutPoint: outpoint1,
+			Asset:    asset,
+			Amount:   amount1,
+		},
+		{
+			OutPoint:         outpoint2,
+			Asset:            asset,
+			Amount:           amount2,
+			AssetBlindFactor: utxos[1].AssetBlindFactor,
+			ValueBlindFactor: utxos[1].ValueBlindFactor,
+		},
+	}
+	option := types.NewBlindTxOption()
+	option.AppendDummyOutput = true
+	err = txUtil.Blind(tx, blindTxInList, nil, &option)
+	assert.NoError(t, err)
+	_, inList, outList, err := txUtil.GetAllWithAddress(tx, false)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(inList))
+	assert.Equal(t, 3, len(outList))
+	assert.Equal(t, addr.Address, outList[0].Address)
+
+	// sign
+	sighash, err := txUtil.GetSighash(tx, &outpoint1, types.SigHashTypeAll, &utxos)
+	assert.NoError(t, err)
+	desc1 := types.Descriptor{
+		OutputDescriptor: utxos[0].Descriptor,
+	}
+	privkeyUtil := key.NewPrivkeyApi()
+	signature, err := privkeyUtil.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
+	assert.NoError(t, err)
+
+	// add sign
+	err = txUtil.AddPubkeySignByDescriptor(tx, &outpoint1, &desc1, signature.ToHex())
+	assert.NoError(t, err)
+
+	// verify signature
+	isVerify, err := txUtil.VerifyEcSignatureByUtxo(tx, &outpoint1, &utxos[0], &types.SignParameter{
+		Data:          *types.NewScriptFromHexIgnoreError(signature.ToHex()),
+		RelatedPubkey: pubkey,
+	})
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+
+	// sign
+	sighash, err = txUtil.GetSighash(tx, &outpoint2, types.SigHashTypeAll, &utxos)
+	assert.NoError(t, err)
+	desc2 := types.Descriptor{
+		OutputDescriptor: utxos[1].Descriptor,
+	}
+	signature1, err := privkeyUtil.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
+	assert.NoError(t, err)
+	signature2, err := privkeyUtil.CreateEcSignature(accountPrivkey, sighash, &types.SigHashTypeAll)
+	assert.NoError(t, err)
+	signs := []types.SignParameter{
+		{
+			Data:          *types.NewScriptFromHexIgnoreError(signature1.ToHex()),
+			RelatedPubkey: pubkey,
+		},
+		{
+			Data:          *types.NewScriptFromHexIgnoreError(signature2.ToHex()),
+			RelatedPubkey: accountPubkey,
+		},
+	}
+
+	// verify signature
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, &utxos[1], &signs[0])
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, &utxos[1], &signs[1])
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+
+	// add sign
+	err = txUtil.AddTxMultisigSignByDescriptor(tx, &outpoint2, &desc2, signs)
+	assert.NoError(t, err)
+
+	// verify
+	isVerify, reason, err := txUtil.VerifySign(tx, &outpoint1, &utxos)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+	assert.Equal(t, "", reason)
+
+	isVerify, reason, err = txUtil.VerifySign(tx, &outpoint2, &utxos)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+	assert.Equal(t, "", reason)
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }

@@ -6,3 +6,10 @@ type SignParameter struct {
 	SigHashType   SigHashType
 	RelatedPubkey *Pubkey
 }
+
+func NewSignParameterFromString(derSignature, relatedPubkey string) *SignParameter {
+	return &SignParameter{
+		Data:          *NewScriptFromHexIgnoreError(derSignature),
+		RelatedPubkey: &Pubkey{Hex: relatedPubkey},
+	}
+}

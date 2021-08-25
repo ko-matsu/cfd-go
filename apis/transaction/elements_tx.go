@@ -3,9 +3,10 @@ package transaction
 import (
 	"strings"
 
-	cfd "github.com/cryptogarageinc/cfd-go"
+	cfdgo "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/address"
 	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
+	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/config"
 	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
@@ -37,6 +38,9 @@ type ConfidentialTxApi interface {
 	AddTxMultisigSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error
 	AddTxMultisigSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error
 	VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.ElementsUtxoData) (isVerify bool, reason string, err error)
+	// VerifyEcSignatureByUtxo ...
+	VerifyEcSignatureByUtxo(tx *types.ConfidentialTx, outpoint *types.OutPoint, utxo *types.ElementsUtxoData, signature *types.SignParameter) (isVerify bool, err error)
+	GetCommitment(amount int64, amountBlindFactor, assetBlindFactor, asset string) (amountCommitment, assetCommitment string, err error)
 	FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error)
 	GetTxid(tx *types.ConfidentialTx) string
 	GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error)
@@ -100,6 +104,8 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 		} else {
 			api.bitcoinTxApi = bitcoinTxApi
 		}
+		pubkeyApi := key.NewPubkeyApi()
+		api.pubkeyApi = pubkeyApi
 	}
 	return &api
 }
@@ -117,6 +123,7 @@ type ConfidentialTxApiImpl struct {
 	descriptorApi           descriptor.DescriptorApi
 	bitcoinAddressApi       address.AddressApi
 	bitcoinTxApi            TransactionApi
+	pubkeyApi               key.PubkeyApi
 }
 
 // WithElementsDescriptorApi This function set a elements descriptor api.
@@ -153,21 +160,31 @@ func (p *ConfidentialTxApiImpl) WithBitcoinTxApi(transactionApi TransactionApi) 
 	return p
 }
 
+// WithPubkeyApi This function set a pubkey api.
+func (p *ConfidentialTxApiImpl) WithPubkeyApi(pubkeyApi key.PubkeyApi) *ConfidentialTxApiImpl {
+	if pubkeyApi == nil {
+		p.SetError(cfdErrors.ErrParameterNil)
+	} else {
+		p.pubkeyApi = pubkeyApi
+	}
+	return p
+}
+
 func (t *ConfidentialTxApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (tx *types.ConfidentialTx, err error) {
 	if err = t.validConfig(); err != nil {
 		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	txHandle, err := cfd.InitializeTransaction(t.network.ToCfdValue(), version, locktime)
+	txHandle, err := cfdgo.InitializeTransaction(t.network.ToCfdValue(), version, locktime)
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize tx error")
 	}
-	defer cfd.FreeTransactionHandle(txHandle)
+	defer cfdgo.FreeTransactionHandle(txHandle)
 
 	if err = t.addConidentialTx(txHandle, *t.network, locktime, txinList, txoutList, pegoutAddressList); err != nil {
 		return nil, errors.Wrap(err, "add tx error")
 	}
 
-	txHex, err := cfd.FinalizeTransaction(txHandle)
+	txHex, err := cfdgo.FinalizeTransaction(txHandle)
 	if err != nil {
 		return nil, errors.Wrap(err, "finalize tx error")
 	}
@@ -206,13 +223,13 @@ func (t *ConfidentialTxApiImpl) Add(tx *types.ConfidentialTx, txinList *[]types.
 	if err := t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	txHandle, err := cfd.InitializeTransactionByHex(t.network.ToCfdValue(), tx.Hex)
+	txHandle, err := cfdgo.InitializeTransactionByHex(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return errors.Wrap(err, "initialize tx error")
 	}
-	defer cfd.FreeTransactionHandle(txHandle)
+	defer cfdgo.FreeTransactionHandle(txHandle)
 
-	data, err := cfd.CfdGoGetConfidentialTxDataByHandle(txHandle)
+	data, err := cfdgo.CfdGoGetConfidentialTxDataByHandle(txHandle)
 	if err != nil {
 		return errors.Wrap(err, "get tx data error")
 	}
@@ -221,7 +238,7 @@ func (t *ConfidentialTxApiImpl) Add(tx *types.ConfidentialTx, txinList *[]types.
 		return errors.Wrap(err, "add tx error")
 	}
 
-	txHex, err := cfd.FinalizeTransaction(txHandle)
+	txHex, err := cfdgo.FinalizeTransaction(txHandle)
 	if err != nil {
 		return errors.Wrap(err, "finalize tx error")
 	}
@@ -255,7 +272,7 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 		}
 	}
 	// convert list
-	blindTxinList := make([]cfd.CfdBlindInputData, len(txinList))
+	blindTxinList := make([]cfdgo.CfdBlindInputData, len(txinList))
 	for index, input := range txinList {
 		blindTxinList[index].Txid = input.OutPoint.Txid
 		blindTxinList[index].Vout = input.OutPoint.Vout
@@ -271,11 +288,11 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 			blindTxinList[index].Asset = lbtcAsset
 		}
 	}
-	var blindOutputList []cfd.CfdBlindOutputData
+	var blindOutputList []cfdgo.CfdBlindOutputData
 	if txoutList != nil {
-		blindOutputList = make([]cfd.CfdBlindOutputData, len(*txoutList))
+		blindOutputList = make([]cfdgo.CfdBlindOutputData, len(*txoutList))
 		for i, data := range *txoutList {
-			blindOutputList[i] = cfd.CfdBlindOutputData{
+			blindOutputList[i] = cfdgo.CfdBlindOutputData{
 				Index:               data.Index,
 				ConfidentialAddress: data.ConfidentialAddress,
 				ConfidentialKey:     data.ConfidentialKey,
@@ -286,12 +303,12 @@ func (t *ConfidentialTxApiImpl) Blind(tx *types.ConfidentialTx, txinList []types
 	if option != nil {
 		blindOpt = *option
 	}
-	blindOption := &cfd.CfdBlindTxOption{
+	blindOption := &cfdgo.CfdBlindTxOption{
 		MinimumRangeValue: blindOpt.MinimumRangeValue,
 		Exponent:          blindOpt.Exponent,
 		MinimumBits:       blindOpt.MinimumBits,
 	}
-	outputTx, err := cfd.CfdGoBlindRawTransaction(txHex, blindTxinList, blindOutputList, blindOption)
+	outputTx, err := cfdgo.CfdGoBlindRawTransaction(txHex, blindTxinList, blindOutputList, blindOption)
 	if err != nil {
 		return errors.Wrap(err, "blind tx error")
 	}
@@ -306,7 +323,7 @@ func (t *ConfidentialTxApiImpl) UnblindTxOut(tx *types.ConfidentialTx, index uin
 		return nil, cfdErrors.ErrParameterNil
 	}
 
-	asset, satoshi, abf, vbf, err := cfd.CfdGoUnblindTxOut(tx.Hex, index, blindingKey.Hex)
+	asset, satoshi, abf, vbf, err := cfdgo.CfdGoUnblindTxOut(tx.Hex, index, blindingKey.Hex)
 	if err != nil {
 		return nil, errors.Wrap(err, "unblind error")
 	}
@@ -330,13 +347,13 @@ func (t *ConfidentialTxApiImpl) AddPubkeySign(tx *types.ConfidentialTx, outpoint
 	if err := t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	signParam := cfd.CfdSignParameter{
+	signParam := cfdgo.CfdSignParameter{
 		Data:                signature,
 		IsDerEncode:         false,
-		SighashType:         int(cfd.KCfdSigHashAll),
+		SighashType:         int(cfdgo.KCfdSigHashAll),
 		SighashAnyoneCanPay: false,
 	}
-	txHex, err := cfd.CfdGoAddTxPubkeyHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), pubkey.Hex, signParam)
+	txHex, err := cfdgo.CfdGoAddTxPubkeyHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), pubkey.Hex, signParam)
 	if err != nil {
 		return errors.Wrap(err, "CT.AddPubkeySign error")
 	}
@@ -368,15 +385,15 @@ func (t *ConfidentialTxApiImpl) AddScriptSign(tx *types.ConfidentialTx, outpoint
 	if err := t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	signParams := make([]cfd.CfdSignParameter, len(signList))
+	signParams := make([]cfdgo.CfdSignParameter, len(signList))
 	for i, data := range signList {
-		signParams[i] = cfd.CfdSignParameter{
+		signParams[i] = cfdgo.CfdSignParameter{
 			Data:        data.Data.ToHex(),
 			IsDerEncode: data.IsDerEncode,
 			SighashType: data.SigHashType.GetValue(),
 		}
 	}
-	txHex, err := cfd.CfdGoAddTxScriptHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), signParams, redeemScript.ToHex())
+	txHex, err := cfdgo.CfdGoAddTxScriptHashSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), signParams, redeemScript.ToHex())
 	if err != nil {
 		return errors.Wrap(err, "CT.AddScriptSign error")
 	}
@@ -406,9 +423,9 @@ func (t *ConfidentialTxApiImpl) AddTxMultisigSign(tx *types.ConfidentialTx, outp
 	if err := t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	signParams := make([]cfd.CfdMultisigSignData, len(signList))
+	signParams := make([]cfdgo.CfdMultisigSignData, len(signList))
 	for i, data := range signList {
-		signParams[i] = cfd.CfdMultisigSignData{
+		signParams[i] = cfdgo.CfdMultisigSignData{
 			Signature:   data.Data.ToHex(),
 			IsDerEncode: data.IsDerEncode,
 			SighashType: data.SigHashType.GetValue(),
@@ -417,7 +434,7 @@ func (t *ConfidentialTxApiImpl) AddTxMultisigSign(tx *types.ConfidentialTx, outp
 			signParams[i].RelatedPubkey = data.RelatedPubkey.Hex
 		}
 	}
-	txHex, err := cfd.CfdGoAddTxMultisigSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), signParams, redeemScript.ToHex())
+	txHex, err := cfdgo.CfdGoAddTxMultisigSign(t.network.ToCfdValue(), tx.Hex, outpoint.Txid, outpoint.Vout, hashType.ToCfdValue(), signParams, redeemScript.ToHex())
 	if err != nil {
 		return errors.Wrap(err, "CT.AddTxMultisigSign error")
 	}
@@ -450,9 +467,9 @@ func (t *ConfidentialTxApiImpl) VerifySign(tx *types.ConfidentialTx, outpoint *t
 		return false, "", errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
 	lbtcAsset, _ := t.getDefaultBitcoinData()
-	utxoList := []cfd.CfdUtxo{}
+	utxoList := []cfdgo.CfdUtxo{}
 	if txinUtxoList != nil {
-		utxoList = make([]cfd.CfdUtxo, len(*txinUtxoList))
+		utxoList = make([]cfdgo.CfdUtxo, len(*txinUtxoList))
 		for i, utxo := range *txinUtxoList {
 			utxoList[i] = utxo.ConvertToCfdUtxo()
 			if len(utxo.Asset) == 0 {
@@ -460,7 +477,7 @@ func (t *ConfidentialTxApiImpl) VerifySign(tx *types.ConfidentialTx, outpoint *t
 			}
 		}
 	}
-	if isVerify, reason, err = cfd.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, utxoList, outpoint.Txid, outpoint.Vout); err != nil {
+	if isVerify, reason, err = cfdgo.CfdGoVerifySign(t.network.ToCfdValue(), tx.Hex, utxoList, outpoint.Txid, outpoint.Vout); err != nil {
 		return false, "", errors.Wrap(err, "verify error")
 	}
 	return isVerify, reason, nil
@@ -471,13 +488,13 @@ func (t *ConfidentialTxApiImpl) GetTxid(tx *types.ConfidentialTx) string {
 	if err := t.validConfig(); err != nil {
 		return ""
 	}
-	handle, err := cfd.CfdGoInitializeTxDataHandle(t.network.ToCfdValue(), tx.Hex)
+	handle, err := cfdgo.CfdGoInitializeTxDataHandle(t.network.ToCfdValue(), tx.Hex)
 	if err != nil {
 		return ""
 	}
-	defer cfd.CfdGoFreeTxDataHandle(handle)
+	defer cfdgo.CfdGoFreeTxDataHandle(handle)
 
-	data, err := cfd.CfdGoGetTxInfoByHandle(handle)
+	data, err := cfdgo.CfdGoGetTxInfoByHandle(handle)
 	if err != nil {
 		return ""
 	}
@@ -489,7 +506,7 @@ func (t *ConfidentialTxApiImpl) GetPegoutAddress(tx *types.ConfidentialTx, index
 	if err := t.validConfig(); err != nil {
 		return nil, false, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	addr, isPegoutOutput, err := cfd.CfdGoGetPegoutAddressFromTransaction(t.network.ToCfdValue(), tx.Hex, index, t.network.ToBitcoinType().ToCfdValue())
+	addr, isPegoutOutput, err := cfdgo.CfdGoGetPegoutAddressFromTransaction(t.network.ToCfdValue(), tx.Hex, index, t.network.ToBitcoinType().ToCfdValue())
 	if err != nil {
 		return nil, false, errors.Wrap(err, "get pegout address error")
 	}
@@ -508,11 +525,11 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 		return nil, errors.Errorf("CFD Error: utxoList is nil")
 	}
 	cfdNetType := t.network.ToCfdValue()
-	var script *cfd.Script
-	var pubkey *cfd.ByteData
+	var script *cfdgo.Script
+	var pubkey *cfdgo.ByteData
 
 	lbtcAsset, _ := t.getDefaultBitcoinData()
-	txinUtxoList := make([]cfd.CfdUtxo, len(*utxoList))
+	txinUtxoList := make([]cfdgo.CfdUtxo, len(*utxoList))
 	for i, utxo := range *utxoList {
 		txinUtxoList[i] = utxo.ConvertToCfdUtxo()
 		if len(utxo.Asset) == 0 {
@@ -529,26 +546,66 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 			}
 
 			if data.HashType.IsPubkeyHash() {
-				pubkey = cfd.NewByteDataFromHexIgnoreError(data.Key.Pubkey.Hex)
+				pubkey = cfdgo.NewByteDataFromHexIgnoreError(data.Key.Pubkey.Hex)
 			} else if data.HashType.IsScriptHash() {
-				script = cfd.NewScriptFromHexIgnoreError(data.RedeemScript.ToHex())
+				script = cfdgo.NewScriptFromHexIgnoreError(data.RedeemScript.ToHex())
 			} else {
 				return nil, errors.Errorf("CFD Error: Descriptor invalid")
+			}
+			if !data.HashType.IsWitnessV1OrLater() {
+				// list is single.
+				newUtxoList := make([]cfdgo.CfdUtxo, 1)
+				newUtxoList[0] = txinUtxoList[i]
+				txinUtxoList = newUtxoList
 			}
 			break
 		}
 	}
-	cfdSighashType := cfd.SigHashType{
+	cfdSighashType := cfdgo.SigHashType{
 		Type:         sighashType.Type,
 		AnyoneCanPay: sighashType.AnyoneCanPay,
 		Rangeproof:   sighashType.Rangeproof,
 	}
-	sighashHex, err := cfd.CfdGoGetSighash(cfdNetType, tx.Hex, txinUtxoList, outpoint.Txid, outpoint.Vout, &cfdSighashType, pubkey, script, nil, nil, nil)
+	sighashHex, err := cfdgo.CfdGoGetSighash(cfdNetType, tx.Hex, txinUtxoList, outpoint.Txid, outpoint.Vout, &cfdSighashType, pubkey, script, nil, nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "get sighash error")
 	}
 	sighash = types.NewByteDataFromHexIgnoreError(sighashHex)
 	return sighash, nil
+}
+
+func (t *ConfidentialTxApiImpl) VerifyEcSignatureByUtxo(tx *types.ConfidentialTx, outpoint *types.OutPoint, utxo *types.ElementsUtxoData, signature *types.SignParameter) (isVerify bool, err error) {
+	if err := t.validConfig(); err != nil {
+		return false, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	} else if tx == nil || outpoint == nil || utxo == nil || signature == nil {
+		return false, cfdErrors.ErrParameterNil
+	}
+
+	sig, sighashTypeValue, _, err := cfdgo.CfdGoDecodeSignatureFromDer(signature.Data.ToHex())
+	if err != nil {
+		return false, errors.Wrap(err, "get sighashType error")
+	}
+	sighashType := types.NewSigHashType(sighashTypeValue)
+	utxoList := []types.ElementsUtxoData{*utxo}
+	sighash, err := t.GetSighash(tx, outpoint, *sighashType, &utxoList)
+	if err != nil {
+		return false, errors.Wrap(err, "get sighash error")
+	}
+
+	isVerify, err = t.pubkeyApi.VerifyEcSignature(signature.RelatedPubkey, sighash.ToHex(), sig)
+	if err != nil {
+		return false, errors.Wrap(err, "verify error")
+	}
+	return isVerify, nil
+}
+
+func (t *ConfidentialTxApiImpl) GetCommitment(amount int64, amountBlindFactor, assetBlindFactor, asset string) (amountCommitment, assetCommitment string, err error) {
+	assetCommitment, err = cfdgo.CfdGoGetAssetCommitment(asset, assetBlindFactor)
+	if err != nil {
+		return
+	}
+	amountCommitment, err = cfdgo.CfdGoGetAmountCommitment(amount, assetCommitment, amountBlindFactor)
+	return
 }
 
 func (t *ConfidentialTxApiImpl) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error) {
@@ -560,7 +617,7 @@ func (t *ConfidentialTxApiImpl) FilterUtxoByTxInList(tx *types.ConfidentialTx, u
 		utxoMap[utxo.OutPoint] = &utxo
 	}
 
-	_, cfdTxins, _, err := cfd.GetConfidentialTxData(tx.Hex, false)
+	_, cfdTxins, _, err := cfdgo.GetConfidentialTxData(tx.Hex, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse tx error")
 	}
@@ -581,7 +638,7 @@ func (t *ConfidentialTxApiImpl) GetAll(tx *types.ConfidentialTx, hasWitness bool
 	if err := t.validConfig(); err != nil {
 		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxData(tx.Hex, hasWitness)
+	cfdData, cfdTxins, cfdTxouts, err := cfdgo.GetConfidentialTxData(tx.Hex, hasWitness)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "parse tx error")
 	}
@@ -593,7 +650,7 @@ func (t *ConfidentialTxApiImpl) GetAllWithAddress(tx *types.ConfidentialTx, hasW
 	if err := t.validConfig(); err != nil {
 		return nil, nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	cfdData, cfdTxins, cfdTxouts, err := cfd.GetConfidentialTxDataAll(tx.Hex, hasWitness, true, t.network.ToCfdValue())
+	cfdData, cfdTxins, cfdTxouts, err := cfdgo.GetConfidentialTxDataAll(tx.Hex, hasWitness, true, t.network.ToCfdValue())
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "parse tx error")
 	}
@@ -601,22 +658,22 @@ func (t *ConfidentialTxApiImpl) GetAllWithAddress(tx *types.ConfidentialTx, hasW
 }
 
 func (t *ConfidentialTxApiImpl) GetTxIn(txHex string, outpoint *types.OutPoint) (txin *types.ConfidentialTxIn, err error) {
-	handle, err := cfd.CfdGoInitializeTxDataHandle(types.LiquidV1.ToCfdValue(), txHex)
+	handle, err := cfdgo.CfdGoInitializeTxDataHandle(types.LiquidV1.ToCfdValue(), txHex)
 	if err != nil {
 		return nil, errors.Wrap(err, "init tx error")
 	}
-	defer cfd.CfdGoFreeTxDataHandle(handle)
+	defer cfdgo.CfdGoFreeTxDataHandle(handle)
 
 	var tempTxin types.ConfidentialTxIn
-	index, err := cfd.CfdGoGetTxInIndexByHandle(handle, outpoint.Txid, outpoint.Vout)
+	index, err := cfdgo.CfdGoGetTxInIndexByHandle(handle, outpoint.Txid, outpoint.Vout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get txin index error(%s)", outpoint.String())
 	}
-	txid, vout, sequence, scriptSig, err := cfd.CfdGoGetTxInByHandle(handle, index)
+	txid, vout, sequence, scriptSig, err := cfdgo.CfdGoGetTxInByHandle(handle, index)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get txin error(%d)", index)
 	}
-	entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err := cfd.CfdGoGetTxInIssuanceInfoByHandle(handle, index)
+	entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err := cfdgo.CfdGoGetTxInIssuanceInfoByHandle(handle, index)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get txin issuance error(%d)", index)
 	}
@@ -636,13 +693,13 @@ func (t *ConfidentialTxApiImpl) GetTxIn(txHex string, outpoint *types.OutPoint) 
 		tempTxin.InflationKeysRangeproof = tokenRangeproof
 	}
 
-	wCount, err := cfd.CfdGoGetTxInWitnessCountByHandle(handle, int(cfd.KCfdTxWitnessStackNormal), index)
+	wCount, err := cfdgo.CfdGoGetTxInWitnessCountByHandle(handle, int(cfdgo.KCfdTxWitnessStackNormal), index)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get txin witness count error(%d)", index)
 	}
 	wList := make([]string, wCount)
 	for j := uint32(0); j < wCount; j++ {
-		stackData, err := cfd.CfdGoGetTxInWitnessByHandle(handle, int(cfd.KCfdTxWitnessStackNormal), index, j)
+		stackData, err := cfdgo.CfdGoGetTxInWitnessByHandle(handle, int(cfdgo.KCfdTxWitnessStackNormal), index, j)
 		if err != nil {
 			return nil, errors.Wrapf(err, "get txin witness count error(%d, %d)", index, j)
 		}
@@ -650,13 +707,13 @@ func (t *ConfidentialTxApiImpl) GetTxIn(txHex string, outpoint *types.OutPoint) 
 	}
 	tempTxin.WitnessStack.Stack = wList
 
-	pCount, err := cfd.CfdGoGetTxInWitnessCountByHandle(handle, int(cfd.KCfdTxWitnessStackPegin), index)
+	pCount, err := cfdgo.CfdGoGetTxInWitnessCountByHandle(handle, int(cfdgo.KCfdTxWitnessStackPegin), index)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get txin witness count error(%d)", index)
 	}
 	pList := make([]string, pCount)
 	for j := uint32(0); j < pCount; j++ {
-		stackData, err := cfd.CfdGoGetTxInWitnessByHandle(handle, int(cfd.KCfdTxWitnessStackPegin), index, j)
+		stackData, err := cfdgo.CfdGoGetTxInWitnessByHandle(handle, int(cfdgo.KCfdTxWitnessStackPegin), index, j)
 		if err != nil {
 			return nil, errors.Wrapf(err, "get txin witness count error(%d, %d)", index, j)
 		}
@@ -668,7 +725,7 @@ func (t *ConfidentialTxApiImpl) GetTxIn(txHex string, outpoint *types.OutPoint) 
 	return txin, nil
 }
 
-func convertListData(cfdData *cfd.TransactionData, cfdTxinList []cfd.ConfidentialTxIn, cfdTxoutList []cfd.ConfidentialTxOut) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
+func convertListData(cfdData *cfdgo.TransactionData, cfdTxinList []cfdgo.ConfidentialTxIn, cfdTxoutList []cfdgo.ConfidentialTxOut) (data *types.TransactionData, txinList []types.ConfidentialTxIn, txoutList []types.ConfidentialTxOut, err error) {
 	data = &types.TransactionData{
 		Txid:     cfdData.Txid,
 		Wtxid:    cfdData.Wtxid,
@@ -705,7 +762,7 @@ func appendDummyOutput(txHex string, network types.NetworkType, txinList *[]type
 	var blindTxOutCount uint32
 	outputTx = txHex
 	// get all list
-	_, _, txoutList, err := cfd.GetConfidentialTxDataAll(txHex, false, false, network.ToCfdValue())
+	_, _, txoutList, err := cfdgo.GetConfidentialTxDataAll(txHex, false, false, network.ToCfdValue())
 	if err != nil {
 		return "", errors.Wrap(err, "get tx error")
 	}
@@ -732,11 +789,11 @@ func appendDummyOutput(txHex string, network types.NetworkType, txinList *[]type
 
 	if (blindTxInCount + blindTxOutCount) == 1 {
 		// generate random confidential key
-		nonce, _, _, err := cfd.CfdGoCreateKeyPair(true, network.ToBitcoinType().ToCfdValue())
+		nonce, _, _, err := cfdgo.CfdGoCreateKeyPair(true, network.ToBitcoinType().ToCfdValue())
 		if err != nil {
 			return "", errors.Wrap(err, "create keyPair error")
 		}
-		outputTx, err = cfd.CfdGoAddConfidentialTxOut(txHex, feeAsset, 0, "", "", "6a", nonce)
+		outputTx, err = cfdgo.CfdGoAddConfidentialTxOut(txHex, feeAsset, 0, "", "", "6a", nonce)
 		if err != nil {
 			return "", errors.Wrap(err, "add txout error")
 		} else if outputTx == txHex {
@@ -758,9 +815,9 @@ func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types
 			seq := (*txinList)[i].Sequence
 			if seq == 0 {
 				if locktime == 0 {
-					seq = uint32(cfd.KCfdSequenceLockTimeFinal)
+					seq = uint32(cfdgo.KCfdSequenceLockTimeFinal)
 				} else {
-					seq = uint32(cfd.KCfdSequenceLockTimeEnableMax)
+					seq = uint32(cfdgo.KCfdSequenceLockTimeEnableMax)
 				}
 			}
 			if (*txinList)[i].PeginInput != nil {
@@ -777,7 +834,7 @@ func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types
 				if len(genesisBlockHash) == 0 {
 					genesisBlockHash = bitcoinGenesisBlockHash
 				}
-				err = cfd.AddPeginInput(txHandle,
+				err = cfdgo.AddPeginInput(txHandle,
 					(*txinList)[i].OutPoint.Txid, (*txinList)[i].OutPoint.Vout,
 					bitcoinTxOut.Amount, asset, genesisBlockHash,
 					(*txinList)[i].PeginInput.ClaimScript,
@@ -785,10 +842,10 @@ func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types
 					(*txinList)[i].PeginInput.TxOutProof,
 				)
 				if err == nil && (*txinList)[i].Sequence != 0 {
-					err = cfd.UpdateTxInSequence(txHandle, (*txinList)[i].OutPoint.Txid, (*txinList)[i].OutPoint.Vout, seq)
+					err = cfdgo.UpdateTxInSequence(txHandle, (*txinList)[i].OutPoint.Txid, (*txinList)[i].OutPoint.Vout, seq)
 				}
 			} else {
-				err = cfd.AddTransactionInput(txHandle, (*txinList)[i].OutPoint.Txid, (*txinList)[i].OutPoint.Vout, seq)
+				err = cfdgo.AddTransactionInput(txHandle, (*txinList)[i].OutPoint.Txid, (*txinList)[i].OutPoint.Vout, seq)
 			}
 			if err != nil {
 				return errors.Wrap(err, "add txin error")
@@ -805,9 +862,9 @@ func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types
 			if (*txoutList)[i].PegoutInput != nil {
 				var pubkey string
 				if len((*txoutList)[i].PegoutInput.OnlineKey) == 64 {
-					pubkey, err = cfd.CfdGoGetPubkeyFromPrivkey((*txoutList)[i].PegoutInput.OnlineKey, "", true)
+					pubkey, err = cfdgo.CfdGoGetPubkeyFromPrivkey((*txoutList)[i].PegoutInput.OnlineKey, "", true)
 				} else {
-					pubkey, err = cfd.CfdGoGetPubkeyFromPrivkey("", (*txoutList)[i].PegoutInput.OnlineKey, true)
+					pubkey, err = cfdgo.CfdGoGetPubkeyFromPrivkey("", (*txoutList)[i].PegoutInput.OnlineKey, true)
 				}
 				if err != nil {
 					return errors.Wrap(err, "get pubkey error")
@@ -816,7 +873,7 @@ func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types
 				if len(genesisBlockHash) == 0 {
 					genesisBlockHash = bitcoinGenesisBlockHash
 				}
-				mainchainAddress, err := cfd.AddPegoutOutput(
+				mainchainAddress, err := cfdgo.AddPegoutOutput(
 					txHandle, asset, (*txoutList)[i].Amount,
 					network.ToBitcoinType().ToCfdValue(), network.ToCfdValue(),
 					genesisBlockHash, pubkey, (*txoutList)[i].PegoutInput.OnlineKey,
@@ -827,11 +884,11 @@ func (t *ConfidentialTxApiImpl) addConidentialTx(txHandle uintptr, network types
 					*pegoutAddressList = append(*pegoutAddressList, mainchainAddress)
 				}
 			} else if (*txoutList)[i].IsDestroy {
-				err = cfd.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, "", "6a", asset)
+				err = cfdgo.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, "", "6a", asset)
 			} else if (*txoutList)[i].IsFee {
-				err = cfd.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, "", "", asset)
+				err = cfdgo.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, "", "", asset)
 			} else {
-				err = cfd.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, (*txoutList)[i].Address, (*txoutList)[i].LockingScript, asset)
+				err = cfdgo.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, (*txoutList)[i].Address, (*txoutList)[i].LockingScript, asset)
 			}
 			if err != nil {
 				return errors.Wrap(err, "get txout error")
@@ -859,11 +916,11 @@ func updateDirectNonce(txHandle uintptr, txHex string, txoutList *[]types.InputC
 		} else if ((*txoutList)[i].PegoutInput != nil) || (*txoutList)[i].IsFee || (len((*txoutList)[i].Address) > 0) {
 			// do nothing
 		} else if (*txoutList)[i].IsDestroy || (len((*txoutList)[i].LockingScript) > 0) {
-			asset, satoshiAmount, valueCommitment, _, lockingScript, err := cfd.CfdGoGetConfidentialTxOutSimpleByHandle(txHandle, uint32(i))
+			asset, satoshiAmount, valueCommitment, _, lockingScript, err := cfdgo.CfdGoGetConfidentialTxOutSimpleByHandle(txHandle, uint32(i))
 			if err != nil {
 				return "", errors.Wrapf(err, "get txout error(%d)", i)
 			}
-			outputTxHex, err = cfd.CfdGoUpdateConfidentialTxOut(outputTxHex, uint32(i), asset, satoshiAmount, valueCommitment, "", lockingScript, (*txoutList)[i].Nonce)
+			outputTxHex, err = cfdgo.CfdGoUpdateConfidentialTxOut(outputTxHex, uint32(i), asset, satoshiAmount, valueCommitment, "", lockingScript, (*txoutList)[i].Nonce)
 			if err != nil {
 				return "", errors.Wrapf(err, "update txout error(%d)", i)
 			}

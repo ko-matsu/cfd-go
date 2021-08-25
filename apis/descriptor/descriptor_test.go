@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/cryptogarageinc/cfd-go/config"
+	"github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -122,6 +123,104 @@ func TestCfdGoParseDescriptorData(t *testing.T) {
 	assert.Nil(t, rootData.Key.ExtPubkey)
 	assert.Nil(t, rootData.Key.ExtPrivkey)
 	assert.Nil(t, rootData.Multisig)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestParseDescriptorByFilter(t *testing.T) {
+	// PKH
+	descApi := NewDescriptorApi(config.NetworkOption(types.LiquidV1))
+	assert.NoError(t, descApi.GetError())
+	filter := &types.DescriptorParseFilter{}
+	filter.EnableHashTypes = []types.HashType{types.P2pkh}
+	rootData, _, err := descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)"}, filter)
+	assert.NoError(t, err)
+	assert.Equal(t, types.P2pkh, rootData.HashType)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	filter.EnableHashTypes = []types.HashType{types.P2wpkh}
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)"}, filter)
+	assert.Error(t, err)
+	assert.Nil(t, rootData)
+	assert.Equal(t, errors.ErrDescriptorFilter, err)
+
+	filter.EnableHashTypes = nil
+	filter.DisableHashTypes = []types.HashType{types.P2pkh}
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)"}, filter)
+	assert.Error(t, err)
+	assert.Nil(t, rootData)
+	assert.Equal(t, errors.ErrDescriptorFilter, err)
+
+	// p2sh-p2wsh(pkh)
+	filter.EnableHashTypes = nil
+	filter.DisableHashTypes = nil
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"}, filter)
+	assert.NoError(t, err)
+	assert.Equal(t, types.P2shP2wsh, rootData.HashType)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	filter.IsMultisigOnlyOnScriptHash = true
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"}, filter)
+	assert.Error(t, err)
+	assert.Nil(t, rootData)
+	assert.Equal(t, errors.ErrDescriptorFilter, err)
+
+	filter.IsMultisigOnlyOnScriptHash = false
+	filter.EnableRootDescriptorTypes = []types.DescriptorType{types.DescriptorTypeSh}
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"}, filter)
+	assert.NoError(t, err)
+	assert.Equal(t, types.P2shP2wsh, rootData.HashType)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	filter.EnableRootDescriptorTypes = []types.DescriptorType{types.DescriptorTypeWsh}
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"}, filter)
+	assert.Error(t, err)
+	assert.Nil(t, rootData)
+	assert.Equal(t, errors.ErrDescriptorFilter, err)
+
+	filter.EnableRootDescriptorTypes = nil
+	filter.DisableRootDescriptorTypes = []types.DescriptorType{types.DescriptorTypeSh}
+	rootData, _, err = descApi.ParseByFilter(
+		&types.Descriptor{OutputDescriptor: "sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"}, filter)
+	assert.Error(t, err)
+	assert.Nil(t, rootData)
+	assert.Equal(t, errors.ErrDescriptorFilter, err)
+
+	// multisig (bitcoin)
+	descApi = NewDescriptorApi(config.NetworkOption(types.Mainnet))
+	assert.NoError(t, descApi.GetError())
+	filter.IsMultisigOnlyOnScriptHash = false
+	rootData, _, err = descApi.ParseByFilterWithDerivationPath(
+		&types.Descriptor{OutputDescriptor: "wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))"},
+		"0", filter)
+	assert.NoError(t, err)
+	assert.Equal(t, types.P2wsh, rootData.HashType)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	filter.IsMultisigOnlyOnScriptHash = true
+	rootData, _, err = descApi.ParseByFilterWithDerivationPath(
+		&types.Descriptor{OutputDescriptor: "wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))"},
+		"0", filter)
+	assert.NoError(t, err)
+	assert.Equal(t, types.P2wsh, rootData.HashType)
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
