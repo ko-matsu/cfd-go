@@ -355,20 +355,6 @@ func (f *DescriptorParseFilter) Check(data *DescriptorRootData) error {
 	return nil
 }
 
-type HashTypes []HashType
-
-func (d HashTypes) IsValid() bool {
-	return len(d) > 0
-}
-func (d HashTypes) Find(hashType HashType) bool {
-	for _, element := range d {
-		if element == hashType {
-			return true
-		}
-	}
-	return false
-}
-
 type DescriptorTypes []DescriptorType
 
 func (d DescriptorTypes) IsValid() bool {

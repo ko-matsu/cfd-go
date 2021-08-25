@@ -6,6 +6,7 @@ import (
 	cfdgo "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/address"
 	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
+	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/config"
 	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
@@ -37,6 +38,9 @@ type ConfidentialTxApi interface {
 	AddTxMultisigSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error
 	AddTxMultisigSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error
 	VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.ElementsUtxoData) (isVerify bool, reason string, err error)
+	// VerifyEcSignatureByUtxo ...
+	VerifyEcSignatureByUtxo(tx *types.ConfidentialTx, outpoint *types.OutPoint, utxo *types.ElementsUtxoData, signature *types.SignParameter) (isVerify bool, err error)
+	GetCommitment(amount int64, amountBlindFactor, assetBlindFactor, asset string) (amountCommitment, assetCommitment string, err error)
 	FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error)
 	GetTxid(tx *types.ConfidentialTx) string
 	GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error)
@@ -100,6 +104,8 @@ func NewConfidentialTxApi(options ...config.CfdConfigOption) *ConfidentialTxApiI
 		} else {
 			api.bitcoinTxApi = bitcoinTxApi
 		}
+		pubkeyApi := key.NewPubkeyApi()
+		api.pubkeyApi = pubkeyApi
 	}
 	return &api
 }
@@ -117,6 +123,7 @@ type ConfidentialTxApiImpl struct {
 	descriptorApi           descriptor.DescriptorApi
 	bitcoinAddressApi       address.AddressApi
 	bitcoinTxApi            TransactionApi
+	pubkeyApi               key.PubkeyApi
 }
 
 // WithElementsDescriptorApi This function set a elements descriptor api.
@@ -149,6 +156,16 @@ func (p *ConfidentialTxApiImpl) WithBitcoinTxApi(transactionApi TransactionApi) 
 		p.SetError(cfdErrors.ErrParameterNil)
 	} else {
 		p.bitcoinTxApi = transactionApi
+	}
+	return p
+}
+
+// WithPubkeyApi This function set a pubkey api.
+func (p *ConfidentialTxApiImpl) WithPubkeyApi(pubkeyApi key.PubkeyApi) *ConfidentialTxApiImpl {
+	if pubkeyApi == nil {
+		p.SetError(cfdErrors.ErrParameterNil)
+	} else {
+		p.pubkeyApi = pubkeyApi
 	}
 	return p
 }
@@ -535,6 +552,12 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 			} else {
 				return nil, errors.Errorf("CFD Error: Descriptor invalid")
 			}
+			if !data.HashType.IsWitnessV1OrLater() {
+				// list is single.
+				newUtxoList := make([]cfdgo.CfdUtxo, 1)
+				newUtxoList[0] = txinUtxoList[i]
+				txinUtxoList = newUtxoList
+			}
 			break
 		}
 	}
@@ -549,6 +572,40 @@ func (t *ConfidentialTxApiImpl) GetSighash(tx *types.ConfidentialTx, outpoint *t
 	}
 	sighash = types.NewByteDataFromHexIgnoreError(sighashHex)
 	return sighash, nil
+}
+
+func (t *ConfidentialTxApiImpl) VerifyEcSignatureByUtxo(tx *types.ConfidentialTx, outpoint *types.OutPoint, utxo *types.ElementsUtxoData, signature *types.SignParameter) (isVerify bool, err error) {
+	if err := t.validConfig(); err != nil {
+		return false, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	} else if tx == nil || outpoint == nil || utxo == nil || signature == nil {
+		return false, cfdErrors.ErrParameterNil
+	}
+
+	sig, sighashTypeValue, _, err := cfdgo.CfdGoDecodeSignatureFromDer(signature.Data.ToHex())
+	if err != nil {
+		return false, errors.Wrap(err, "get sighashType error")
+	}
+	sighashType := types.NewSigHashType(sighashTypeValue)
+	utxoList := []types.ElementsUtxoData{*utxo}
+	sighash, err := t.GetSighash(tx, outpoint, *sighashType, &utxoList)
+	if err != nil {
+		return false, errors.Wrap(err, "get sighash error")
+	}
+
+	isVerify, err = t.pubkeyApi.VerifyEcSignature(signature.RelatedPubkey, sighash.ToHex(), sig)
+	if err != nil {
+		return false, errors.Wrap(err, "verify error")
+	}
+	return isVerify, nil
+}
+
+func (t *ConfidentialTxApiImpl) GetCommitment(amount int64, amountBlindFactor, assetBlindFactor, asset string) (amountCommitment, assetCommitment string, err error) {
+	assetCommitment, err = cfdgo.CfdGoGetAssetCommitment(asset, assetBlindFactor)
+	if err != nil {
+		return
+	}
+	amountCommitment, err = cfdgo.CfdGoGetAmountCommitment(amount, assetCommitment, amountBlindFactor)
+	return
 }
 
 func (t *ConfidentialTxApiImpl) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) (txinUtxoList []types.ElementsUtxoData, err error) {
