@@ -330,6 +330,17 @@ func (d DescriptorKey) GetPublicKey() string {
 	return ""
 }
 
+type DescriptorKeys []DescriptorKey
+
+func (d DescriptorKeys) Find(key DescriptorKey) bool {
+	for _, element := range d {
+		if element.Pubkey == key.Pubkey {
+			return true
+		}
+	}
+	return false
+}
+
 func (f *DescriptorParseFilter) Check(data *DescriptorRootData) error {
 	if f == nil || data == nil {
 		return nil
