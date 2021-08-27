@@ -10,6 +10,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// go generate comment
+//go:generate -command mkdir mock
+//go:generate mockgen -source transaction.go -destination mock/transaction.go -package mock
+//go:generate go fmt ./mock
+//go:generate goimports -w mock/transaction.go
+
 // -------------------------------------
 // API
 // -------------------------------------

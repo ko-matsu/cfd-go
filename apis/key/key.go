@@ -8,6 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// go generate comment
+//go:generate -command mkdir mock
+//go:generate mockgen -source key.go -destination mock/key.go -package mock
+//go:generate go fmt ./mock
+//go:generate goimports -w mock/key.go
+
 // PubkeyApi This interface has pubkey operation API.
 type PubkeyApi interface {
 	VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error)

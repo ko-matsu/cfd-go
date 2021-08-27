@@ -6,6 +6,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// go generate comment
+//go:generate -command mkdir mock
+//go:generate mockgen -source confidential_address.go -destination mock/confidential_address.go -package mock
+//go:generate go fmt ./mock
+//go:generate goimports -w mock/confidential_address.go
+
 // -------------------------------------
 // API
 // -------------------------------------

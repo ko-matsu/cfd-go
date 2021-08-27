@@ -8,6 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// go generate comment
+//go:generate -command mkdir mock
+//go:generate mockgen -source block.go -destination mock/block.go -package mock
+//go:generate go fmt ./mock
+//go:generate goimports -w mock/block.go
+
 // -------------------------------------
 // API struct
 // -------------------------------------
