@@ -8,6 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// go generate comment
+//go:generate -command mkdir mock
+//go:generate mockgen -source block.go -destination mock/block.go -package mock
+//go:generate go fmt ./mock
+//go:generate goimports -w mock/block.go
+
 // -------------------------------------
 // API struct
 // -------------------------------------
@@ -20,7 +26,7 @@ type BlockApi interface {
 	ExistTxid(block *types.Block, txid string) (exist bool, err error)
 }
 
-// NewPeginService returns an object that defines the API for Block.
+// NewBlockApi returns an object that defines the API for Block.
 func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 	api := BlockApiImpl{}
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)
