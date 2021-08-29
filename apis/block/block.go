@@ -26,7 +26,7 @@ type BlockApi interface {
 	ExistTxid(block *types.Block, txid string) (exist bool, err error)
 }
 
-// NewPeginService returns an object that defines the API for Block.
+// NewBlockApi returns an object that defines the API for Block.
 func NewBlockApi(options ...config.CfdConfigOption) *BlockApiImpl {
 	api := BlockApiImpl{}
 	conf := config.GetCurrentCfdConfig().WithOptions(options...)

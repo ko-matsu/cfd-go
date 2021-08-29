@@ -34,6 +34,34 @@ func (m *MockPubkeyApi) EXPECT() *MockPubkeyApiMockRecorder {
 	return m.recorder
 }
 
+// IsCompressed mocks base method.
+func (m *MockPubkeyApi) IsCompressed(pubkey *types.Pubkey) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsCompressed", pubkey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IsCompressed indicates an expected call of IsCompressed.
+func (mr *MockPubkeyApiMockRecorder) IsCompressed(pubkey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsCompressed", reflect.TypeOf((*MockPubkeyApi)(nil).IsCompressed), pubkey)
+}
+
+// Verify mocks base method.
+func (m *MockPubkeyApi) Verify(pubkey *types.Pubkey) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Verify", pubkey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Verify indicates an expected call of Verify.
+func (mr *MockPubkeyApiMockRecorder) Verify(pubkey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockPubkeyApi)(nil).Verify), pubkey)
+}
+
 // VerifyEcSignature mocks base method.
 func (m *MockPubkeyApi) VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (bool, error) {
 	m.ctrl.T.Helper()

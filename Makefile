@@ -13,6 +13,7 @@ generate:
 format:
 	go fmt . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
 	goimports -w .
+	go vet . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
 	go mod tidy
 
 build-lib:

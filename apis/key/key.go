@@ -16,6 +16,11 @@ import (
 
 // PubkeyApi This interface has pubkey operation API.
 type PubkeyApi interface {
+	// Verify ...
+	Verify(pubkey *types.Pubkey) error
+	// IsCompressed ...
+	IsCompressed(pubkey *types.Pubkey) error
+	// VerifyEcSignature ...
 	VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error)
 }
 
@@ -62,8 +67,34 @@ type PrivkeyApiImpl struct {
 // implement Pubkey
 // -------------------------------------
 
+// Verify ...
+func (p *PubkeyApiImpl) Verify(pubkey *types.Pubkey) error {
+	if pubkey == nil {
+		return cfdErrors.ErrParameterNil
+	}
+	_, err := cfd.CfdGoCompressPubkey(pubkey.Hex)
+	return err
+}
+
+// IsCompressed ...
+func (p *PubkeyApiImpl) IsCompressed(pubkey *types.Pubkey) error {
+	if pubkey == nil {
+		return cfdErrors.ErrParameterNil
+	}
+	compressedKey, err := cfd.CfdGoCompressPubkey(pubkey.Hex)
+	if err != nil {
+		return err
+	} else if compressedKey != pubkey.Hex {
+		return errors.New("CFD Error: pubkey is uncompressed")
+	}
+	return nil
+}
+
 // VerifyEcSignature ...
 func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error) {
+	if pubkey == nil {
+		return false, cfdErrors.ErrParameterNil
+	}
 	isVerify, err = cfd.CfdGoVerifyEcSignature(sighash, pubkey.Hex, signature)
 	if err != nil {
 		return false, errors.Wrap(err, "verify ec signature error")

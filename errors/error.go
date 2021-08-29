@@ -10,6 +10,7 @@ const (
 	ErrUnmatchNetwork   CfdError = "CFD Error: network type is unmatching"
 	ErrParameterNil     CfdError = "CFD Error: Parameter is nil"
 	ErrDescriptorFilter CfdError = "CFD Error: Descriptor that does not match the condition"
+	ErrMultisigScript   CfdError = "CFD Error: Invalid multisig script"
 
 	InternalError CfdError = "CFD Error: Internal error"
 
