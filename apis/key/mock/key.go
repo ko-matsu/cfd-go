@@ -159,3 +159,17 @@ func (mr *MockPrivkeyApiMockRecorder) GetPubkey(privkey interface{}) *gomock.Cal
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubkey", reflect.TypeOf((*MockPrivkeyApi)(nil).GetPubkey), privkey)
 }
+
+// HasWif mocks base method.
+func (m *MockPrivkeyApi) HasWif(wif string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasWif", wif)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasWif indicates an expected call of HasWif.
+func (mr *MockPrivkeyApiMockRecorder) HasWif(wif interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasWif", reflect.TypeOf((*MockPrivkeyApi)(nil).HasWif), wif)
+}

@@ -15,7 +15,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source script.go -destination mock/script.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/script.go
 
 // -------------------------------------

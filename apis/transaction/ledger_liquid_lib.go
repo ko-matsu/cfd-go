@@ -12,7 +12,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source ledger_liquid_lib.go -destination mock/ledger_liquid_lib.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/ledger_liquid_lib.go
 
 // ConfidentialTxApi This interface defines the API to operate Elements Confidential Transaction.

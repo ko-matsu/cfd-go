@@ -34,6 +34,9 @@ func TestCfdPrivkeyAndPubkey(t *testing.T) {
 	assert.Equal(t, 52, len(wif))
 	pubkey := &types.Pubkey{Hex: pubkeyHex}
 
+	assert.Equal(t, true, privkeyApi.HasWif(wif))
+	assert.Equal(t, false, privkeyApi.HasWif(privkeyHex))
+
 	privkey, err := privkeyApi.GetPrivkeyFromWif(wif)
 	assert.NoError(t, err)
 	assert.Equal(t, privkeyHex, privkey.Hex)

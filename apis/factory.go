@@ -3,6 +3,7 @@ package apis
 import (
 	"github.com/cryptogarageinc/cfd-go/apis/address"
 	"github.com/cryptogarageinc/cfd-go/apis/block"
+	"github.com/cryptogarageinc/cfd-go/apis/crypto"
 	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
 	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/apis/transaction"
@@ -15,6 +16,7 @@ import (
 
 // BitcoinApiFactory ...
 type BitcoinApiFactory interface {
+	CreateCryptoApi() crypto.CryptoApi
 	CreatePubkeyApi() key.PubkeyApi
 	CreatePrivkeyApi() key.PrivkeyApi
 	CreateExtPubkeyApi() key.ExtPubkeyApi
@@ -112,6 +114,9 @@ func (p *ApiFactoryImpl) getConfig() *config.CfdConfig {
 	return &conf
 }
 
+func (a ApiFactoryImpl) CreateCryptoApi() crypto.CryptoApi {
+	return crypto.NewCryptoApi()
+}
 func (a ApiFactoryImpl) CreatePubkeyApi() key.PubkeyApi {
 	return key.NewPubkeyApi()
 }

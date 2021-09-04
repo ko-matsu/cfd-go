@@ -13,7 +13,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source hdwallet.go -destination mock/hdwallet.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/hdwallet.go
 
 // FIXME split file

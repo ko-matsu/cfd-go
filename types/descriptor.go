@@ -77,10 +77,8 @@ type DescriptorKey struct {
 
 // DescriptorMultisig stores the multisig data for descriptor.
 type DescriptorMultisig struct {
-	// number of multisig require signatures
-	ReqSigNum uint32
-	// Multisig keys
-	Keys []DescriptorKey
+	ReqSigNum uint32         // number of multisig require signatures
+	Keys      DescriptorKeys // Multisig keys
 }
 
 /**
@@ -303,6 +301,15 @@ func NewDescriptorMultisig(reqSigNum uint32, keys []DescriptorKeyData) *Descript
 	return obj
 }
 
+func (d DescriptorRootData) GetAddress() string {
+	switch d.Type {
+	case DescriptorTypeRaw, DescriptorTypeNull:
+		return ""
+	default:
+		return d.Address.Address
+	}
+}
+
 func (d DescriptorRootData) HasMultisig() bool {
 	return d.Multisig != nil
 }
@@ -323,6 +330,24 @@ func (d DescriptorRootData) GetPublicKey() string {
 	return ""
 }
 
+func (d DescriptorRootData) GetPublicKeys() []string {
+	if d.HashType.IsPubkeyHash() {
+		return []string{d.Key.GetPublicKey()}
+	} else if d.HasMultisig() {
+		return d.Multisig.Keys.GetPublicKeys()
+	}
+	return nil
+}
+
+func (d DescriptorRootData) ExistPublicKey(pubkey *Pubkey) bool {
+	if d.HashType.IsPubkeyHash() {
+		return d.Key.Pubkey.Hex == pubkey.Hex
+	} else if d.HasMultisig() {
+		return d.Multisig.Keys.ExistPublicKey(pubkey)
+	}
+	return false
+}
+
 func (d DescriptorKey) GetPublicKey() string {
 	if d.KeyType.Valid() {
 		return d.Pubkey.Hex
@@ -335,6 +360,23 @@ type DescriptorKeys []DescriptorKey
 func (d DescriptorKeys) Find(key DescriptorKey) bool {
 	for _, element := range d {
 		if element.Pubkey == key.Pubkey {
+			return true
+		}
+	}
+	return false
+}
+
+func (d DescriptorKeys) GetPublicKeys() []string {
+	keys := make([]string, len(d))
+	for i, key := range d {
+		keys[i] = key.GetPublicKey()
+	}
+	return keys
+}
+
+func (d DescriptorKeys) ExistPublicKey(pubkey *Pubkey) bool {
+	for _, key := range d {
+		if key.Pubkey.Hex == pubkey.Hex {
 			return true
 		}
 	}

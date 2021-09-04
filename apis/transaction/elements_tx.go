@@ -17,7 +17,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source elements_tx.go -destination mock/elements_tx.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/elements_tx.go
 
 const (
