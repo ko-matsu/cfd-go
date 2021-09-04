@@ -16,7 +16,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source descriptor.go -destination mock/descriptor.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/descriptor.go
 
 type DescriptorApi interface {

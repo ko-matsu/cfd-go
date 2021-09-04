@@ -18,7 +18,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source pegout.go -destination mock/pegout.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/pegout.go
 
 // Pegout This interface defines the API used by the pegout function.

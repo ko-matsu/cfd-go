@@ -17,7 +17,6 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate mockgen -source pegin.go -destination mock/pegin.go -package mock
-//go:generate go fmt ./mock
 //go:generate goimports -w mock/pegin.go
 
 // Pegin This interface defines the API used by the pegin function.
