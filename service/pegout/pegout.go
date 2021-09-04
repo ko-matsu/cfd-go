@@ -20,6 +20,10 @@ import (
 //go:generate mockgen -source pegout.go -destination mock/pegout.go -package mock
 //go:generate goimports -w mock/pegout.go
 
+const (
+	PegoutAmountMinimum int64 = 100000
+)
+
 // Pegout This interface defines the API used by the pegout function.
 type Pegout interface {
 	// CreateOnlinePrivateKey This function generate random private key for online key.
@@ -37,7 +41,7 @@ type Pegout interface {
 	) (pegoutAddress *types.Address, baseDescriptor *types.Descriptor, err error)
 	// CreatePegoutTransaction This function create the pegout transaction.
 	CreatePegoutTransaction(
-		utxoList []types.ElementsUtxoData,
+		utxoList []*types.ElementsUtxoData,
 		pegoutData types.InputConfidentialTxOut,
 		sendList *[]types.InputConfidentialTxOut,
 		changeAddress *string,
@@ -287,7 +291,7 @@ func (p *PegoutService) CreatePegoutAddress(
 
 // CreatePegoutTransaction This function create the pegout transaction.
 func (p *PegoutService) CreatePegoutTransaction(
-	utxoList []types.ElementsUtxoData,
+	utxoList []*types.ElementsUtxoData,
 	pegoutData types.InputConfidentialTxOut,
 	sendList *[]types.InputConfidentialTxOut,
 	changeAddress *string,
@@ -298,7 +302,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 	}
 
 	// validation utxoList, pegoutData
-	if err = p.validateUtxoList(&utxoList); err != nil {
+	if err = p.validateUtxoList(utxoList); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout utxoList validation error")
 	} else if err = p.validatePegoutData(&pegoutData); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout peginData validation error")
@@ -320,7 +324,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 		return nil, nil, nil, errors.Wrap(err, "Pegout changeAddress validation error")
 	}
 
-	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxInOutList(&utxoList, sendList, changeAddr)
+	blindOutputCount, hasAppendDummyOutput, _, err := p.validateTxInOutList(utxoList, sendList, changeAddr)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout sendList validation error")
 	}
@@ -370,8 +374,8 @@ func (p *PegoutService) CreatePegoutTransaction(
 	fundTxInList := []cfd.CfdUtxo{}
 	utxoListLen := len(utxoList)
 	fundUtxoList := make([]cfd.CfdUtxo, utxoListLen)
-	utxoMap := make(map[types.OutPoint]*types.ElementsUtxoData, utxoListLen)
-	blindedUtxoMap := make(map[types.OutPoint]*types.ElementsUtxoData, utxoListLen)
+	utxoMap := make(map[string]*types.ElementsUtxoData, utxoListLen)
+	blindedUtxoMap := make(map[string]*types.ElementsUtxoData, utxoListLen)
 	for i, txin := range utxoList {
 		fundUtxoList[i].Txid = txin.OutPoint.Txid
 		fundUtxoList[i].Vout = txin.OutPoint.Vout
@@ -379,9 +383,9 @@ func (p *PegoutService) CreatePegoutTransaction(
 		fundUtxoList[i].Asset = txin.Asset
 		fundUtxoList[i].Descriptor = txin.Descriptor
 		fundUtxoList[i].AmountCommitment = txin.AmountCommitment
-		utxoMap[txin.OutPoint] = &txin
+		utxoMap[txin.OutPoint.String()] = txin
 		if txin.HasBlindUtxo() {
-			blindedUtxoMap[txin.OutPoint] = &txin
+			blindedUtxoMap[txin.OutPoint.String()] = txin
 		}
 	}
 	targetAmounts := []cfd.CfdFundRawTxTargetAmount{
@@ -389,9 +393,6 @@ func (p *PegoutService) CreatePegoutTransaction(
 			Amount: 0,
 			Asset:  assetId,
 		},
-	}
-	if amount == 0 {
-		targetAmounts[0].Amount = 1
 	}
 	if changeAddress != nil {
 		targetAmounts[0].ReservedAddress = *changeAddress
@@ -405,9 +406,43 @@ func (p *PegoutService) CreatePegoutTransaction(
 	fundOption.KnapsackMinChange = option.KnapsackMinChange
 	fundOption.Exponent = option.Exponent
 	fundOption.MinimumBits = option.MinimumBits
-	outputTx, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
-	if err != nil {
-		return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
+	var outputTx string
+	var fee, baseFee int64
+	if !option.SubtractFee {
+		outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+		if err != nil {
+			return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
+		}
+	} else {
+		baseFee = int64(fundOption.EffectiveFeeRate * 1000)
+		// TODO: use selectCoin?
+
+		// first try (for fee)
+		_, tmpFee, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+		if err == nil {
+			baseFee = tmpFee
+		}
+
+		loopLimit := 10
+		for i := 0; i <= loopLimit; i++ {
+			// second try
+			fee += baseFee
+			if pegoutData.Amount-fee < PegoutAmountMinimum {
+				return nil, nil, nil, errors.Errorf("pegout amount is low (tx: %s)", tx.Hex)
+			}
+			txouts[0].Amount = workPegoutData.Amount - fee
+			tx2, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
+			if err != nil {
+				return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
+			}
+			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx2.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+			if err == nil {
+				tx.Hex = tx2.Hex
+				break
+			} else if i == loopLimit {
+				return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
+			}
+		}
 	}
 
 	// 4. check to need append dummy output
@@ -415,29 +450,44 @@ func (p *PegoutService) CreatePegoutTransaction(
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 	}
-	outputCount := len(outputs)
-	if option.IsBlindTx && !hasAppendDummyOutput && (outputCount == 3) { // 3 = output + fee + pegout
-		hasAllBlinded := true
-		for _, input := range inputs {
-			_, ok := blindedUtxoMap[input.OutPoint]
-			if !ok {
-				hasAllBlinded = false
-				break
-			}
+	if option.IsBlindTx && !hasAppendDummyOutput && p.IsNeedDummyBlind(utxoList, inputs, outputs) {
+		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
 		}
-		if !hasAllBlinded {
-			tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
-			if err != nil {
-				return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
+		outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+		if err != nil && option.SubtractFee && strings.Contains(err.Error(), "Not enough utxos") {
+			// retry
+			loopLimit := 10
+			for i := 0; i <= loopLimit; i++ {
+				fee += baseFee
+				if pegoutData.Amount-fee < PegoutAmountMinimum {
+					return nil, nil, nil, errors.Errorf("pegout amount is low (tx: %s)", tx.Hex)
+				}
+				txouts[0].Amount = workPegoutData.Amount - fee
+				tx2, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
+				if err != nil {
+					return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
+				}
+				tx.Hex, err = appendDummyOutput(tx2.Hex, assetId, p.network)
+				if err != nil {
+					return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
+				}
+				outputTx2, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+				if err == nil {
+					outputTx = outputTx2
+					break
+				} else if i == loopLimit {
+					return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
+				}
 			}
-			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
-			if err != nil {
-				return nil, nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
-			}
-			_, inputs, _, err = p.elementsTxApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
-			if err != nil {
-				return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
-			}
+		} else if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
+		}
+
+		_, inputs, _, err = p.elementsTxApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 		}
 	}
 	tx.Hex = outputTx
@@ -447,7 +497,7 @@ func (p *PegoutService) CreatePegoutTransaction(
 	if option.IsBlindTx {
 		blindInputList := make([]types.BlindInputData, len(inputs))
 		for i, txin := range inputs {
-			utxo, ok := utxoMap[txin.OutPoint]
+			utxo, ok := utxoMap[txin.OutPoint.String()]
 			if !ok {
 				return nil, nil, nil, errors.Errorf("CFD Error: Internal error")
 			}
@@ -470,6 +520,45 @@ func (p *PegoutService) CreatePegoutTransaction(
 	return tx, pegoutAddress, unblindTx, nil
 }
 
+func (p *PegoutService) IsNeedDummyBlind(
+	utxoList []*types.ElementsUtxoData,
+	txinList []types.ConfidentialTxIn,
+	txoutList []types.ConfidentialTxOut,
+) bool {
+	utxoMap := make(map[string]*types.ElementsUtxoData, len(utxoList))
+	for _, utxo := range utxoList {
+		utxoMap[utxo.OutPoint.String()] = utxo
+	}
+
+	txinUtxos := make([]*types.ElementsUtxoData, len(txinList))
+	for i, txin := range txinList {
+		utxo, ok := utxoMap[txin.OutPoint.String()]
+		if !ok {
+			return false
+		}
+		txinUtxos[i] = utxo
+	}
+	var txinBlindCount, txoutBlindCount uint32
+	for _, utxo := range txinUtxos {
+		if utxo.HasBlindUtxo() {
+			txinBlindCount++
+		}
+	}
+	for _, txout := range txoutList {
+		if txout.HasBlinding() {
+			txoutBlindCount++
+		}
+	}
+
+	switch {
+	case txinBlindCount == 0 && txoutBlindCount == 1:
+		return true
+	case txinBlindCount > 0 && txoutBlindCount == 0:
+		return true
+	}
+	return false
+}
+
 // VerifyPubkeySignature This function validate the signature by pubkey.
 func (p *PegoutService) VerifyPubkeySignature(
 	proposalTx *types.ConfidentialTx,
@@ -489,8 +578,8 @@ func (p *PegoutService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
 	sighashType := types.NewSigHashType(cfdSighashType)
-	utxoList := []types.ElementsUtxoData{*utxoData}
-	sighash, err := p.elementsTxApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
+	utxoList := []*types.ElementsUtxoData{utxoData}
+	sighash, err := p.elementsTxApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, utxoList)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegout decode signature error")
 	}
@@ -586,19 +675,19 @@ func validatePegoutExtPubkey(extPubkey *types.ExtPubkey) error {
 	return nil
 }
 
-func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, sendList *[]types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
+func (p *PegoutService) validateTxInOutList(utxoList []*types.ElementsUtxoData, sendList *[]types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
 	caApi := address.ConfidentialAddressApiImpl{}
 	blindOutputCount = uint32(0)
 	unblindOutputCount := uint32(0)
 	feeCount := uint32(0)
 	blindInputCount := 0
-	for _, txin := range *utxoList {
+	for _, txin := range utxoList {
 		if txin.HasBlindUtxo() {
 			blindInputCount += 1
 		}
 	}
 	hasAllInputBlinded := false
-	if (blindInputCount > 0) && (blindInputCount == len(*utxoList)) {
+	if (blindInputCount > 0) && (blindInputCount == len(utxoList)) {
 		hasAllInputBlinded = true
 	}
 
@@ -679,29 +768,27 @@ func (p *PegoutService) validateTxInOutList(utxoList *[]types.ElementsUtxoData, 
 	return blindOutputCount, hasAppendDummyOutput, amount, nil
 }
 
-func (p *PegoutService) validateUtxoList(utxoList *[]types.ElementsUtxoData) error {
-	if utxoList != nil {
-		for _, utxo := range *utxoList {
-			switch {
-			case len(utxo.OutPoint.Txid) != 64:
-				return errors.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
-			case utxo.Amount == 0:
-				return errors.Errorf("CFD Error: utxo Amount is invalid")
-			case len(utxo.Asset) != 64:
-				return errors.Errorf("CFD Error: utxo Amount is invalid")
-			case (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64):
-				return errors.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
-			case (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64):
-				return errors.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
-			case len(utxo.Descriptor) == 0:
-				return errors.Errorf("CFD Error: utxo Descriptor is invalid")
-			case (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66):
-				return errors.Errorf("CFD Error: utxo AmountCommitment is invalid")
-			case utxo.PeginData != nil:
-				return errors.Errorf("CFD Error: Pegout utxo cannot use PeginData")
-			case utxo.IsIssuance:
-				return errors.Errorf("CFD Error: Pegout utxo cannot use IsIssuance")
-			}
+func (p *PegoutService) validateUtxoList(utxoList []*types.ElementsUtxoData) error {
+	for _, utxo := range utxoList {
+		switch {
+		case len(utxo.OutPoint.Txid) != 64:
+			return errors.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
+		case utxo.Amount == 0:
+			return errors.Errorf("CFD Error: utxo Amount is invalid")
+		case len(utxo.Asset) != 64:
+			return errors.Errorf("CFD Error: utxo Amount is invalid")
+		case (len(utxo.AssetBlindFactor) != 0) && (len(utxo.AssetBlindFactor) != 64):
+			return errors.Errorf("CFD Error: utxo AssetBlindFactor is invalid")
+		case (len(utxo.ValueBlindFactor) != 0) && (len(utxo.ValueBlindFactor) != 64):
+			return errors.Errorf("CFD Error: utxo ValueBlindFactor is invalid")
+		case len(utxo.Descriptor) == 0:
+			return errors.Errorf("CFD Error: utxo Descriptor is invalid")
+		case (len(utxo.AmountCommitment) != 0) && (len(utxo.AmountCommitment) != 66):
+			return errors.Errorf("CFD Error: utxo AmountCommitment is invalid")
+		case utxo.PeginData != nil:
+			return errors.Errorf("CFD Error: Pegout utxo cannot use PeginData")
+		case utxo.IsIssuance:
+			return errors.Errorf("CFD Error: Pegout utxo cannot use IsIssuance")
 		}
 	}
 	return nil
@@ -727,6 +814,8 @@ func (p *PegoutService) validatePegoutData(pegoutData *types.InputConfidentialTx
 		return errors.Errorf("CFD Error: pegoutData.PegoutInput.OnlineKey is empty")
 	case len(pegoutData.PegoutInput.Whitelist) == 0:
 		return errors.Errorf("CFD Error: pegoutData.PegoutInput.Whitelist is empty")
+	case pegoutData.Amount < PegoutAmountMinimum:
+		return errors.Errorf("CFD Error: pegoutData.Amount is low. minimum: %d", PegoutAmountMinimum)
 	}
 
 	if (p.bitcoinGenesisBlockHash == nil) && (len(pegoutData.PegoutInput.BitcoinGenesisBlockHash) != 64) {

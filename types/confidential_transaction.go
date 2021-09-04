@@ -343,6 +343,10 @@ func NewConfidentialTxOut(cfdTxout *cfd.ConfidentialTxOut) *ConfidentialTxOut {
 	return &data
 }
 
+func (c ConfidentialTxOut) HasBlinding() bool {
+	return len(c.CommitmentValue) == 66 || len(c.CommitmentNonce) == 66
+}
+
 type ConfidentialTxOutSet []ConfidentialTxOut
 
 func (c ConfidentialTxOutSet) FindByAddressFirst(address string) (*ConfidentialTxOut, uint32) {
