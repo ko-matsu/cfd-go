@@ -6657,6 +6657,136 @@ func CfdGoUnblindData(blindingKey, lockingScript, assetCommitment, valueCommitme
 	return amount, asset, assetBlindFactor, valueBlindFactor, nil
 }
 
+// CfdGoEncryptAES ...
+func CfdGoEncryptAES(key, cbcIv, buffer string) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdEncryptAES(handle, key, cbcIv, buffer, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoDecryptAES ...
+func CfdGoDecryptAES(key, cbcIv, buffer string) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdDecryptAES(handle, key, cbcIv, buffer, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoEncodeBase64 ...
+func CfdGoEncodeBase64(buffer string) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdEncodeBase64(handle, buffer, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoDecodeBase64 ...
+func CfdGoDecodeBase64(base64 string) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdDecodeBase64(handle, base64, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoEncodeBase58 ...
+func CfdGoEncodeBase58(buffer string, useChecksum bool) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdEncodeBase58(handle, buffer, useChecksum, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoDecodeBase58 ...
+func CfdGoDecodeBase58(base58 string, useChecksum bool) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdDecodeBase58(handle, base58, useChecksum, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoRipemd160 ...
+func CfdGoRipemd160(message string, hasText bool) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdRipemd160(handle, message, hasText, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoSha256 ...
+func CfdGoSha256(message string, hasText bool) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdSha256(handle, message, hasText, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoHash160 ...
+func CfdGoHash160(message string, hasText bool) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdHash160(handle, message, hasText, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+// CfdGoHash256 ...
+func CfdGoHash256(message string, hasText bool) (output string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdHash256(handle, message, hasText, &output)
+	err = convertCfdError(ret, handle)
+	return
+}
+
 // refine API ------------------------------------------------------------------
 
 /**
