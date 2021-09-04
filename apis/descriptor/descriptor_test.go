@@ -43,7 +43,7 @@ func TestCfdGoParseDescriptorData(t *testing.T) {
 	}
 
 	// p2sh-p2wsh(pkh)
-	rootData, _, err = descApi.ParseByString(
+	rootData, details, err := descApi.ParseByString(
 		"sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))")
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(0), rootData.Depth)
@@ -57,6 +57,7 @@ func TestCfdGoParseDescriptorData(t *testing.T) {
 	assert.Nil(t, rootData.Key.ExtPubkey)
 	assert.Nil(t, rootData.Key.ExtPrivkey)
 	assert.Nil(t, rootData.Multisig)
+	assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", details[0].RedeemScript)
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}

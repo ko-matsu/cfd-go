@@ -249,6 +249,8 @@ type PegoutTxOption struct {
 	Exponent int64
 	// blind minimum bits. default is -1 (cfd-go auto).
 	MinimumBits int64
+	// subtract fee by pegout amount.
+	SubtractFee bool
 }
 
 // NewPegoutTxOption ...

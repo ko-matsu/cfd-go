@@ -162,10 +162,10 @@ func (mr *MockConfidentialTxApiMockRecorder) Create(version, locktime, txinList,
 }
 
 // FilterUtxoByTxInList mocks base method.
-func (m *MockConfidentialTxApi) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList *[]types.ElementsUtxoData) ([]types.ElementsUtxoData, error) {
+func (m *MockConfidentialTxApi) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList []*types.ElementsUtxoData) ([]*types.ElementsUtxoData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FilterUtxoByTxInList", tx, utxoList)
-	ret0, _ := ret[0].([]types.ElementsUtxoData)
+	ret0, _ := ret[0].([]*types.ElementsUtxoData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -243,7 +243,7 @@ func (mr *MockConfidentialTxApiMockRecorder) GetPegoutAddress(tx, index interfac
 }
 
 // GetSighash mocks base method.
-func (m *MockConfidentialTxApi) GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList *[]types.ElementsUtxoData) (*types.ByteData, error) {
+func (m *MockConfidentialTxApi) GetSighash(tx *types.ConfidentialTx, outpoint *types.OutPoint, sighashType types.SigHashType, utxoList []*types.ElementsUtxoData) (*types.ByteData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSighash", tx, outpoint, sighashType, utxoList)
 	ret0, _ := ret[0].(*types.ByteData)
@@ -317,7 +317,7 @@ func (mr *MockConfidentialTxApiMockRecorder) VerifyEcSignatureByUtxo(tx, outpoin
 }
 
 // VerifySign mocks base method.
-func (m *MockConfidentialTxApi) VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList *[]types.ElementsUtxoData) (bool, string, error) {
+func (m *MockConfidentialTxApi) VerifySign(tx *types.ConfidentialTx, outpoint *types.OutPoint, txinUtxoList []*types.ElementsUtxoData) (bool, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifySign", tx, outpoint, txinUtxoList)
 	ret0, _ := ret[0].(bool)

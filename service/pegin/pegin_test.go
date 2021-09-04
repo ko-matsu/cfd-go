@@ -129,7 +129,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		TxOutProof:         txoutProof,
 	}
 	/*
-		dummyUtxos := []types.ElementsUtxoData{
+		dummyUtxos := []*types.ElementsUtxoData{
 			{
 				OutPoint: types.OutPoint{
 					Txid: "0e5fd4e860d999b30b268ed583dfcfe805c395f8290d8307f6617fdc3f029de3",
@@ -170,11 +170,11 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Equal(t, "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225", peginUtxoData.Asset)
 
 	// create sighash
-	peginUtxos := []types.ElementsUtxoData{
-		*peginUtxoData,
+	peginUtxos := []*types.ElementsUtxoData{
+		peginUtxoData,
 	}
 	desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
-	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 
 	// crate signature (sign)
@@ -203,7 +203,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Equal(t, uint32(1938), txData.Vsize)
 
 	// verify (after sign)
-	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, &peginUtxos)
+	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
@@ -366,11 +366,11 @@ func TestCreateClaimPeginTxOverrideApi(t *testing.T) {
 	assert.Equal(t, "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225", peginUtxoData.Asset)
 
 	// create sighash
-	peginUtxos := []types.ElementsUtxoData{
-		*peginUtxoData,
+	peginUtxos := []*types.ElementsUtxoData{
+		peginUtxoData,
 	}
 	desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
-	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 
 	// crate signature (sign)
@@ -399,7 +399,7 @@ func TestCreateClaimPeginTxOverrideApi(t *testing.T) {
 	assert.Equal(t, uint32(1938), txData.Vsize)
 
 	// verify (after sign)
-	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, &peginUtxos)
+	isVerify, reason, err := txApi.VerifySign(tx, &peginOutPoint, peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
@@ -509,11 +509,11 @@ func TestCreateClaimPeginTxOverrideApiByMock(t *testing.T) {
 	assert.Equal(t, "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225", peginUtxoData.Asset)
 
 	// create sighash
-	peginUtxos := []types.ElementsUtxoData{
-		*peginUtxoData,
+	peginUtxos := []*types.ElementsUtxoData{
+		peginUtxoData,
 	}
 	// desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
-	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txApi.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 
 	// crate signature (sign)
