@@ -26,6 +26,7 @@ type PubkeyApi interface {
 
 // PrivkeyApi This interface has privkey operation API.
 type PrivkeyApi interface {
+	HasWif(wif string) bool
 	GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error)
 	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
 	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
@@ -105,6 +106,14 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 // -------------------------------------
 // implement Privkey
 // -------------------------------------
+
+// HasWif ...
+func (k *PrivkeyApiImpl) HasWif(wif string) bool {
+	if _, _, _, err := cfd.CfdGoParsePrivkeyWif(wif); err != nil {
+		return false
+	}
+	return true
+}
 
 // GetPrivkeyFromWif ...
 func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {
