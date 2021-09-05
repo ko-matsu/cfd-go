@@ -96,7 +96,7 @@ func (mr *MockPegoutMockRecorder) CreatePegoutAddress(addressType, accountExtPub
 }
 
 // CreatePegoutTransaction mocks base method.
-func (m *MockPegout) CreatePegoutTransaction(utxoList []types.ElementsUtxoData, pegoutData types.InputConfidentialTxOut, sendList *[]types.InputConfidentialTxOut, changeAddress *string, option *types.PegoutTxOption) (*types.ConfidentialTx, *types.Address, *types.ConfidentialTx, error) {
+func (m *MockPegout) CreatePegoutTransaction(utxoList []*types.ElementsUtxoData, pegoutData types.InputConfidentialTxOut, sendList *[]types.InputConfidentialTxOut, changeAddress *string, option *types.PegoutTxOption) (*types.ConfidentialTx, *types.Address, *types.ConfidentialTx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePegoutTransaction", utxoList, pegoutData, sendList, changeAddress, option)
 	ret0, _ := ret[0].(*types.ConfidentialTx)

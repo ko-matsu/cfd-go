@@ -160,6 +160,36 @@ func (mr *MockPrivkeyApiMockRecorder) GetPubkey(privkey interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubkey", reflect.TypeOf((*MockPrivkeyApi)(nil).GetPubkey), privkey)
 }
 
+// GetWifFromHex mocks base method.
+func (m *MockPrivkeyApi) GetWifFromHex(privkeyHex string) (*types.Privkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWifFromHex", privkeyHex)
+	ret0, _ := ret[0].(*types.Privkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetWifFromHex indicates an expected call of GetWifFromHex.
+func (mr *MockPrivkeyApiMockRecorder) GetWifFromHex(privkeyHex interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWifFromHex", reflect.TypeOf((*MockPrivkeyApi)(nil).GetWifFromHex), privkeyHex)
+}
+
+// GetWifFromHexWithCompressedPubkey mocks base method.
+func (m *MockPrivkeyApi) GetWifFromHexWithCompressedPubkey(privkeyHex string, compressedPubkey bool) (*types.Privkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWifFromHexWithCompressedPubkey", privkeyHex, compressedPubkey)
+	ret0, _ := ret[0].(*types.Privkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetWifFromHexWithCompressedPubkey indicates an expected call of GetWifFromHexWithCompressedPubkey.
+func (mr *MockPrivkeyApiMockRecorder) GetWifFromHexWithCompressedPubkey(privkeyHex, compressedPubkey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWifFromHexWithCompressedPubkey", reflect.TypeOf((*MockPrivkeyApi)(nil).GetWifFromHexWithCompressedPubkey), privkeyHex, compressedPubkey)
+}
+
 // HasWif mocks base method.
 func (m *MockPrivkeyApi) HasWif(wif string) bool {
 	m.ctrl.T.Helper()

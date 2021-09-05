@@ -249,6 +249,8 @@ type PegoutTxOption struct {
 	Exponent int64
 	// blind minimum bits. default is -1 (cfd-go auto).
 	MinimumBits int64
+	// subtract fee by pegout amount.
+	SubtractFee bool
 }
 
 // NewPegoutTxOption ...
@@ -339,6 +341,10 @@ func NewConfidentialTxOut(cfdTxout *cfd.ConfidentialTxOut) *ConfidentialTxOut {
 		Rangeproof:      cfdTxout.Rangeproof,
 	}
 	return &data
+}
+
+func (c ConfidentialTxOut) HasBlinding() bool {
+	return len(c.CommitmentValue) == 66 || len(c.CommitmentNonce) == 66
 }
 
 type ConfidentialTxOutSet []ConfidentialTxOut

@@ -143,7 +143,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.Equal(t, 3, len(outList))
 
 	// sign
-	peginUtxos := []types.ElementsUtxoData{
+	peginUtxos := []*types.ElementsUtxoData{
 		{
 			OutPoint: types.OutPoint{
 				Txid: peginOutPoint.Txid,
@@ -153,7 +153,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},
 	}
-	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 	desc := types.Descriptor{
 		OutputDescriptor: peginUtxos[0].Descriptor,
@@ -167,7 +167,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, &peginUtxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
@@ -369,14 +369,14 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Equal(t, 3, len(outList))
 
 	// create signature
-	peginUtxos := []types.ElementsUtxoData{
+	peginUtxos := []*types.ElementsUtxoData{
 		{
 			OutPoint:   peginOutPoint,
 			Amount:     peginAmount,
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},
 	}
-	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 	desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
 	signature, err := keyApi.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
@@ -387,7 +387,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, &peginUtxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)

@@ -193,7 +193,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.Equal(t, addr.Address, outList[0].Address)
 
 	// sign
-	peginUtxos := []types.ElementsUtxoData{
+	peginUtxos := []*types.ElementsUtxoData{
 		{
 			OutPoint: types.OutPoint{
 				Txid: peginOutPoint.Txid,
@@ -203,7 +203,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},
 	}
-	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 	desc := types.Descriptor{
 		OutputDescriptor: peginUtxos[0].Descriptor,
@@ -217,7 +217,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, &peginUtxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
@@ -233,7 +233,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.Equal(t, outList[0].CommitmentValue, amountCommitment)
 	assert.Equal(t, outList[0].Asset, assetCommitment)
 
-	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &peginOutPoint, &peginUtxos[0], &types.SignParameter{
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &peginOutPoint, peginUtxos[0], &types.SignParameter{
 		Data:          *types.NewScriptFromHexIgnoreError(signature.ToHex()),
 		RelatedPubkey: pubkey,
 	})
@@ -451,14 +451,14 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.Equal(t, 3, len(outList))
 
 	// create signature
-	peginUtxos := []types.ElementsUtxoData{
+	peginUtxos := []*types.ElementsUtxoData{
 		{
 			OutPoint:   peginOutPoint,
 			Amount:     peginAmount,
 			Descriptor: "wpkh(" + pubkey.Hex + ")",
 		},
 	}
-	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, &peginUtxos)
+	sighash, err := txUtil.GetSighash(tx, &peginOutPoint, types.SigHashTypeAll, peginUtxos)
 	assert.NoError(t, err)
 	desc := &types.Descriptor{OutputDescriptor: peginUtxos[0].Descriptor}
 	signature, err := keyApi.CreateEcSignature(privkey, sighash, &types.SigHashTypeAll)
@@ -469,7 +469,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, &peginUtxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &peginOutPoint, peginUtxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
@@ -588,7 +588,7 @@ func TestCfdAddMultisigSignConfidentialTxManual(t *testing.T) {
 		Asset:      "186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179",
 		Descriptor: "wsh(multi(2,02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71,02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad))",
 	}
-	sighash, err := api.GetSighash(&tx, &outPoint, sigHashType, &[]types.ElementsUtxoData{utxo})
+	sighash, err := api.GetSighash(&tx, &outPoint, sigHashType, []*types.ElementsUtxoData{&utxo})
 	assert.NoError(t, err)
 	assert.Equal(t, "d17f091203341a0d1f0101c6d010a40ce0f3cef8a09b2b605b77bb6cfc23359f", sighash.ToHex())
 
@@ -667,7 +667,7 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 		Asset:      "186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179",
 		Descriptor: "wsh(multi(2,02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71,02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad))",
 	}
-	sighash, err := api.GetSighash(&tx, &outPoint, sigHashType, &[]types.ElementsUtxoData{utxo})
+	sighash, err := api.GetSighash(&tx, &outPoint, sigHashType, []*types.ElementsUtxoData{&utxo})
 	assert.NoError(t, err)
 	assert.Equal(t, "d17f091203341a0d1f0101c6d010a40ce0f3cef8a09b2b605b77bb6cfc23359f", sighash.ToHex())
 
@@ -782,7 +782,7 @@ func TestBlindTransaction(t *testing.T) {
 		Txid: "29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc6455",
 		Vout: 2,
 	}
-	utxos := []types.ElementsUtxoData{
+	utxos := []*types.ElementsUtxoData{
 		{
 			OutPoint:   outpoint1,
 			Amount:     amount1,
@@ -863,7 +863,7 @@ func TestBlindTransaction(t *testing.T) {
 	assert.Equal(t, addr.Address, outList[0].Address)
 
 	// sign
-	sighash, err := txUtil.GetSighash(tx, &outpoint1, types.SigHashTypeAll, &utxos)
+	sighash, err := txUtil.GetSighash(tx, &outpoint1, types.SigHashTypeAll, utxos)
 	assert.NoError(t, err)
 	desc1 := types.Descriptor{
 		OutputDescriptor: utxos[0].Descriptor,
@@ -877,7 +877,7 @@ func TestBlindTransaction(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify signature
-	isVerify, err := txUtil.VerifyEcSignatureByUtxo(tx, &outpoint1, &utxos[0], &types.SignParameter{
+	isVerify, err := txUtil.VerifyEcSignatureByUtxo(tx, &outpoint1, utxos[0], &types.SignParameter{
 		Data:          *types.NewScriptFromHexIgnoreError(signature.ToHex()),
 		RelatedPubkey: pubkey,
 	})
@@ -885,7 +885,7 @@ func TestBlindTransaction(t *testing.T) {
 	assert.True(t, isVerify)
 
 	// sign
-	sighash, err = txUtil.GetSighash(tx, &outpoint2, types.SigHashTypeAll, &utxos)
+	sighash, err = txUtil.GetSighash(tx, &outpoint2, types.SigHashTypeAll, utxos)
 	assert.NoError(t, err)
 	desc2 := types.Descriptor{
 		OutputDescriptor: utxos[1].Descriptor,
@@ -906,10 +906,10 @@ func TestBlindTransaction(t *testing.T) {
 	}
 
 	// verify signature
-	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, &utxos[1], &signs[0])
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, utxos[1], &signs[0])
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
-	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, &utxos[1], &signs[1])
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, utxos[1], &signs[1])
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 
@@ -918,12 +918,12 @@ func TestBlindTransaction(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify
-	isVerify, reason, err := txUtil.VerifySign(tx, &outpoint1, &utxos)
+	isVerify, reason, err := txUtil.VerifySign(tx, &outpoint1, utxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)
 
-	isVerify, reason, err = txUtil.VerifySign(tx, &outpoint2, &utxos)
+	isVerify, reason, err = txUtil.VerifySign(tx, &outpoint2, utxos)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 	assert.Equal(t, "", reason)

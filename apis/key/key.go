@@ -26,6 +26,8 @@ type PubkeyApi interface {
 // PrivkeyApi This interface has privkey operation API.
 type PrivkeyApi interface {
 	HasWif(wif string) bool
+	GetWifFromHex(privkeyHex string) (privkey *types.Privkey, err error)
+	GetWifFromHexWithCompressedPubkey(privkeyHex string, compressedPubkey bool) (privkey *types.Privkey, err error)
 	GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error)
 	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
 	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
@@ -114,6 +116,29 @@ func (k *PrivkeyApiImpl) HasWif(wif string) bool {
 	return true
 }
 
+// GetWifFromHex ...
+func (k *PrivkeyApiImpl) GetWifFromHex(privkeyHex string) (privkey *types.Privkey, err error) {
+	return k.GetWifFromHexWithCompressedPubkey(privkeyHex, true)
+}
+
+// GetWifFromHexWithCompressedPubkey ...
+func (k *PrivkeyApiImpl) GetWifFromHexWithCompressedPubkey(privkeyHex string, compressedPubkey bool) (privkey *types.Privkey, err error) {
+	if err = k.validConfig(); err != nil {
+		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	wif, err := cfd.CfdGoGetPrivkeyWif(privkeyHex, k.network.ToCfdValue(), compressedPubkey)
+	if err != nil {
+		return nil, errors.Wrap(err, "get wif error")
+	}
+	privkey = &types.Privkey{
+		Wif:                wif,
+		Hex:                privkeyHex,
+		Network:            *k.network,
+		IsCompressedPubkey: compressedPubkey,
+	}
+	return privkey, nil
+}
+
 // GetPrivkeyFromWif ...
 func (k *PrivkeyApiImpl) GetPrivkeyFromWif(wif string) (privkey *types.Privkey, err error) {
 	hex, network, isCompressed, err := cfd.CfdGoParsePrivkeyWif(wif)
@@ -165,4 +190,14 @@ func (k *PrivkeyApiImpl) CreateEcSignatureGrindR(privkey *types.Privkey, sighash
 	}
 	signature = types.NewByteDataFromHexIgnoreError(derSig)
 	return signature, nil
+}
+
+// validConfig ...
+func (k *PrivkeyApiImpl) validConfig() error {
+	if k.network == nil {
+		return cfdErrors.ErrNetworkConfig
+	} else if !k.network.IsBitcoin() {
+		return cfdErrors.ErrBitcoinNetwork
+	}
+	return nil
 }

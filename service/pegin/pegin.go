@@ -40,7 +40,7 @@ type Pegin interface {
 	CreatePeginTransaction(
 		peginOutPoint *types.OutPoint,
 		peginData *types.InputPeginData,
-		utxoList *[]types.ElementsUtxoData,
+		utxoList []*types.ElementsUtxoData,
 		sendList []types.InputConfidentialTxOut,
 		changeAddress *string,
 		option *types.PeginTxOption,
@@ -268,7 +268,7 @@ func (p *PeginService) CreatePeginAddress(
 func (p *PeginService) CreatePeginTransaction(
 	peginOutPoint *types.OutPoint,
 	peginData *types.InputPeginData,
-	utxoList *[]types.ElementsUtxoData,
+	utxoList []*types.ElementsUtxoData,
 	sendList []types.InputConfidentialTxOut,
 	changeAddress *string,
 	option *types.PeginTxOption,
@@ -345,20 +345,18 @@ func (p *PeginService) CreatePeginTransaction(
 
 	utxoListLen := 0
 	if utxoList != nil {
-		utxoListLen = len(*utxoList)
+		utxoListLen = len(utxoList)
 	}
 	fundUtxoList := make([]cfd.CfdUtxo, utxoListLen)
 	utxoMap := make(map[types.OutPoint]*types.ElementsUtxoData, utxoListLen)
-	if utxoList != nil {
-		for i, txin := range *utxoList {
-			fundUtxoList[i].Txid = txin.OutPoint.Txid
-			fundUtxoList[i].Vout = txin.OutPoint.Vout
-			fundUtxoList[i].Amount = txin.Amount
-			fundUtxoList[i].Asset = txin.Asset
-			fundUtxoList[i].Descriptor = txin.Descriptor
-			fundUtxoList[i].AmountCommitment = txin.AmountCommitment
-			utxoMap[txin.OutPoint] = &txin
-		}
+	for i, txin := range utxoList {
+		fundUtxoList[i].Txid = txin.OutPoint.Txid
+		fundUtxoList[i].Vout = txin.OutPoint.Vout
+		fundUtxoList[i].Amount = txin.Amount
+		fundUtxoList[i].Asset = txin.Asset
+		fundUtxoList[i].Descriptor = txin.Descriptor
+		fundUtxoList[i].AmountCommitment = txin.AmountCommitment
+		utxoMap[txin.OutPoint] = txin
 	}
 	targetAmounts := []cfd.CfdFundRawTxTargetAmount{
 		{
@@ -459,8 +457,8 @@ func (p *PeginService) VerifyPubkeySignature(
 		return false, errors.Wrap(err, "Pegin decode signature error")
 	}
 	sighashType := types.NewSigHashType(cfdSighashType)
-	utxoList := []types.ElementsUtxoData{*utxoData}
-	sighash, err := p.elementsTxApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, &utxoList)
+	utxoList := []*types.ElementsUtxoData{utxoData}
+	sighash, err := p.elementsTxApi.GetSighash(proposalTx, &utxoData.OutPoint, *sighashType, utxoList)
 	if err != nil {
 		return false, errors.Wrap(err, "Pegin decode signature error")
 	}
@@ -643,11 +641,11 @@ func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOu
 	return blindOutputCount, hasAppendDummyOutput, amount, nil
 }
 
-func (p *PeginService) validateUtxoList(utxoList *[]types.ElementsUtxoData) error {
+func (p *PeginService) validateUtxoList(utxoList []*types.ElementsUtxoData) error {
 	if utxoList == nil {
 		return nil
 	}
-	for _, utxo := range *utxoList {
+	for _, utxo := range utxoList {
 		switch {
 		case len(utxo.OutPoint.Txid) != 64:
 			return errors.Errorf("CFD Error: utxo OutPoint.Txid is invalid")
