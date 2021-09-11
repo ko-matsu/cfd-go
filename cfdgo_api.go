@@ -4104,9 +4104,9 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 	}
 	defer CfdFreeMnemonicWordList(handle, mnemonicHandle)
 
+	// go 1.17 cover: need printf.
+	fmt.Printf("maxIndex: %d", maxIndex)
 	if maxIndex == 0 {
-		// go 1.17 cover: need printf.
-		fmt.Printf("maxIndex: %d", maxIndex)
 		return []string{}, nil
 	}
 
