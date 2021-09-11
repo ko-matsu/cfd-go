@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - features/sprint*
+    - feature/ci*
     paths-ignore:
     - 'README.md'
     - '*.dockerfile'
