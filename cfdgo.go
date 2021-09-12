@@ -822,6 +822,7 @@ extern swig_intgo _wrap_CfdAddTargetAmountForFundRawTx_cfdgo_3ba1877d699189c4(ui
 extern swig_intgo _wrap_CfdSetOptionFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, uintptr_t arg4, double arg5, _Bool arg6);
 extern swig_intgo _wrap_CfdFinalizeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_415 arg3, double arg4, uintptr_t arg5, uintptr_t arg6, swig_voidp arg7);
 extern swig_intgo _wrap_CfdGetAppendTxOutFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdGetCalculateFeeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 extern swig_intgo _wrap_CfdFreeFundRawTxHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
 #undef intgo
 */
@@ -6099,6 +6100,15 @@ func CfdGetAppendTxOutFundRawTx(arg1 uintptr, arg2 uintptr, arg3 Uint32_t, arg4 
 	_swig_i_2 := arg3.Swigcptr()
 	_swig_i_3 := arg4
 	swig_r = (int)(C._wrap_CfdGetAppendTxOutFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.swig_voidp(_swig_i_3)))
+	return swig_r
+}
+
+func CfdGetCalculateFeeFundRawTx(arg1 uintptr, arg2 uintptr, arg3 Int64_t) (_swig_ret int) {
+	var swig_r int
+	_swig_i_0 := arg1
+	_swig_i_1 := arg2
+	_swig_i_2 := arg3.Swigcptr()
+	swig_r = (int)(C._wrap_CfdGetCalculateFeeFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2)))
 	return swig_r
 }
 

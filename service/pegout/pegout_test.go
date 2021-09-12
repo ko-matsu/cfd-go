@@ -627,10 +627,9 @@ func TestCreatePegoutTxSubtractFeeJust(t *testing.T) {
 	assert.Greater(t, 6887, len(tx.Hex))
 	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(119250), unblindTxoutList[0].Amount)
+	assert.Equal(t, int64(119812), unblindTxoutList[0].Amount)
 	assert.Equal(t, int64(0), unblindTxoutList[1].Amount)
-	assert.Equal(t, int64(750), unblindTxoutList[2].Amount)
-	// FIXME(k-matsuzawa): need to check fee-calculation
+	assert.Equal(t, int64(188), unblindTxoutList[2].Amount)
 
 	pegoutAddress, hasPegout, err := txApi.GetPegoutAddress(tx, uint32(0))
 	assert.NoError(t, err)
