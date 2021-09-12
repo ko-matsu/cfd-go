@@ -4094,36 +4094,15 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 	}
 	defer CfdGoFreeHandle(handle)
 
-	var maxIndex uint32
-	var mnemonicHandle uintptr
-	maxIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxIndex)))
-	ret := CfdInitializeMnemonicWordList(handle, language, &mnemonicHandle, maxIndexPtr)
+	var mnemonicWords string
+	ret := CfdGetMnemonicWords(handle, language, &mnemonicWords)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
 		return
 	}
-	defer CfdFreeMnemonicWordList(handle, mnemonicHandle)
 
-	// go 1.17 cover: need printf.
-	/*
-		if maxIndex == 0 {
-			fmt.Printf("maxIndex: %d\n", maxIndex)
-			return []string{}, nil
-		}
-	*/
-
-	mnemonicList = make([]string, maxIndex)
-	for i := uint32(0); i < maxIndex; i++ {
-		var word string
-		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-		ret := CfdGetMnemonicWord(handle, mnemonicHandle, indexPtr, &word)
-		if ret != (int)(KCfdSuccess) {
-			err = convertCfdError(ret, handle)
-			return
-		}
-		mnemonicList[i] = word
-	}
-	return mnemonicList, err
+	mnemonicList = strings.Split(mnemonicWords, " ")
+	return mnemonicList, nil
 }
 
 /** CfdGoConvertMnemonicWordsToSeed

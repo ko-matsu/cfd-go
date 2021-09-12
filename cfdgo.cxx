@@ -7950,6 +7950,33 @@ intgo _wrap_CfdGetExtkeyInfo_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_
 }
 
 
+intgo _wrap_CfdGetMnemonicWords_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_* _swig_go_2) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char **arg3 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  arg3 = *(char ***)&_swig_go_2; 
+  
+  result = (int)CfdGetMnemonicWords(arg1,(char const *)arg2,arg3);
+  _swig_go_result = result; 
+  {
+    if (arg3 && *arg3) {
+      _swig_go_2->n = strlen(*arg3);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_CfdInitializeMnemonicWordList_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_ _swig_go_1, void **_swig_go_2, uint32_t *_swig_go_3) {
   void *arg1 = (void *) 0 ;
   char *arg2 = (char *) 0 ;
