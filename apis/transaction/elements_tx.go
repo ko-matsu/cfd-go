@@ -46,6 +46,7 @@ type ConfidentialTxApi interface {
 	// VerifyEcSignatureByUtxo ...
 	VerifyEcSignatureByUtxo(tx *types.ConfidentialTx, outpoint *types.OutPoint, utxo *types.ElementsUtxoData, signature *types.SignParameter) (isVerify bool, err error)
 	GetCommitment(amount int64, amountBlindFactor, assetBlindFactor, asset string) (amountCommitment, assetCommitment string, err error)
+	UnblindByTxOut(txout *types.ConfidentialTxOut, blindingkey *types.Privkey) (unblindedData *types.UnblindData, err error)
 	FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList []*types.ElementsUtxoData) (txinUtxoList []*types.ElementsUtxoData, err error)
 	GetTxid(tx *types.ConfidentialTx) string
 	GetPegoutAddress(tx *types.ConfidentialTx, index uint32) (pegoutAddress *types.Address, isPegoutOutput bool, err error)
@@ -611,6 +612,20 @@ func (t *ConfidentialTxApiImpl) GetCommitment(amount int64, amountBlindFactor, a
 	}
 	amountCommitment, err = cfdgo.CfdGoGetAmountCommitment(amount, assetCommitment, amountBlindFactor)
 	return
+}
+
+func (t *ConfidentialTxApiImpl) UnblindByTxOut(txout *types.ConfidentialTxOut, blindingkey *types.Privkey) (unblindedData *types.UnblindData, err error) {
+	amount, asset, abf, vbf, err := cfdgo.CfdGoUnblindData(blindingkey.Hex, txout.LockingScript, txout.Asset, txout.CommitmentValue, txout.CommitmentNonce, txout.Rangeproof)
+	if err != nil {
+		return
+	}
+	unblindedData = &types.UnblindData{
+		Asset:            asset,
+		Amount:           amount,
+		AssetBlindFactor: abf,
+		ValueBlindFactor: vbf,
+	}
+	return unblindedData, nil
 }
 
 func (t *ConfidentialTxApiImpl) FilterUtxoByTxInList(tx *types.ConfidentialTx, utxoList []*types.ElementsUtxoData) (txinUtxoList []*types.ElementsUtxoData, err error) {
