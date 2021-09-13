@@ -470,6 +470,9 @@ func TestCreatePegoutTxSubtractFeeManyUtxo(t *testing.T) {
 	option := types.NewPegoutTxOption()
 	option.KnapsackMinChange = 0
 	option.SubtractFee = true
+	option.EffectiveFeeRate = 0.15
+	option.LongTermFeeRate = 0.15
+	option.DustFeeRate = 3.0
 	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, nil, &changeAddress, &option)
 	assert.NoError(t, err)
 	assert.Equal(t, "1D4YiPF4k9qotSS3QWMa2E8Bt4jV9SZPmE", pegoutAddr.Address)

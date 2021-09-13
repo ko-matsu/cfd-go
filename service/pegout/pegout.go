@@ -555,10 +555,14 @@ func (p *PegoutService) createPegoutTx(
 		} else {
 			txHex = tx.Hex
 		}
-		outputTx2, _, _, _, err := cfd.CfdGoFundRawTransactionAndCalcFee(p.network.ToCfdValue(), txHex, fundTxInList, fundUtxoList, targetAmounts, fundOption)
+		outputTx2, fee2, _, _, err := cfd.CfdGoFundRawTransactionAndCalcFee(p.network.ToCfdValue(), txHex, fundTxInList, fundUtxoList, targetAmounts, fundOption)
 		if err != nil {
 			// return "", fee, errors.Wrapf(err, "Pegout FundRawTransaction error: %d", oldFee)
 			fee = oldFee
+		} else if pegoutData.Amount != txouts[0].Amount+fee {
+			return "", fee, errors.Wrapf(err, "Pegout FundRawTransaction error: %d", oldFee)
+		} else if fee2 != fee {
+			return "", fee, errors.Wrapf(err, "Pegout FundRawTransaction fee: %d", fee2)
 		} else {
 			outputTx = outputTx2
 		}
