@@ -4094,28 +4094,15 @@ func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error
 	}
 	defer CfdGoFreeHandle(handle)
 
-	maxIndex := uint32(0)
-	var mnemonicHandle uintptr
-	maxIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxIndex)))
-	ret := CfdInitializeMnemonicWordList(handle, language, &mnemonicHandle, maxIndexPtr)
+	var mnemonicWords string
+	ret := CfdGetMnemonicWords(handle, language, &mnemonicWords)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
 		return
 	}
-	defer CfdFreeMnemonicWordList(handle, mnemonicHandle)
 
-	mnemonicList = make([]string, maxIndex)
-	for i := uint32(0); i < maxIndex; i++ {
-		var word string
-		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-		ret := CfdGetMnemonicWord(handle, mnemonicHandle, indexPtr, &word)
-		if ret != (int)(KCfdSuccess) {
-			err = convertCfdError(ret, handle)
-			return
-		}
-		mnemonicList[i] = word
-	}
-	return mnemonicList, err
+	mnemonicList = strings.Split(mnemonicWords, " ")
+	return mnemonicList, nil
 }
 
 /** CfdGoConvertMnemonicWordsToSeed
@@ -4272,6 +4259,12 @@ func CfdGoFundRawTransactionBtc(txHex string, txinList []CfdUtxo, utxoList []Cfd
  * return: err               error
  */
 func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, utxoList []CfdUtxo, targetAmountList []CfdFundRawTxTargetAmount, option *CfdFundRawTxOption) (outputTx string, fee int64, usedAddressList []string, err error) {
+	outputTx, fee, usedAddressList, _, err = CfdGoFundRawTransactionAndCalcFee(
+		networkType, txHex, txinList, utxoList, targetAmountList, option)
+	return
+}
+
+func CfdGoFundRawTransactionAndCalcFee(networkType int, txHex string, txinList []CfdUtxo, utxoList []CfdUtxo, targetAmountList []CfdFundRawTxTargetAmount, option *CfdFundRawTxOption) (outputTx string, fee int64, usedAddressList []string, calcFee int64, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4384,7 +4377,13 @@ func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, 
 		}
 		usedAddressList[i] = addr
 	}
-	return outputTx, fee, usedAddressList, nil
+	calcFeePtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&calcFee)))
+	ret = CfdGetCalculateFeeFundRawTx(handle, fundHandle, calcFeePtr)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	return outputTx, fee, usedAddressList, calcFee, nil
 }
 
 // CfdGoGetAssetCommitment get asset commitment.

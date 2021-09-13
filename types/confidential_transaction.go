@@ -135,6 +135,13 @@ type ElementsUtxoData struct {
 	PeginData         *PeginUtxoData       // pegin data
 }
 
+type UnblindData struct {
+	Asset            string // Asset
+	AssetBlindFactor string // Asset BlindFactor
+	Amount           int64  // satoshi value
+	ValueBlindFactor string // Value BlindFactor
+}
+
 // BlindInputData ...
 type BlindInputData struct {
 	OutPoint         OutPoint // OutPoint
@@ -348,6 +355,7 @@ func (c ConfidentialTxOut) HasBlinding() bool {
 }
 
 type ConfidentialTxOutSet []ConfidentialTxOut
+type ConfidentialTxOutIndexMap map[uint32]*ConfidentialTxOut
 
 func (c ConfidentialTxOutSet) FindByAddressFirst(address string) (*ConfidentialTxOut, uint32) {
 	for i, txout := range c {
@@ -387,12 +395,30 @@ func (c ConfidentialTxOutSet) FindByLockingScript(lockingScript string) map[uint
 	return txouts
 }
 
-func (c ConfidentialTxOutSet) GetFeeAmount() int32 {
-	var total int32
+func (c ConfidentialTxOutSet) GetFeeAmount() int64 {
+	var total int64
 	for _, txout := range c {
 		if txout.LockingScript == "" {
-			total += int32(txout.Amount)
+			total += txout.Amount
 		}
+	}
+	return total
+}
+
+func (c ConfidentialTxOutSet) Filter(filterFunc func(*ConfidentialTxOut) bool) ConfidentialTxOutIndexMap {
+	txouts := make(map[uint32]*ConfidentialTxOut)
+	for i, txout := range c {
+		if filterFunc(&txout) {
+			txouts[uint32(i)] = &txout
+		}
+	}
+	return txouts
+}
+
+func (c ConfidentialTxOutIndexMap) GetTotalAmount() int64 {
+	var total int64
+	for _, txout := range c {
+		total += txout.Amount
 	}
 	return total
 }

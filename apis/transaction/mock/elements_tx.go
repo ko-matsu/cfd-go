@@ -286,6 +286,21 @@ func (mr *MockConfidentialTxApiMockRecorder) GetTxid(tx interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxid", reflect.TypeOf((*MockConfidentialTxApi)(nil).GetTxid), tx)
 }
 
+// UnblindByTxOut mocks base method.
+func (m *MockConfidentialTxApi) UnblindByTxOut(txout *types.ConfidentialTxOut, blindingkey *types.Privkey) (*types.UnblindData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnblindByTxOut", txout, blindingkey)
+	ret0, _ := ret[0].(*types.UnblindData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UnblindByTxOut indicates an expected call of UnblindByTxOut.
+func (mr *MockConfidentialTxApiMockRecorder) UnblindByTxOut(txout, blindingkey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnblindByTxOut", reflect.TypeOf((*MockConfidentialTxApi)(nil).UnblindByTxOut), txout, blindingkey)
+}
+
 // UnblindTxOut mocks base method.
 func (m *MockConfidentialTxApi) UnblindTxOut(tx *types.ConfidentialTx, index uint32, blindingKey *types.Privkey) (*types.ElementsUtxoData, error) {
 	m.ctrl.T.Helper()

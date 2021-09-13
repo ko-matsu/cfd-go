@@ -186,7 +186,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	option.AppendDummyOutput = true
 	err = txUtil.Blind(tx, blindTxInList, nil, &option)
 	assert.NoError(t, err)
-	_, inList, outList, err := txUtil.GetAllWithAddress(tx, false)
+	_, inList, outList, err := txUtil.GetAllWithAddress(tx, true)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(inList))
 	assert.Equal(t, 3, len(outList))
@@ -227,6 +227,13 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, outputs[0].Amount, unblindData.Amount)
 	assert.Equal(t, outputs[0].Asset, unblindData.Asset)
+
+	unblindedData, err := txUtil.UnblindByTxOut(&outList[0], blindingKey)
+	assert.NoError(t, err)
+	assert.Equal(t, outputs[0].Amount, unblindedData.Amount)
+	assert.Equal(t, outputs[0].Asset, unblindedData.Asset)
+	assert.Equal(t, unblindData.AssetBlindFactor, unblindedData.AssetBlindFactor)
+	assert.Equal(t, unblindData.ValueBlindFactor, unblindedData.ValueBlindFactor)
 
 	amountCommitment, assetCommitment, err := txUtil.GetCommitment(unblindData.Amount, unblindData.ValueBlindFactor, unblindData.AssetBlindFactor, unblindData.Asset)
 	assert.NoError(t, err)

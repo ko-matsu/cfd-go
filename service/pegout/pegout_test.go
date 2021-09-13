@@ -470,6 +470,9 @@ func TestCreatePegoutTxSubtractFeeManyUtxo(t *testing.T) {
 	option := types.NewPegoutTxOption()
 	option.KnapsackMinChange = 0
 	option.SubtractFee = true
+	option.EffectiveFeeRate = 0.15
+	option.LongTermFeeRate = 0.15
+	option.DustFeeRate = 1.0
 	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, nil, &changeAddress, &option)
 	assert.NoError(t, err)
 	assert.Equal(t, "1D4YiPF4k9qotSS3QWMa2E8Bt4jV9SZPmE", pegoutAddr.Address)
@@ -477,15 +480,27 @@ func TestCreatePegoutTxSubtractFeeManyUtxo(t *testing.T) {
 	// output check
 	_, inList, outList, err := txApi.GetAll(tx, false)
 	assert.NoError(t, err)
-	assert.Equal(t, 4, len(inList))
-	assert.Equal(t, 3, len(outList)) // pegout, fee, output(change)
-	assert.Less(t, 7185, len(tx.Hex))
-	assert.Greater(t, 7189, len(tx.Hex))
-	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(109787), unblindTxoutList[0].Amount)
-	assert.Equal(t, int64(213), unblindTxoutList[1].Amount)
-	assert.Equal(t, int64(10000), unblindTxoutList[2].Amount)
+	if len(inList) == 3 {
+		assert.Equal(t, 3, len(inList))
+		assert.Equal(t, 3, len(outList)) // pegout, fee, output(change)
+		assert.Less(t, 7035, len(tx.Hex))
+		assert.Greater(t, 7040, len(tx.Hex))
+		_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(109791), unblindTxoutList[0].Amount)
+		assert.Equal(t, int64(0), unblindTxoutList[1].Amount)
+		assert.Equal(t, int64(209), unblindTxoutList[2].Amount)
+	} else {
+		assert.Equal(t, 4, len(inList))
+		assert.Equal(t, 3, len(outList)) // pegout, fee, output(change)
+		assert.Less(t, 7185, len(tx.Hex))
+		assert.Greater(t, 7189, len(tx.Hex))
+		_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(109787), unblindTxoutList[0].Amount)
+		assert.Equal(t, int64(213), unblindTxoutList[1].Amount)
+		assert.Equal(t, int64(10000), unblindTxoutList[2].Amount)
+	}
 
 	pegoutAddress, hasPegout, err := txApi.GetPegoutAddress(tx, uint32(0))
 	assert.NoError(t, err)
@@ -627,10 +642,9 @@ func TestCreatePegoutTxSubtractFeeJust(t *testing.T) {
 	assert.Greater(t, 6887, len(tx.Hex))
 	_, _, unblindTxoutList, err := txApi.GetAll(unblindTx, false)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(119250), unblindTxoutList[0].Amount)
+	assert.Equal(t, int64(119812), unblindTxoutList[0].Amount)
 	assert.Equal(t, int64(0), unblindTxoutList[1].Amount)
-	assert.Equal(t, int64(750), unblindTxoutList[2].Amount)
-	// FIXME(k-matsuzawa): need to check fee-calculation
+	assert.Equal(t, int64(188), unblindTxoutList[2].Amount)
 
 	pegoutAddress, hasPegout, err := txApi.GetPegoutAddress(tx, uint32(0))
 	assert.NoError(t, err)

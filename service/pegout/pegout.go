@@ -407,7 +407,8 @@ func (p *PegoutService) CreatePegoutTransaction(
 	fundOption.Exponent = option.Exponent
 	fundOption.MinimumBits = option.MinimumBits
 	var outputTx string
-	var fee, baseFee int64
+	var fee, baseFee, appendFee int64
+	loopLimit := 100
 	if !option.SubtractFee {
 		outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 		if err != nil {
@@ -415,33 +416,19 @@ func (p *PegoutService) CreatePegoutTransaction(
 		}
 	} else {
 		baseFee = int64(fundOption.EffectiveFeeRate * 1000)
-		// TODO: use selectCoin?
+		appendFee = int64(fundOption.EffectiveFeeRate * 100)
 
 		// first try (for fee)
 		_, tmpFee, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
 		if err == nil {
 			baseFee = tmpFee
 		}
-
-		loopLimit := 10
-		for i := 0; i <= loopLimit; i++ {
-			// second try
-			fee += baseFee
-			if pegoutData.Amount-fee < PegoutAmountMinimum {
-				return nil, nil, nil, errors.Errorf("pegout amount is low (tx: %s)", tx.Hex)
-			}
-			txouts[0].Amount = workPegoutData.Amount - fee
-			tx2, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
-			if err != nil {
-				return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
-			}
-			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx2.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
-			if err == nil {
-				tx.Hex = tx2.Hex
-				break
-			} else if i == loopLimit {
-				return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
-			}
+		outputTx, fee, err = p.createPegoutTx(
+			workPegoutData, txins, txouts, assetId,
+			fundTxInList, fundUtxoList, targetAmounts, &fundOption,
+			baseFee, appendFee, loopLimit, false)
+		if err != nil {
+			return nil, nil, nil, err
 		}
 	}
 
@@ -451,38 +438,25 @@ func (p *PegoutService) CreatePegoutTransaction(
 		return nil, nil, nil, errors.Wrap(err, "Pegout GetTxAll error")
 	}
 	if option.IsBlindTx && !hasAppendDummyOutput && p.IsNeedDummyBlind(utxoList, inputs, outputs) {
-		tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
-		}
-		outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
-		if err != nil && option.SubtractFee && strings.Contains(err.Error(), "Not enough utxos") {
-			// retry
-			loopLimit := 10
-			for i := 0; i <= loopLimit; i++ {
-				fee += baseFee
-				if pegoutData.Amount-fee < PegoutAmountMinimum {
-					return nil, nil, nil, errors.Errorf("pegout amount is low (tx: %s)", tx.Hex)
-				}
-				txouts[0].Amount = workPegoutData.Amount - fee
-				tx2, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
-				if err != nil {
-					return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
-				}
-				tx.Hex, err = appendDummyOutput(tx2.Hex, assetId, p.network)
-				if err != nil {
-					return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
-				}
-				outputTx2, _, _, err := cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
-				if err == nil {
-					outputTx = outputTx2
-					break
-				} else if i == loopLimit {
-					return nil, nil, nil, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", tx.Hex)
-				}
+		if !option.SubtractFee {
+			tx.Hex, err = appendDummyOutput(tx.Hex, assetId, p.network)
+			if err != nil {
+				return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
 			}
-		} else if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "Pegout FundRawTransaction error")
+			outputTx, _, _, err = cfd.CfdGoFundRawTransaction(p.network.ToCfdValue(), tx.Hex, fundTxInList, fundUtxoList, targetAmounts, &fundOption)
+			if err != nil {
+				return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
+			}
+		} else {
+			// retry
+			targetAmounts[0].ReservedAddress = ""
+			outputTx, _, err = p.createPegoutTx(
+				workPegoutData, txins, txouts, assetId,
+				fundTxInList, fundUtxoList, targetAmounts, &fundOption,
+				fee, appendFee, loopLimit, true)
+			if err != nil {
+				return nil, nil, nil, errors.Wrap(err, "Pegout append dummy output error")
+			}
 		}
 
 		_, inputs, _, err = p.elementsTxApi.GetAll(&types.ConfidentialTx{Hex: outputTx}, false)
@@ -518,6 +492,121 @@ func (p *PegoutService) CreatePegoutTransaction(
 	}
 
 	return tx, pegoutAddress, unblindTx, nil
+}
+
+func (p *PegoutService) createPegoutTx(
+	pegoutData types.InputConfidentialTxOut,
+	txins []types.InputConfidentialTxIn,
+	txouts []types.InputConfidentialTxOut,
+	assetId string,
+	fundTxInList []cfd.CfdUtxo,
+	fundUtxoList []cfd.CfdUtxo,
+	targetAmounts []cfd.CfdFundRawTxTargetAmount,
+	fundOption *cfd.CfdFundRawTxOption,
+	currentFee int64,
+	appendFee int64,
+	loopLimit int,
+	appendDummy bool,
+) (outputTx string, fee int64, err error) {
+	fee = currentFee
+	var txHex string
+	var calcFee int64
+	var txFee int64
+	for i := 0; i <= loopLimit; i++ {
+		if i != 0 {
+			fee += appendFee
+		}
+		if pegoutData.Amount-fee < PegoutAmountMinimum {
+			return "", fee, errors.Errorf("pegout amount is low")
+		}
+		txouts[0].Amount = pegoutData.Amount - fee
+		tx, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
+		if err != nil {
+			return "", fee, errors.Wrap(err, "Pegout CT.Create error")
+		}
+		if appendDummy {
+			txHex, err = appendDummyOutput(tx.Hex, assetId, p.network)
+			if err != nil {
+				return "", fee, errors.Wrap(err, "Pegout append dummy output error")
+			}
+		} else {
+			txHex = tx.Hex
+		}
+		var appendAddrList []string
+		outputTx, txFee, appendAddrList, calcFee, err = cfd.CfdGoFundRawTransactionAndCalcFee(p.network.ToCfdValue(), txHex, fundTxInList, fundUtxoList, targetAmounts, fundOption)
+		if err == nil {
+			if appendDummy && len(appendAddrList) > 0 {
+				calcFee = 0
+			}
+			break
+		} else if i == loopLimit {
+			return "", fee, errors.Wrapf(err, "Pegout FundRawTransaction error (tx: %s)", txHex)
+		}
+	}
+
+	oldFee := fee
+	oldTxFee := txFee
+	loopCount := 0
+	for fee != calcFee || txFee != fee { // re-calculation
+		if calcFee != 0 {
+			fee = calcFee
+		}
+		loopCount++
+		if pegoutData.Amount-fee < PegoutAmountMinimum {
+			return "", fee, errors.Errorf("pegout amount is low")
+		}
+		txouts[0].Amount = pegoutData.Amount - fee
+		tx, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
+		if err != nil {
+			return "", fee, errors.Wrap(err, "Pegout CT.Create error")
+		}
+		if appendDummy {
+			txHex, err = appendDummyOutput(tx.Hex, assetId, p.network)
+			if err != nil {
+				return "", fee, errors.Wrap(err, "Pegout append dummy output error")
+			}
+		} else {
+			txHex = tx.Hex
+		}
+		outputTx2, txFee, appendAddrList, calcFee2, err := cfd.CfdGoFundRawTransactionAndCalcFee(p.network.ToCfdValue(), txHex, fundTxInList, fundUtxoList, targetAmounts, fundOption)
+		// fmt.Printf("Fund: %d, %d, %d, %d, %d, %v\n", fee, txFee, calcFee2, txouts[0].Amount, len(appendAddrList), err)
+		if err != nil {
+			if loopCount < 10 && strings.Contains(err.Error(), "Not enough utxos") {
+				calcFee += 1
+				continue
+			}
+			return "", fee, errors.Wrapf(err, "Pegout FundRawTransaction error: %d, %d, %d", oldFee, calcFee, oldTxFee)
+			// fee = oldFee
+		} else if appendDummy && len(appendAddrList) > 0 {
+			if loopCount < 5 {
+				calcFee = calcFee2
+				continue
+			}
+			return "", fee, errors.Errorf("Pegout FundRawTransaction calcFee: %d, %d, %s", calcFee2, txFee, outputTx2)
+		} else if txFee != fee {
+			if loopCount < 5 {
+				calcFee = calcFee2
+				continue
+			}
+			return "", fee, errors.Errorf("Pegout FundRawTransaction fee: %d, %d", fee, txFee)
+
+		} else if txFee != calcFee2 {
+			if loopCount < 3 {
+				calcFee = calcFee2 + 1
+				continue
+			}
+			if txFee-calcFee2 > 300 { // retry
+				calcFee = calcFee2 + 1
+				continue
+			}
+			// return "", fee, errors.Errorf("Pegout FundRawTransaction calcFee2: %d, %d", fee, txFee)
+		}
+
+		// fmt.Printf("Fund set: %d, %d, %d, %v, %s\n", fee, txFee, calcFee2, appendDummy, outputTx2)
+		outputTx = outputTx2
+		break
+	}
+	return outputTx, txFee, nil
 }
 
 func (p *PegoutService) IsNeedDummyBlind(
