@@ -161,3 +161,11 @@ func TestConvertToBip32(t *testing.T) {
 		assert.Equal(t, "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF", bip32Pub.Key)
 	}
 }
+
+func TestCreateBip32Path(t *testing.T) {
+	hdwalletApiImpl := NewHdWalletApi()
+
+	path, err := hdwalletApiImpl.CreateBip32Path(Bip32Root(), HardenedBip32ByNum(44), Bip32ByNum(0), Bip32ByString("5'"))
+	assert.NoError(t, err)
+	assert.Equal(t, "m/44'/0/5'", path)
+}
