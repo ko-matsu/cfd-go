@@ -1,6 +1,7 @@
 package key
 
 import (
+	"strconv"
 	"strings"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
@@ -16,6 +17,53 @@ import (
 //go:generate goimports -w mock/hdwallet.go
 
 // FIXME split file
+
+type Bip32Item func() string
+
+// Bip32ByNum returns Bip32Item function.
+func Bip32ByNum(value int) Bip32Item {
+	return func() string {
+		if value < 0 {
+			val := value & 0x7fffffff
+			return strconv.Itoa(val) + "'"
+		}
+		return strconv.Itoa(value)
+	}
+}
+
+// HardenedBip32ByNum returns Bip32Item function.
+func HardenedBip32ByNum(value int) Bip32Item {
+	return func() string {
+		val := value & 0x7fffffff
+		return strconv.Itoa(val) + "'"
+	}
+}
+
+// Bip32ByString returns Bip32Item function.
+func Bip32ByString(value string) Bip32Item {
+	return func() string {
+		numStr := value
+		var hardenedStr string
+		switch {
+		case strings.HasSuffix(value, "h"), strings.HasSuffix(value, "'"):
+			hardenedStr = value[len(value)-1:]
+			numStr = value[:len(value)-1]
+		default:
+		}
+		num, err := strconv.ParseInt(numStr, 0, 32)
+		if err != nil || num < 0 {
+			return ""
+		}
+		return numStr + hardenedStr
+	}
+}
+
+// Bip32Root returns Bip32Item function.
+func Bip32Root() Bip32Item {
+	return func() string {
+		return "m"
+	}
+}
 
 type ExtPubkeyApi interface {
 	GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error)
@@ -42,6 +90,7 @@ type HdWalletApi interface {
 	GetSeedFromMnemonic(mnemonic []string, language string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetSeedFromMnemonicAndPassphrase(mnemonic []string, language string, passphrase string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetMnemonicFromEntropy(entropy *types.ByteData, language string) (mnemonic *[]string, err error)
+	CreateBip32Path(items ...Bip32Item) (path string, err error)
 }
 
 func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
@@ -395,6 +444,23 @@ func (h *HdWalletApiImpl) GetMnemonicFromEntropy(entropy *types.ByteData, langua
 	mnemonicWords := strings.Split(mnemonicText, " ")
 	mnemonic = &mnemonicWords
 	return mnemonic, nil
+}
+
+func (h *HdWalletApiImpl) CreateBip32Path(items ...Bip32Item) (path string, err error) {
+	bip32Path := ""
+	for i, itemFunc := range items {
+		pathStr := itemFunc()
+		if pathStr == "" {
+			return "", errors.Errorf("CFD Error: invalid path")
+		} else if pathStr == "m" && i != 0 {
+			return "", errors.Errorf("CFD Error: invalid root item position")
+		}
+		if bip32Path != "" {
+			bip32Path += "/"
+		}
+		bip32Path += pathStr
+	}
+	return bip32Path, nil
 }
 
 // validConfig ...

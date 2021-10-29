@@ -4399,7 +4399,7 @@ func CfdGoGetAssetCommitment(asset, assetBlinder string) (assetCommitment string
 	return assetCommitment, err
 }
 
-// CfdGoGetAssetCommitment get amount commitment.
+// CfdGoGetAmountCommitment get amount commitment.
 func CfdGoGetAmountCommitment(amount int64, assetCommitment, blinder string) (commitment string, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {

@@ -103,3 +103,11 @@ func TestCfdExtkey(t *testing.T) {
 		assert.Equal(t, "xpub6EXtjFtcPwmae296sZGckBgbfCHnodfjWujbGK7hhzRybmWJhmgeusFbiiZyG1iSeiBcQ7diPeUC9vtP9wLS44bWpqH4kuQQD5N4gA3LaFE", extkey)
 	*/
 }
+
+func TestCreateBip32Path(t *testing.T) {
+	hdwalletApiImpl := NewHdWalletApi()
+
+	path, err := hdwalletApiImpl.CreateBip32Path(Bip32Root(), HardenedBip32ByNum(44), Bip32ByNum(0), Bip32ByString("5'"))
+	assert.NoError(t, err)
+	assert.Equal(t, "m/44'/0/5'", path)
+}
