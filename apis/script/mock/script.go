@@ -34,6 +34,21 @@ func (m *MockScriptApi) EXPECT() *MockScriptApiMockRecorder {
 	return m.recorder
 }
 
+// AnalyzeLockingScript mocks base method.
+func (m *MockScriptApi) AnalyzeLockingScript(script *types.Script) (types.HashType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnalyzeLockingScript", script)
+	ret0, _ := ret[0].(types.HashType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AnalyzeLockingScript indicates an expected call of AnalyzeLockingScript.
+func (mr *MockScriptApiMockRecorder) AnalyzeLockingScript(script interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnalyzeLockingScript", reflect.TypeOf((*MockScriptApi)(nil).AnalyzeLockingScript), script)
+}
+
 // CreateFromAsm mocks base method.
 func (m *MockScriptApi) CreateFromAsm(asm string) (*types.Script, error) {
 	m.ctrl.T.Helper()

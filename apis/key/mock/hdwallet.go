@@ -7,6 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
+	key "github.com/cryptogarageinc/cfd-go/apis/key"
 	types "github.com/cryptogarageinc/cfd-go/types"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -198,6 +199,25 @@ func NewMockHdWalletApi(ctrl *gomock.Controller) *MockHdWalletApi {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockHdWalletApi) EXPECT() *MockHdWalletApiMockRecorder {
 	return m.recorder
+}
+
+// CreateBip32Path mocks base method.
+func (m *MockHdWalletApi) CreateBip32Path(items ...key.Bip32Item) (string, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{}
+	for _, a := range items {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateBip32Path", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateBip32Path indicates an expected call of CreateBip32Path.
+func (mr *MockHdWalletApiMockRecorder) CreateBip32Path(items ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBip32Path", reflect.TypeOf((*MockHdWalletApi)(nil).CreateBip32Path), items...)
 }
 
 // GetExtPrivkey mocks base method.

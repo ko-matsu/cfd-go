@@ -65,10 +65,10 @@ func (mr *MockPegoutMockRecorder) CreateOnlinePrivateKey() *gomock.Call {
 }
 
 // CreatePakEntry mocks base method.
-func (m *MockPegout) CreatePakEntry(accountExtPubkey *types.ExtPubkey, onlinePrivkey *types.Privkey) (*types.ByteData, error) {
+func (m *MockPegout) CreatePakEntry(accountExtPubkey *types.ExtPubkey, onlinePrivkey *types.Privkey) (*types.PakEntry, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePakEntry", accountExtPubkey, onlinePrivkey)
-	ret0, _ := ret[0].(*types.ByteData)
+	ret0, _ := ret[0].(*types.PakEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
