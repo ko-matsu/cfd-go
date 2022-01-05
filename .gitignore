@@ -45,7 +45,6 @@
 /bin
 autom4te.cache
 *.in
-/Makefile
 /config.h
 *.m4
 config.h.in~
