@@ -32,7 +32,7 @@ type Pegout interface {
 	CreatePakEntry(
 		accountExtPubkey *types.ExtPubkey,
 		onlinePrivkey *types.Privkey,
-	) (pakEntry *types.ByteData, err error)
+	) (pakEntry *types.PakEntry, err error)
 	// CreatePegoutAddress This function create the pegout address for bitcoin network.
 	CreatePegoutAddress(
 		addressType types.AddressType,
@@ -207,7 +207,7 @@ func (p *PegoutService) CreateOnlinePrivateKey() (privkey *types.Privkey, err er
 func (p *PegoutService) CreatePakEntry(
 	accountExtPubkey *types.ExtPubkey,
 	onlinePrivkey *types.Privkey,
-) (pakEntry *types.ByteData, err error) {
+) (pakEntry *types.PakEntry, err error) {
 	if err = p.validConfig(); err != nil {
 		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
@@ -239,7 +239,7 @@ func (p *PegoutService) CreatePakEntry(
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegout internal error")
 	}
-	pakEntry = &pakEntryObj
+	pakEntry = types.NewPakEntry(pakEntryObj)
 	return pakEntry, nil
 }
 
