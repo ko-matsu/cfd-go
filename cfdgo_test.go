@@ -2292,3 +2292,84 @@ func TestBlockApi2(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, exist)
 }
+
+func TestCustomPrefix(t *testing.T) {
+	const PRIVKEY string = "d21c625759280111907a06df050cccbc875b11a50bdafa71dae5d1e8695ba82e"
+	const SEED string = "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04"
+	const ADDR_PK string = "02d21c625759280111907a06df050cccbc875b11a50bdafa71dae5d1e8695ba82e"
+	jsonStr := "{\"keyJsonDatas\":[{\"IsMainnet\":\"true\",\"wif\":\"40\",\"bip32xpub\":\"0473e78d\",\"bip32xprv\":\"0473e354\"},{\"IsMainnet\":\"false\",\"wif\":\"60\",\"bip32xpub\":\"0420bd3a\",\"bip32xprv\":\"0420b900\"}],\"addressJsonDatas\":[{\"nettype\":\"mainnet\",\"p2pkh\":\"72\",\"p2sh\":\"84\",\"bech32\":\"elrg\"},{\"nettype\":\"regtest\",\"p2pkh\":\"64\",\"p2sh\":\"22\",\"bech32\":\"cs\"}]}"
+
+	testDataList := []struct {
+		network       string
+		wif           string
+		xprv          string
+		xpub          string
+		p2pkhAddress  string
+		p2shAddress   string
+		p2wpkhAddress string
+	}{
+		{
+			network:       "mainnet",
+			wif:           "Ab9nRQnDi6iACMeL1qffHY83npHTEGvmJgxBDDykXuzBfZpWFyBQ",
+			xprv:          "wprvikzVDokm6P1KtKfqXgTJv8XpWZcukZYCFsmaRemcFvKZakza93Zwuo15JHekgFrn6ZZai45KS6AitFzNGo2sTf17aiPR86dWi9Tq82Qgo1r",
+			xpub:          "wpubWgH9tQnJckSFRpnyr5rjEzmB3bmxQ9nzR21zjuYXxKb8VsQ6bjNrpu2Aph61HVbgR9UFxZuRKe5FMHkZncoGNGUF1zjL8eyQSoacUbLMX4F",
+			p2pkhAddress:  "o7WPAG3N5XxhUR1b4uWJvVFigMiEVvS5uz",
+			p2shAddress:   "vDCWYEd3kN7JVeRUp9cbswSwpcL6rmcj6j",
+			p2wpkhAddress: "elrg1qn98wsxje7xk68axrn979fuzqrd04880svgjkzc",
+		}, {
+			network:       "regtest",
+			wif:           "FKhxiaK1K22ZNv4uiGJEm79dkiiKwfc2WptM7m4nFE6xgACzMbkJ",
+			xprv:          "sprv8Erh3X3hFeKuoD653knTvhJHkiKLxbhym6yyMYfKJ9kPXc3AnztLtmAyv29tc6yQn95qGE6e6TmYRokeKRMdyBXuyXTihmcpwoqJJPtTyAy",
+			xpub:          "spub4Tr3T2ab61tD1hAY9nKUHqF2Jk9qN4Rq8Kua9w4vrVHNQQNKLYCbSZVTmHWGjUHEXBze8DprMkvK8ATi6tdKxBBjwmLdjVtuMKo4yLfkDWR",
+			p2pkhAddress:  "hUmwNjsL91US2M4Nj2qr8jShsJ72UUPcgp",
+			p2shAddress:   "En5Q3bQpAghSMAkzR2yNMemr9B5fD4c6Wi",
+			p2wpkhAddress: "cs1qn98wsxje7xk68axrn979fuzqrd04880ssz7cnm",
+		},
+	}
+
+	err := CfdGoSetCustomPrefix(jsonStr)
+	assert.NoError(t, err)
+
+	for _, testData := range testDataList {
+		var network, networkByKey int
+		switch testData.network {
+		case "mainnet":
+			network = int(KCfdNetworkMainnet)
+			networkByKey = network
+		case "testnet":
+			network = int(KCfdNetworkTestnet)
+			networkByKey = network
+		case "regtest":
+			network = int(KCfdNetworkRegtest)
+			networkByKey = int(KCfdNetworkTestnet)
+		}
+
+		wif, err := CfdGoGetPrivkeyWif(PRIVKEY, networkByKey, true)
+		assert.NoError(t, err)
+		assert.Equal(t, testData.wif, wif)
+
+		extPrivkey, err := CfdGoCreateExtkeyFromSeed(SEED, networkByKey, int(KCfdExtPrivkey))
+		assert.NoError(t, err)
+		assert.Equal(t, testData.xprv, extPrivkey)
+
+		extPubkey, err := CfdGoCreateExtPubkey(testData.xprv, networkByKey)
+		assert.NoError(t, err)
+		assert.Equal(t, testData.xpub, extPubkey)
+
+		p2pkhAddr, pkhLockingScript, _, err := CfdGoCreateAddress(int(KCfdP2pkh), ADDR_PK, "", network)
+		assert.NoError(t, err)
+		assert.Equal(t, testData.p2pkhAddress, p2pkhAddr)
+
+		p2shAddr, _, _, err := CfdGoCreateAddress(int(KCfdP2sh), "", pkhLockingScript, network)
+		assert.NoError(t, err)
+		assert.Equal(t, testData.p2shAddress, p2shAddr)
+
+		p2wpkhAddr, _, _, err := CfdGoCreateAddress(int(KCfdP2wpkh), ADDR_PK, "", network)
+		assert.NoError(t, err)
+		assert.Equal(t, testData.p2wpkhAddress, p2wpkhAddr)
+	}
+
+	// cleanup
+	err = CfdGoClearCustomPrefix()
+	assert.NoError(t, err)
+}

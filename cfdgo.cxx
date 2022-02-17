@@ -7707,6 +7707,97 @@ intgo _wrap_CfdNegatePrivkey_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_
 }
 
 
+intgo _wrap_CfdSignMessage_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, bool _swig_go_4, _gostring_* _swig_go_5) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  bool arg5 ;
+  char **arg6 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  arg4 = (char *)malloc(_swig_go_3.n + 1);
+  memcpy(arg4, _swig_go_3.p, _swig_go_3.n);
+  arg4[_swig_go_3.n] = '\0';
+  
+  arg5 = (bool)_swig_go_4; 
+  arg6 = *(char ***)&_swig_go_5; 
+  
+  result = (int)CfdSignMessage(arg1,(char const *)arg2,(char const *)arg3,(char const *)arg4,arg5,arg6);
+  _swig_go_result = result; 
+  {
+    if (arg6 && *arg6) {
+      _swig_go_5->n = strlen(*arg6);
+    }
+  }
+  free(arg2); 
+  free(arg3); 
+  free(arg4); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdVerifyMessage_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_ _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, _gostring_ _swig_go_4, _gostring_* _swig_go_5) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  char *arg5 = (char *) 0 ;
+  char **arg6 = (char **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  arg4 = (char *)malloc(_swig_go_3.n + 1);
+  memcpy(arg4, _swig_go_3.p, _swig_go_3.n);
+  arg4[_swig_go_3.n] = '\0';
+  
+  
+  arg5 = (char *)malloc(_swig_go_4.n + 1);
+  memcpy(arg5, _swig_go_4.p, _swig_go_4.n);
+  arg5[_swig_go_4.n] = '\0';
+  
+  arg6 = *(char ***)&_swig_go_5; 
+  
+  result = (int)CfdVerifyMessage(arg1,(char const *)arg2,(char const *)arg3,(char const *)arg4,(char const *)arg5,arg6);
+  _swig_go_result = result; 
+  {
+    if (arg6 && *arg6) {
+      _swig_go_5->n = strlen(*arg6);
+    }
+  }
+  free(arg2); 
+  free(arg3); 
+  free(arg4); 
+  free(arg5); 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_CfdCreateExtkeyFromSeed_cfdgo_3ba1877d699189c4(void *_swig_go_0, _gostring_ _swig_go_1, intgo _swig_go_2, intgo _swig_go_3, _gostring_* _swig_go_4) {
   void *arg1 = (void *) 0 ;
   char *arg2 = (char *) 0 ;

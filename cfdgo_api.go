@@ -6785,6 +6785,36 @@ func CfdGoHash256(message string, hasText bool) (output string, err error) {
 	return
 }
 
+// custom prefix API -----------------------------------------------------------
+
+// CfdGoSetCustomPrefix set custom prefix by json.
+func CfdGoSetCustomPrefix(jsonStr string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var respStr string
+	ret := CfdRequestExecuteJson(handle, "SetCustomPrefix", jsonStr, &respStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+// CfdGoClearCustomPrefix clear custom prefix.
+func CfdGoClearCustomPrefix() error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var respStr string
+	ret := CfdRequestExecuteJson(handle, "ClearCustomPrefix", "", &respStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
 // refine API ------------------------------------------------------------------
 
 /**

@@ -463,6 +463,13 @@ typedef _gostring_ swig_type_428;
 typedef _gostring_ swig_type_429;
 typedef _gostring_ swig_type_430;
 typedef _gostring_ swig_type_431;
+typedef _gostring_ swig_type_432;
+typedef _gostring_ swig_type_433;
+typedef _gostring_ swig_type_434;
+typedef _gostring_ swig_type_435;
+typedef _gostring_ swig_type_436;
+typedef _gostring_ swig_type_437;
+typedef _gostring_ swig_type_438;
 extern void _wrap_Swig_free_cfdgo_3ba1877d699189c4(uintptr_t arg1);
 extern uintptr_t _wrap_Swig_malloc_cfdgo_3ba1877d699189c4(swig_intgo arg1);
 extern swig_intgo _wrap_kCfdSuccess_cfdgo_3ba1877d699189c4(void);
@@ -721,54 +728,56 @@ extern swig_intgo _wrap_CfdNegatePubkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, s
 extern swig_intgo _wrap_CfdPrivkeyTweakAdd_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_254 arg2, swig_type_255 arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdPrivkeyTweakMul_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_256 arg2, swig_type_257 arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdNegatePrivkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_258 arg2, swig_voidp arg3);
-extern swig_intgo _wrap_CfdCreateExtkeyFromSeed_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_259 arg2, swig_intgo arg3, swig_intgo arg4, swig_voidp arg5);
-extern swig_intgo _wrap_CfdCreateExtkeyByFormatFromSeed_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_260 arg2, swig_intgo arg3, swig_intgo arg4, swig_intgo arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdCreateExtkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3, swig_type_261 arg4, swig_type_262 arg5, swig_type_263 arg6, swig_type_264 arg7, char arg8, uintptr_t arg9, swig_voidp arg10);
-extern swig_intgo _wrap_CfdCreateExtkeyByFormat_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3, swig_type_265 arg4, swig_type_266 arg5, swig_type_267 arg6, swig_type_268 arg7, char arg8, uintptr_t arg9, swig_intgo arg10, swig_voidp arg11);
-extern swig_intgo _wrap_CfdCreateExtkeyFromParent_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_269 arg2, uintptr_t arg3, _Bool arg4, swig_intgo arg5, swig_intgo arg6, swig_voidp arg7);
-extern swig_intgo _wrap_CfdCreateExtkeyFromParentPath_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_270 arg2, swig_type_271 arg3, swig_intgo arg4, swig_intgo arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdCreateExtPubkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_272 arg2, swig_intgo arg3, swig_voidp arg4);
-extern swig_intgo _wrap_CfdGetPrivkeyFromExtkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_273 arg2, swig_intgo arg3, swig_voidp arg4, swig_voidp arg5);
-extern swig_intgo _wrap_CfdGetPubkeyFromExtkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_274 arg2, swig_intgo arg3, swig_voidp arg4);
-extern swig_intgo _wrap_CfdGetParentExtkeyPathData_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_275 arg2, swig_type_276 arg3, swig_intgo arg4, swig_voidp arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdGetExtkeyInformation_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_277 arg2, swig_voidp arg3, swig_voidp arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7);
-extern swig_intgo _wrap_CfdGetExtkeyInfo_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_278 arg2, swig_voidp arg3, swig_voidp arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7, swig_voidp arg8, swig_voidp arg9);
-extern swig_intgo _wrap_CfdGetMnemonicWords_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_279 arg2, swig_voidp arg3);
-extern swig_intgo _wrap_CfdInitializeMnemonicWordList_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_280 arg2, swig_voidp arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdSignMessage_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_259 arg2, swig_type_260 arg3, swig_type_261 arg4, _Bool arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdVerifyMessage_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_262 arg2, swig_type_263 arg3, swig_type_264 arg4, swig_type_265 arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdCreateExtkeyFromSeed_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_266 arg2, swig_intgo arg3, swig_intgo arg4, swig_voidp arg5);
+extern swig_intgo _wrap_CfdCreateExtkeyByFormatFromSeed_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_267 arg2, swig_intgo arg3, swig_intgo arg4, swig_intgo arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdCreateExtkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3, swig_type_268 arg4, swig_type_269 arg5, swig_type_270 arg6, swig_type_271 arg7, char arg8, uintptr_t arg9, swig_voidp arg10);
+extern swig_intgo _wrap_CfdCreateExtkeyByFormat_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3, swig_type_272 arg4, swig_type_273 arg5, swig_type_274 arg6, swig_type_275 arg7, char arg8, uintptr_t arg9, swig_intgo arg10, swig_voidp arg11);
+extern swig_intgo _wrap_CfdCreateExtkeyFromParent_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_276 arg2, uintptr_t arg3, _Bool arg4, swig_intgo arg5, swig_intgo arg6, swig_voidp arg7);
+extern swig_intgo _wrap_CfdCreateExtkeyFromParentPath_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_277 arg2, swig_type_278 arg3, swig_intgo arg4, swig_intgo arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdCreateExtPubkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_279 arg2, swig_intgo arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdGetPrivkeyFromExtkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_280 arg2, swig_intgo arg3, swig_voidp arg4, swig_voidp arg5);
+extern swig_intgo _wrap_CfdGetPubkeyFromExtkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_281 arg2, swig_intgo arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdGetParentExtkeyPathData_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_282 arg2, swig_type_283 arg3, swig_intgo arg4, swig_voidp arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdGetExtkeyInformation_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_284 arg2, swig_voidp arg3, swig_voidp arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7);
+extern swig_intgo _wrap_CfdGetExtkeyInfo_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_285 arg2, swig_voidp arg3, swig_voidp arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7, swig_voidp arg8, swig_voidp arg9);
+extern swig_intgo _wrap_CfdGetMnemonicWords_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_286 arg2, swig_voidp arg3);
+extern swig_intgo _wrap_CfdInitializeMnemonicWordList_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_287 arg2, swig_voidp arg3, uintptr_t arg4);
 extern swig_intgo _wrap_CfdGetMnemonicWord_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdFreeMnemonicWordList_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
-extern swig_intgo _wrap_CfdConvertMnemonicToSeed_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_281 arg2, swig_type_282 arg3, _Bool arg4, swig_type_283 arg5, _Bool arg6, swig_voidp arg7, swig_voidp arg8);
-extern swig_intgo _wrap_CfdConvertEntropyToMnemonic_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_284 arg2, swig_type_285 arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdConvertMnemonicToSeed_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_288 arg2, swig_type_289 arg3, _Bool arg4, swig_type_290 arg5, _Bool arg6, swig_voidp arg7, swig_voidp arg8);
+extern swig_intgo _wrap_CfdConvertEntropyToMnemonic_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_291 arg2, swig_type_292 arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdInitializeTxSerializeForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_voidp arg2);
-extern swig_intgo _wrap_CfdAddTxOutMetaDataForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_286 arg4, swig_type_287 arg5, swig_type_288 arg6);
-extern swig_intgo _wrap_CfdFinalizeTxSerializeForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_289 arg4, _Bool arg5, _Bool arg6, swig_voidp arg7);
-extern swig_intgo _wrap_CfdFinalizeTxSerializeHashForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_290 arg4, _Bool arg5, _Bool arg6, _Bool arg7, swig_voidp arg8);
+extern swig_intgo _wrap_CfdAddTxOutMetaDataForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_293 arg4, swig_type_294 arg5, swig_type_295 arg6);
+extern swig_intgo _wrap_CfdFinalizeTxSerializeForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_296 arg4, _Bool arg5, _Bool arg6, swig_voidp arg7);
+extern swig_intgo _wrap_CfdFinalizeTxSerializeHashForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_297 arg4, _Bool arg5, _Bool arg6, _Bool arg7, swig_voidp arg8);
 extern swig_intgo _wrap_CfdFreeTxSerializeForLedger_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
-extern swig_intgo _wrap_CfdParseScript_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_291 arg2, swig_voidp arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdParseScript_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_298 arg2, swig_voidp arg3, uintptr_t arg4);
 extern swig_intgo _wrap_CfdGetScriptItem_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdFreeScriptItemHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
-extern swig_intgo _wrap_CfdConvertScriptAsmToHex_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_292 arg2, swig_voidp arg3);
+extern swig_intgo _wrap_CfdConvertScriptAsmToHex_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_type_299 arg2, swig_voidp arg3);
 extern swig_intgo _wrap_CfdInitializeMultisigScriptSig_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_voidp arg2);
-extern swig_intgo _wrap_CfdAddMultisigScriptSigData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_293 arg3, swig_type_294 arg4);
-extern swig_intgo _wrap_CfdAddMultisigScriptSigDataToDer_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_295 arg3, swig_intgo arg4, _Bool arg5, swig_type_296 arg6);
-extern swig_intgo _wrap_CfdFinalizeMultisigScriptSig_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_297 arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdAddMultisigScriptSigData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_300 arg3, swig_type_301 arg4);
+extern swig_intgo _wrap_CfdAddMultisigScriptSigDataToDer_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_302 arg3, swig_intgo arg4, _Bool arg5, swig_type_303 arg6);
+extern swig_intgo _wrap_CfdFinalizeMultisigScriptSig_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_304 arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdFreeMultisigScriptSigHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_CfdInitializeTaprootScriptTree_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_voidp arg2);
 extern swig_intgo _wrap_CfdInitializeTaprootScriptTreeWithNetwork_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_voidp arg3);
-extern swig_intgo _wrap_CfdSetInitialTapLeaf_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_298 arg3, uintptr_t arg4);
-extern swig_intgo _wrap_CfdSetInitialTapBranchByHash_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_299 arg3);
-extern swig_intgo _wrap_CfdSetScriptTreeFromString_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_300 arg3, swig_type_301 arg4, uintptr_t arg5, swig_type_302 arg6);
-extern swig_intgo _wrap_CfdSetTapScriptByWitnessStack_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_303 arg3, swig_type_304 arg4, swig_voidp arg5);
-extern swig_intgo _wrap_CfdAddTapBranchByHash_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_305 arg3);
+extern swig_intgo _wrap_CfdSetInitialTapLeaf_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_305 arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdSetInitialTapBranchByHash_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_306 arg3);
+extern swig_intgo _wrap_CfdSetScriptTreeFromString_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_307 arg3, swig_type_308 arg4, uintptr_t arg5, swig_type_309 arg6);
+extern swig_intgo _wrap_CfdSetTapScriptByWitnessStack_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_310 arg3, swig_type_311 arg4, swig_voidp arg5);
+extern swig_intgo _wrap_CfdAddTapBranchByHash_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_312 arg3);
 extern swig_intgo _wrap_CfdAddTapBranchByScriptTree_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
-extern swig_intgo _wrap_CfdAddTapBranchByScriptTreeString_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_306 arg3);
-extern swig_intgo _wrap_CfdAddTapBranchByTapLeaf_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_307 arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdAddTapBranchByScriptTreeString_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_313 arg3);
+extern swig_intgo _wrap_CfdAddTapBranchByTapLeaf_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_314 arg3, uintptr_t arg4);
 extern swig_intgo _wrap_CfdGetBaseTapLeaf_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4, swig_voidp arg5);
 extern swig_intgo _wrap_CfdGetTapBranchCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 extern swig_intgo _wrap_CfdGetTapBranchData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, _Bool arg4, swig_voidp arg5, uintptr_t arg6, swig_voidp arg7, uintptr_t arg8);
 extern swig_intgo _wrap_CfdGetTapBranchHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4, swig_voidp arg5);
-extern swig_intgo _wrap_CfdGetTaprootScriptTreeHash_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_308 arg3, swig_voidp arg4, swig_voidp arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdGetTaprootTweakedPrivkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_309 arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdGetTaprootScriptTreeHash_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_315 arg3, swig_voidp arg4, swig_voidp arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdGetTaprootTweakedPrivkey_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_316 arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdGetTaprootScriptTreeSrting_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_voidp arg3);
 extern swig_intgo _wrap_CfdFreeTaprootScriptTreeHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_kCfdSequenceLockTimeDisable_cfdgo_3ba1877d699189c4(void);
@@ -783,50 +792,50 @@ extern swig_intgo _wrap_kCfdFundTxKnapsackMinChange_cfdgo_3ba1877d699189c4(void)
 extern swig_intgo _wrap_kCfdFundTxBlindExponent_cfdgo_3ba1877d699189c4(void);
 extern swig_intgo _wrap_kCfdFundTxBlindMinimumBits_cfdgo_3ba1877d699189c4(void);
 extern uintptr_t _wrap_kCfdCodeSeparatorPositionDefault_get_cfdgo_3ba1877d699189c4(void);
-extern swig_intgo _wrap_CfdInitializeTransaction_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3, uintptr_t arg4, swig_type_310 arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdAddTransactionInput_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_311 arg3, uintptr_t arg4, uintptr_t arg5);
-extern swig_intgo _wrap_CfdAddTransactionOutput_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_312 arg4, swig_type_313 arg5, swig_type_314 arg6);
+extern swig_intgo _wrap_CfdInitializeTransaction_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3, uintptr_t arg4, swig_type_317 arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdAddTransactionInput_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_318 arg3, uintptr_t arg4, uintptr_t arg5);
+extern swig_intgo _wrap_CfdAddTransactionOutput_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_319 arg4, swig_type_320 arg5, swig_type_321 arg6);
 extern swig_intgo _wrap_CfdSplitTxOut_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, uintptr_t arg4);
-extern swig_intgo _wrap_CfdUpdateWitnessStack_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_315 arg4, uintptr_t arg5, uintptr_t arg6, swig_type_316 arg7);
-extern swig_intgo _wrap_CfdClearWitnessStack_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_317 arg3, uintptr_t arg4);
-extern swig_intgo _wrap_CfdUpdateTxInScriptSig_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_318 arg3, uintptr_t arg4, swig_type_319 arg5);
-extern swig_intgo _wrap_CfdUpdateTxInSequence_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_320 arg3, uintptr_t arg4, uintptr_t arg5);
-extern swig_intgo _wrap_CfdSetTransactionUtxoData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_321 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_322 arg6, swig_type_323 arg7, swig_type_324 arg8, swig_type_325 arg9, swig_type_326 arg10, _Bool arg11);
-extern swig_intgo _wrap_CfdCreateSighashByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_327 arg3, uintptr_t arg4, swig_intgo arg5, _Bool arg6, swig_type_328 arg7, swig_type_329 arg8, swig_type_330 arg9, uintptr_t arg10, swig_type_331 arg11, swig_voidp arg12);
-extern swig_intgo _wrap_CfdAddSignWithPrivkeyByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_332 arg3, uintptr_t arg4, swig_type_333 arg5, swig_intgo arg6, _Bool arg7, _Bool arg8, swig_type_334 arg9, swig_type_335 arg10);
-extern swig_intgo _wrap_CfdVerifyTxSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_336 arg3, uintptr_t arg4);
-extern swig_intgo _wrap_CfdAddTxSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_337 arg3, uintptr_t arg4, swig_intgo arg5, swig_type_338 arg6, _Bool arg7, swig_intgo arg8, _Bool arg9, _Bool arg10);
-extern swig_intgo _wrap_CfdAddTaprootSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_339 arg3, uintptr_t arg4, swig_type_340 arg5, swig_type_341 arg6, swig_type_342 arg7, swig_type_343 arg8);
-extern swig_intgo _wrap_CfdAddPubkeyHashSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_344 arg3, uintptr_t arg4, swig_intgo arg5, swig_type_345 arg6, swig_type_346 arg7, _Bool arg8, swig_intgo arg9, _Bool arg10);
-extern swig_intgo _wrap_CfdAddScriptHashLastSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_347 arg3, uintptr_t arg4, swig_intgo arg5, swig_type_348 arg6);
+extern swig_intgo _wrap_CfdUpdateWitnessStack_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_322 arg4, uintptr_t arg5, uintptr_t arg6, swig_type_323 arg7);
+extern swig_intgo _wrap_CfdClearWitnessStack_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_324 arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdUpdateTxInScriptSig_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_325 arg3, uintptr_t arg4, swig_type_326 arg5);
+extern swig_intgo _wrap_CfdUpdateTxInSequence_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_327 arg3, uintptr_t arg4, uintptr_t arg5);
+extern swig_intgo _wrap_CfdSetTransactionUtxoData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_328 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_329 arg6, swig_type_330 arg7, swig_type_331 arg8, swig_type_332 arg9, swig_type_333 arg10, _Bool arg11);
+extern swig_intgo _wrap_CfdCreateSighashByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_334 arg3, uintptr_t arg4, swig_intgo arg5, _Bool arg6, swig_type_335 arg7, swig_type_336 arg8, swig_type_337 arg9, uintptr_t arg10, swig_type_338 arg11, swig_voidp arg12);
+extern swig_intgo _wrap_CfdAddSignWithPrivkeyByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_339 arg3, uintptr_t arg4, swig_type_340 arg5, swig_intgo arg6, _Bool arg7, _Bool arg8, swig_type_341 arg9, swig_type_342 arg10);
+extern swig_intgo _wrap_CfdVerifyTxSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_343 arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdAddTxSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_344 arg3, uintptr_t arg4, swig_intgo arg5, swig_type_345 arg6, _Bool arg7, swig_intgo arg8, _Bool arg9, _Bool arg10);
+extern swig_intgo _wrap_CfdAddTaprootSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_346 arg3, uintptr_t arg4, swig_type_347 arg5, swig_type_348 arg6, swig_type_349 arg7, swig_type_350 arg8);
+extern swig_intgo _wrap_CfdAddPubkeyHashSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_351 arg3, uintptr_t arg4, swig_intgo arg5, swig_type_352 arg6, swig_type_353 arg7, _Bool arg8, swig_intgo arg9, _Bool arg10);
+extern swig_intgo _wrap_CfdAddScriptHashLastSignByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_354 arg3, uintptr_t arg4, swig_intgo arg5, swig_type_355 arg6);
 extern swig_intgo _wrap_CfdFinalizeTransaction_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_voidp arg3);
 extern swig_intgo _wrap_CfdFreeTransactionHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_CfdCreateSplitTxOutHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_voidp arg3);
-extern swig_intgo _wrap_CfdAddSplitTxOutData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_349 arg4, swig_type_350 arg5, swig_type_351 arg6);
+extern swig_intgo _wrap_CfdAddSplitTxOutData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_356 arg4, swig_type_357 arg5, swig_type_358 arg6);
 extern swig_intgo _wrap_CfdFreeSplitTxOutHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
-extern swig_intgo _wrap_CfdUpdateTxOutAmount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_352 arg3, uintptr_t arg4, uintptr_t arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdAddTxSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_353 arg3, swig_type_354 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_355 arg7, _Bool arg8, swig_intgo arg9, _Bool arg10, _Bool arg11, swig_voidp arg12);
-extern swig_intgo _wrap_CfdAddPubkeyHashSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_356 arg3, swig_type_357 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_358 arg7, swig_type_359 arg8, _Bool arg9, swig_intgo arg10, _Bool arg11, swig_voidp arg12);
-extern swig_intgo _wrap_CfdAddScriptHashSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_360 arg3, swig_type_361 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_362 arg7, _Bool arg8, swig_voidp arg9);
-extern swig_intgo _wrap_CfdAddSignWithPrivkeySimple_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_363 arg3, swig_type_364 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_365 arg7, swig_type_366 arg8, uintptr_t arg9, swig_intgo arg10, _Bool arg11, _Bool arg12, swig_voidp arg13);
+extern swig_intgo _wrap_CfdUpdateTxOutAmount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_359 arg3, uintptr_t arg4, uintptr_t arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdAddTxSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_360 arg3, swig_type_361 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_362 arg7, _Bool arg8, swig_intgo arg9, _Bool arg10, _Bool arg11, swig_voidp arg12);
+extern swig_intgo _wrap_CfdAddPubkeyHashSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_363 arg3, swig_type_364 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_365 arg7, swig_type_366 arg8, _Bool arg9, swig_intgo arg10, _Bool arg11, swig_voidp arg12);
+extern swig_intgo _wrap_CfdAddScriptHashSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_367 arg3, swig_type_368 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_369 arg7, _Bool arg8, swig_voidp arg9);
+extern swig_intgo _wrap_CfdAddSignWithPrivkeySimple_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_370 arg3, swig_type_371 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_372 arg7, swig_type_373 arg8, uintptr_t arg9, swig_intgo arg10, _Bool arg11, _Bool arg12, swig_voidp arg13);
 extern swig_intgo _wrap_CfdInitializeMultisigSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_voidp arg2);
-extern swig_intgo _wrap_CfdAddMultisigSignData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_367 arg3, swig_type_368 arg4);
-extern swig_intgo _wrap_CfdAddMultisigSignDataToDer_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_369 arg3, swig_intgo arg4, _Bool arg5, swig_type_370 arg6);
-extern swig_intgo _wrap_CfdFinalizeMultisigSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_371 arg4, swig_type_372 arg5, uintptr_t arg6, swig_intgo arg7, swig_type_373 arg8, swig_voidp arg9);
+extern swig_intgo _wrap_CfdAddMultisigSignData_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_374 arg3, swig_type_375 arg4);
+extern swig_intgo _wrap_CfdAddMultisigSignDataToDer_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_376 arg3, swig_intgo arg4, _Bool arg5, swig_type_377 arg6);
+extern swig_intgo _wrap_CfdFinalizeMultisigSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_378 arg4, swig_type_379 arg5, uintptr_t arg6, swig_intgo arg7, swig_type_380 arg8, swig_voidp arg9);
 extern swig_intgo _wrap_CfdFreeMultisigSignHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
-extern swig_intgo _wrap_CfdVerifySignature_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_374 arg3, swig_type_375 arg4, swig_intgo arg5, swig_type_376 arg6, swig_type_377 arg7, swig_type_378 arg8, uintptr_t arg9, swig_intgo arg10, _Bool arg11, uintptr_t arg12, swig_type_379 arg13);
-extern swig_intgo _wrap_CfdVerifyTxSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_380 arg3, swig_type_381 arg4, uintptr_t arg5, swig_type_382 arg6, swig_intgo arg7, swig_type_383 arg8, uintptr_t arg9, swig_type_384 arg10);
-extern swig_intgo _wrap_CfdCreateSighash_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_385 arg3, swig_type_386 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_387 arg7, swig_type_388 arg8, uintptr_t arg9, swig_intgo arg10, _Bool arg11, swig_voidp arg12);
-extern swig_intgo _wrap_CfdGetTxInfo_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_389 arg3, swig_voidp arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7, uintptr_t arg8, uintptr_t arg9, uintptr_t arg10);
-extern swig_intgo _wrap_CfdGetTxIn_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_390 arg3, uintptr_t arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7, swig_voidp arg8);
-extern swig_intgo _wrap_CfdGetTxInWitness_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_391 arg3, uintptr_t arg4, uintptr_t arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdGetTxOut_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_392 arg3, uintptr_t arg4, uintptr_t arg5, swig_voidp arg6);
-extern swig_intgo _wrap_CfdGetTxInCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_393 arg3, uintptr_t arg4);
-extern swig_intgo _wrap_CfdGetTxInWitnessCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_394 arg3, uintptr_t arg4, uintptr_t arg5);
-extern swig_intgo _wrap_CfdGetTxOutCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_395 arg3, uintptr_t arg4);
-extern swig_intgo _wrap_CfdGetTxInIndex_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_396 arg3, swig_type_397 arg4, uintptr_t arg5, uintptr_t arg6);
-extern swig_intgo _wrap_CfdGetTxOutIndex_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_398 arg3, swig_type_399 arg4, swig_type_400 arg5, uintptr_t arg6);
-extern swig_intgo _wrap_CfdInitializeTxDataHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_401 arg3, swig_voidp arg4);
+extern swig_intgo _wrap_CfdVerifySignature_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_381 arg3, swig_type_382 arg4, swig_intgo arg5, swig_type_383 arg6, swig_type_384 arg7, swig_type_385 arg8, uintptr_t arg9, swig_intgo arg10, _Bool arg11, uintptr_t arg12, swig_type_386 arg13);
+extern swig_intgo _wrap_CfdVerifyTxSign_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_387 arg3, swig_type_388 arg4, uintptr_t arg5, swig_type_389 arg6, swig_intgo arg7, swig_type_390 arg8, uintptr_t arg9, swig_type_391 arg10);
+extern swig_intgo _wrap_CfdCreateSighash_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_392 arg3, swig_type_393 arg4, uintptr_t arg5, swig_intgo arg6, swig_type_394 arg7, swig_type_395 arg8, uintptr_t arg9, swig_intgo arg10, _Bool arg11, swig_voidp arg12);
+extern swig_intgo _wrap_CfdGetTxInfo_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_396 arg3, swig_voidp arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7, uintptr_t arg8, uintptr_t arg9, uintptr_t arg10);
+extern swig_intgo _wrap_CfdGetTxIn_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_397 arg3, uintptr_t arg4, swig_voidp arg5, uintptr_t arg6, uintptr_t arg7, swig_voidp arg8);
+extern swig_intgo _wrap_CfdGetTxInWitness_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_398 arg3, uintptr_t arg4, uintptr_t arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdGetTxOut_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_399 arg3, uintptr_t arg4, uintptr_t arg5, swig_voidp arg6);
+extern swig_intgo _wrap_CfdGetTxInCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_400 arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdGetTxInWitnessCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_401 arg3, uintptr_t arg4, uintptr_t arg5);
+extern swig_intgo _wrap_CfdGetTxOutCount_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_402 arg3, uintptr_t arg4);
+extern swig_intgo _wrap_CfdGetTxInIndex_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_403 arg3, swig_type_404 arg4, uintptr_t arg5, uintptr_t arg6);
+extern swig_intgo _wrap_CfdGetTxOutIndex_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_405 arg3, swig_type_406 arg4, swig_type_407 arg5, uintptr_t arg6);
+extern swig_intgo _wrap_CfdInitializeTxDataHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, swig_type_408 arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdFreeTxDataHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_CfdGetModifiedTxByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_voidp arg3);
 extern swig_intgo _wrap_CfdGetTxInfoByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_voidp arg3, swig_voidp arg4, uintptr_t arg5, uintptr_t arg6, uintptr_t arg7, uintptr_t arg8, uintptr_t arg9);
@@ -836,18 +845,18 @@ extern swig_intgo _wrap_CfdGetTxOutByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg
 extern swig_intgo _wrap_CfdGetTxInCountByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 extern swig_intgo _wrap_CfdGetTxInWitnessCountByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, uintptr_t arg4, uintptr_t arg5);
 extern swig_intgo _wrap_CfdGetTxOutCountByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
-extern swig_intgo _wrap_CfdGetTxInIndexByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_402 arg3, uintptr_t arg4, uintptr_t arg5);
-extern swig_intgo _wrap_CfdGetTxOutIndexByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_403 arg3, swig_type_404 arg4, uintptr_t arg5);
-extern swig_intgo _wrap_CfdGetTxOutIndexWithOffsetByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_405 arg4, swig_type_406 arg5, uintptr_t arg6);
-extern swig_intgo _wrap_CfdInitializeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3, swig_type_407 arg4, swig_voidp arg5);
-extern swig_intgo _wrap_CfdAddTxInForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_408 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_409 arg6, swig_type_410 arg7, _Bool arg8, _Bool arg9, _Bool arg10, uintptr_t arg11, swig_type_411 arg12);
-extern swig_intgo _wrap_CfdAddTxInTemplateForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_412 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_413 arg6, swig_type_414 arg7, _Bool arg8, _Bool arg9, _Bool arg10, uintptr_t arg11, swig_type_415 arg12, swig_type_416 arg13);
-extern swig_intgo _wrap_CfdAddTxInputForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_417 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_418 arg6, swig_type_419 arg7, _Bool arg8, _Bool arg9, _Bool arg10, swig_type_420 arg11, uintptr_t arg12, uintptr_t arg13, swig_type_421 arg14);
-extern swig_intgo _wrap_CfdAddUtxoForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_422 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_423 arg6, swig_type_424 arg7);
-extern swig_intgo _wrap_CfdAddUtxoTemplateForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_425 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_426 arg6, swig_type_427 arg7, swig_type_428 arg8);
-extern swig_intgo _wrap_CfdAddTargetAmountForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, uintptr_t arg4, swig_type_429 arg5, swig_type_430 arg6);
+extern swig_intgo _wrap_CfdGetTxInIndexByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_409 arg3, uintptr_t arg4, uintptr_t arg5);
+extern swig_intgo _wrap_CfdGetTxOutIndexByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_410 arg3, swig_type_411 arg4, uintptr_t arg5);
+extern swig_intgo _wrap_CfdGetTxOutIndexWithOffsetByHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_type_412 arg4, swig_type_413 arg5, uintptr_t arg6);
+extern swig_intgo _wrap_CfdInitializeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3, swig_type_414 arg4, swig_voidp arg5);
+extern swig_intgo _wrap_CfdAddTxInForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_415 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_416 arg6, swig_type_417 arg7, _Bool arg8, _Bool arg9, _Bool arg10, uintptr_t arg11, swig_type_418 arg12);
+extern swig_intgo _wrap_CfdAddTxInTemplateForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_419 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_420 arg6, swig_type_421 arg7, _Bool arg8, _Bool arg9, _Bool arg10, uintptr_t arg11, swig_type_422 arg12, swig_type_423 arg13);
+extern swig_intgo _wrap_CfdAddTxInputForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_424 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_425 arg6, swig_type_426 arg7, _Bool arg8, _Bool arg9, _Bool arg10, swig_type_427 arg11, uintptr_t arg12, uintptr_t arg13, swig_type_428 arg14);
+extern swig_intgo _wrap_CfdAddUtxoForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_429 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_430 arg6, swig_type_431 arg7);
+extern swig_intgo _wrap_CfdAddUtxoTemplateForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_432 arg3, uintptr_t arg4, uintptr_t arg5, swig_type_433 arg6, swig_type_434 arg7, swig_type_435 arg8);
+extern swig_intgo _wrap_CfdAddTargetAmountForFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, uintptr_t arg4, swig_type_436 arg5, swig_type_437 arg6);
 extern swig_intgo _wrap_CfdSetOptionFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, uintptr_t arg4, double arg5, _Bool arg6);
-extern swig_intgo _wrap_CfdFinalizeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_431 arg3, double arg4, uintptr_t arg5, uintptr_t arg6, swig_voidp arg7);
+extern swig_intgo _wrap_CfdFinalizeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, swig_type_438 arg3, double arg4, uintptr_t arg5, uintptr_t arg6, swig_voidp arg7);
 extern swig_intgo _wrap_CfdGetAppendTxOutFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdGetCalculateFeeFundRawTx_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 extern swig_intgo _wrap_CfdFreeFundRawTxHandle_cfdgo_3ba1877d699189c4(uintptr_t arg1, uintptr_t arg2);
@@ -855,11 +864,9 @@ extern swig_intgo _wrap_CfdFreeFundRawTxHandle_cfdgo_3ba1877d699189c4(uintptr_t 
 */
 import "C"
 
-import (
-	_ "runtime/cgo"
-	"sync"
-	"unsafe"
-)
+import "unsafe"
+import _ "runtime/cgo"
+import "sync"
 
 type _ unsafe.Pointer
 
@@ -4304,6 +4311,51 @@ func CfdNegatePrivkey(arg1 uintptr, arg2 string, arg3 *string) (_swig_ret int) {
 	return swig_r
 }
 
+func CfdSignMessage(arg1 uintptr, arg2 string, arg3 string, arg4 string, arg5 bool, arg6 *string) (_swig_ret int) {
+	var swig_r int
+	_swig_i_0 := arg1
+	_swig_i_1 := arg2
+	_swig_i_2 := arg3
+	_swig_i_3 := arg4
+	_swig_i_4 := arg5
+	_swig_i_5 := arg6
+	swig_r = (int)(C._wrap_CfdSignMessage_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_259)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_260)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_261)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	if Swig_escape_always_false {
+		Swig_escape_val = arg2
+	}
+	if Swig_escape_always_false {
+		Swig_escape_val = arg3
+	}
+	if Swig_escape_always_false {
+		Swig_escape_val = arg4
+	}
+	return swig_r
+}
+
+func CfdVerifyMessage(arg1 uintptr, arg2 string, arg3 string, arg4 string, arg5 string, arg6 *string) (_swig_ret int) {
+	var swig_r int
+	_swig_i_0 := arg1
+	_swig_i_1 := arg2
+	_swig_i_2 := arg3
+	_swig_i_3 := arg4
+	_swig_i_4 := arg5
+	_swig_i_5 := arg6
+	swig_r = (int)(C._wrap_CfdVerifyMessage_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_262)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_263)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_264)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_265)(unsafe.Pointer(&_swig_i_4)), C.swig_voidp(_swig_i_5)))
+	if Swig_escape_always_false {
+		Swig_escape_val = arg2
+	}
+	if Swig_escape_always_false {
+		Swig_escape_val = arg3
+	}
+	if Swig_escape_always_false {
+		Swig_escape_val = arg4
+	}
+	if Swig_escape_always_false {
+		Swig_escape_val = arg5
+	}
+	return swig_r
+}
+
 func CfdCreateExtkeyFromSeed(arg1 uintptr, arg2 string, arg3 int, arg4 int, arg5 *string) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
@@ -4311,7 +4363,7 @@ func CfdCreateExtkeyFromSeed(arg1 uintptr, arg2 string, arg3 int, arg4 int, arg5
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (int)(C._wrap_CfdCreateExtkeyFromSeed_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_259)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3), C.swig_voidp(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdCreateExtkeyFromSeed_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_266)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3), C.swig_voidp(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4326,7 +4378,7 @@ func CfdCreateExtkeyByFormatFromSeed(arg1 uintptr, arg2 string, arg3 int, arg4 i
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdCreateExtkeyByFormatFromSeed_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_260)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3), C.swig_intgo(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdCreateExtkeyByFormatFromSeed_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_267)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3), C.swig_intgo(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4345,7 +4397,7 @@ func CfdCreateExtkey(arg1 uintptr, arg2 int, arg3 int, arg4 string, arg5 string,
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9.Swigcptr()
 	_swig_i_9 := arg10
-	swig_r = (int)(C._wrap_CfdCreateExtkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_261)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_262)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_263)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_264)(unsafe.Pointer(&_swig_i_6)), C.char(_swig_i_7), C.uintptr_t(_swig_i_8), C.swig_voidp(_swig_i_9)))
+	swig_r = (int)(C._wrap_CfdCreateExtkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_268)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_269)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_270)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_271)(unsafe.Pointer(&_swig_i_6)), C.char(_swig_i_7), C.uintptr_t(_swig_i_8), C.swig_voidp(_swig_i_9)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -4374,7 +4426,7 @@ func CfdCreateExtkeyByFormat(arg1 uintptr, arg2 int, arg3 int, arg4 string, arg5
 	_swig_i_8 := arg9.Swigcptr()
 	_swig_i_9 := arg10
 	_swig_i_10 := arg11
-	swig_r = (int)(C._wrap_CfdCreateExtkeyByFormat_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_265)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_266)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_267)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_268)(unsafe.Pointer(&_swig_i_6)), C.char(_swig_i_7), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C.swig_voidp(_swig_i_10)))
+	swig_r = (int)(C._wrap_CfdCreateExtkeyByFormat_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_272)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_273)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_274)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_275)(unsafe.Pointer(&_swig_i_6)), C.char(_swig_i_7), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C.swig_voidp(_swig_i_10)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -4399,7 +4451,7 @@ func CfdCreateExtkeyFromParent(arg1 uintptr, arg2 string, arg3 Uint32_t, arg4 bo
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
-	swig_r = (int)(C._wrap_CfdCreateExtkeyFromParent_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_269)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2), C._Bool(_swig_i_3), C.swig_intgo(_swig_i_4), C.swig_intgo(_swig_i_5), C.swig_voidp(_swig_i_6)))
+	swig_r = (int)(C._wrap_CfdCreateExtkeyFromParent_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_276)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2), C._Bool(_swig_i_3), C.swig_intgo(_swig_i_4), C.swig_intgo(_swig_i_5), C.swig_voidp(_swig_i_6)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4414,7 +4466,7 @@ func CfdCreateExtkeyFromParentPath(arg1 uintptr, arg2 string, arg3 string, arg4 
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdCreateExtkeyFromParentPath_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_270)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_271)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C.swig_intgo(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdCreateExtkeyFromParentPath_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_277)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_278)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C.swig_intgo(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4430,7 +4482,7 @@ func CfdCreateExtPubkey(arg1 uintptr, arg2 string, arg3 int, arg4 *string) (_swi
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdCreateExtPubkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_272)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_voidp(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdCreateExtPubkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_279)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_voidp(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4444,7 +4496,7 @@ func CfdGetPrivkeyFromExtkey(arg1 uintptr, arg2 string, arg3 int, arg4 *string, 
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (int)(C._wrap_CfdGetPrivkeyFromExtkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_273)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdGetPrivkeyFromExtkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_280)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4457,7 +4509,7 @@ func CfdGetPubkeyFromExtkey(arg1 uintptr, arg2 string, arg3 int, arg4 *string) (
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdGetPubkeyFromExtkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_274)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_voidp(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdGetPubkeyFromExtkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_281)(unsafe.Pointer(&_swig_i_1)), C.swig_intgo(_swig_i_2), C.swig_voidp(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4472,7 +4524,7 @@ func CfdGetParentExtkeyPathData(arg1 uintptr, arg2 string, arg3 string, arg4 int
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdGetParentExtkeyPathData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_275)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_276)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C.swig_voidp(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetParentExtkeyPathData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_282)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_283)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C.swig_voidp(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4491,7 +4543,7 @@ func CfdGetExtkeyInformation(arg1 uintptr, arg2 string, arg3 *string, arg4 *stri
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6.Swigcptr()
 	_swig_i_6 := arg7.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetExtkeyInformation_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_277)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6)))
+	swig_r = (int)(C._wrap_CfdGetExtkeyInformation_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_284)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4509,7 +4561,7 @@ func CfdGetExtkeyInfo(arg1 uintptr, arg2 string, arg3 *string, arg4 *string, arg
 	_swig_i_6 := arg7.Swigcptr()
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9
-	swig_r = (int)(C._wrap_CfdGetExtkeyInfo_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_278)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6), C.swig_voidp(_swig_i_7), C.swig_voidp(_swig_i_8)))
+	swig_r = (int)(C._wrap_CfdGetExtkeyInfo_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_285)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6), C.swig_voidp(_swig_i_7), C.swig_voidp(_swig_i_8)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4521,7 +4573,7 @@ func CfdGetMnemonicWords(arg1 uintptr, arg2 string, arg3 *string) (_swig_ret int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int)(C._wrap_CfdGetMnemonicWords_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_279)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2)))
+	swig_r = (int)(C._wrap_CfdGetMnemonicWords_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_286)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4534,7 +4586,7 @@ func CfdInitializeMnemonicWordList(arg1 uintptr, arg2 string, arg3 *uintptr, arg
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdInitializeMnemonicWordList_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_280)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdInitializeMnemonicWordList_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_287)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4569,7 +4621,7 @@ func CfdConvertMnemonicToSeed(arg1 uintptr, arg2 string, arg3 string, arg4 bool,
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
 	_swig_i_7 := arg8
-	swig_r = (int)(C._wrap_CfdConvertMnemonicToSeed_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_281)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_282)(unsafe.Pointer(&_swig_i_2)), C._Bool(_swig_i_3), *(*C.swig_type_283)(unsafe.Pointer(&_swig_i_4)), C._Bool(_swig_i_5), C.swig_voidp(_swig_i_6), C.swig_voidp(_swig_i_7)))
+	swig_r = (int)(C._wrap_CfdConvertMnemonicToSeed_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_288)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_289)(unsafe.Pointer(&_swig_i_2)), C._Bool(_swig_i_3), *(*C.swig_type_290)(unsafe.Pointer(&_swig_i_4)), C._Bool(_swig_i_5), C.swig_voidp(_swig_i_6), C.swig_voidp(_swig_i_7)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4588,7 +4640,7 @@ func CfdConvertEntropyToMnemonic(arg1 uintptr, arg2 string, arg3 string, arg4 *s
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdConvertEntropyToMnemonic_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_284)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_285)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdConvertEntropyToMnemonic_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_291)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_292)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4614,7 +4666,7 @@ func CfdAddTxOutMetaDataForLedger(arg1 uintptr, arg2 uintptr, arg3 Uint32_t, arg
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddTxOutMetaDataForLedger_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_286)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_287)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_288)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddTxOutMetaDataForLedger_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_293)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_294)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_295)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -4636,7 +4688,7 @@ func CfdFinalizeTxSerializeForLedger(arg1 uintptr, arg2 uintptr, arg3 int, arg4 
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
-	swig_r = (int)(C._wrap_CfdFinalizeTxSerializeForLedger_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_289)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), C._Bool(_swig_i_5), C.swig_voidp(_swig_i_6)))
+	swig_r = (int)(C._wrap_CfdFinalizeTxSerializeForLedger_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_296)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), C._Bool(_swig_i_5), C.swig_voidp(_swig_i_6)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -4653,7 +4705,7 @@ func CfdFinalizeTxSerializeHashForLedger(arg1 uintptr, arg2 uintptr, arg3 int, a
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
 	_swig_i_7 := arg8
-	swig_r = (int)(C._wrap_CfdFinalizeTxSerializeHashForLedger_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_290)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), C._Bool(_swig_i_5), C._Bool(_swig_i_6), C.swig_voidp(_swig_i_7)))
+	swig_r = (int)(C._wrap_CfdFinalizeTxSerializeHashForLedger_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_297)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), C._Bool(_swig_i_5), C._Bool(_swig_i_6), C.swig_voidp(_swig_i_7)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -4674,7 +4726,7 @@ func CfdParseScript(arg1 uintptr, arg2 string, arg3 *uintptr, arg4 Uint32_t) (_s
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdParseScript_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_291)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdParseScript_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_298)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4704,7 +4756,7 @@ func CfdConvertScriptAsmToHex(arg1 uintptr, arg2 string, arg3 *string) (_swig_re
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int)(C._wrap_CfdConvertScriptAsmToHex_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_292)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2)))
+	swig_r = (int)(C._wrap_CfdConvertScriptAsmToHex_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), *(*C.swig_type_299)(unsafe.Pointer(&_swig_i_1)), C.swig_voidp(_swig_i_2)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -4725,7 +4777,7 @@ func CfdAddMultisigScriptSigData(arg1 uintptr, arg2 uintptr, arg3 string, arg4 s
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdAddMultisigScriptSigData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_293)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_294)(unsafe.Pointer(&_swig_i_3))))
+	swig_r = (int)(C._wrap_CfdAddMultisigScriptSigData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_300)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_301)(unsafe.Pointer(&_swig_i_3))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4743,7 +4795,7 @@ func CfdAddMultisigScriptSigDataToDer(arg1 uintptr, arg2 uintptr, arg3 string, a
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddMultisigScriptSigDataToDer_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_295)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_296)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddMultisigScriptSigDataToDer_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_302)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_303)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4759,7 +4811,7 @@ func CfdFinalizeMultisigScriptSig(arg1 uintptr, arg2 uintptr, arg3 string, arg4 
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdFinalizeMultisigScriptSig_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_297)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdFinalizeMultisigScriptSig_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_304)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4797,7 +4849,7 @@ func CfdSetInitialTapLeaf(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint8_t)
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdSetInitialTapLeaf_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_298)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdSetInitialTapLeaf_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_305)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4809,7 +4861,7 @@ func CfdSetInitialTapBranchByHash(arg1 uintptr, arg2 uintptr, arg3 string) (_swi
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int)(C._wrap_CfdSetInitialTapBranchByHash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_299)(unsafe.Pointer(&_swig_i_2))))
+	swig_r = (int)(C._wrap_CfdSetInitialTapBranchByHash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_306)(unsafe.Pointer(&_swig_i_2))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4824,7 +4876,7 @@ func CfdSetScriptTreeFromString(arg1 uintptr, arg2 uintptr, arg3 string, arg4 st
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdSetScriptTreeFromString_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_300)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_301)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), *(*C.swig_type_302)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdSetScriptTreeFromString_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_307)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_308)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), *(*C.swig_type_309)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4844,7 +4896,7 @@ func CfdSetTapScriptByWitnessStack(arg1 uintptr, arg2 uintptr, arg3 string, arg4
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (int)(C._wrap_CfdSetTapScriptByWitnessStack_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_303)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_304)(unsafe.Pointer(&_swig_i_3)), C.swig_voidp(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdSetTapScriptByWitnessStack_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_310)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_311)(unsafe.Pointer(&_swig_i_3)), C.swig_voidp(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4859,7 +4911,7 @@ func CfdAddTapBranchByHash(arg1 uintptr, arg2 uintptr, arg3 string) (_swig_ret i
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int)(C._wrap_CfdAddTapBranchByHash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_305)(unsafe.Pointer(&_swig_i_2))))
+	swig_r = (int)(C._wrap_CfdAddTapBranchByHash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_312)(unsafe.Pointer(&_swig_i_2))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4880,7 +4932,7 @@ func CfdAddTapBranchByScriptTreeString(arg1 uintptr, arg2 uintptr, arg3 string) 
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int)(C._wrap_CfdAddTapBranchByScriptTreeString_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_306)(unsafe.Pointer(&_swig_i_2))))
+	swig_r = (int)(C._wrap_CfdAddTapBranchByScriptTreeString_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_313)(unsafe.Pointer(&_swig_i_2))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4893,7 +4945,7 @@ func CfdAddTapBranchByTapLeaf(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdAddTapBranchByTapLeaf_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_307)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdAddTapBranchByTapLeaf_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_314)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4953,7 +5005,7 @@ func CfdGetTaprootScriptTreeHash(arg1 uintptr, arg2 uintptr, arg3 string, arg4 *
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdGetTaprootScriptTreeHash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_308)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetTaprootScriptTreeHash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_315)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -4966,7 +5018,7 @@ func CfdGetTaprootTweakedPrivkey(arg1 uintptr, arg2 uintptr, arg3 string, arg4 *
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdGetTaprootTweakedPrivkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_309)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdGetTaprootTweakedPrivkey_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_316)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5098,7 +5150,7 @@ func CfdInitializeTransaction(arg1 uintptr, arg2 int, arg3 Uint32_t, arg4 Uint32
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdInitializeTransaction_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3), *(*C.swig_type_310)(unsafe.Pointer(&_swig_i_4)), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdInitializeTransaction_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3), *(*C.swig_type_317)(unsafe.Pointer(&_swig_i_4)), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg5
 	}
@@ -5112,7 +5164,7 @@ func CfdAddTransactionInput(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
-	swig_r = (int)(C._wrap_CfdAddTransactionInput_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_311)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdAddTransactionInput_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_318)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5127,7 +5179,7 @@ func CfdAddTransactionOutput(arg1 uintptr, arg2 uintptr, arg3 Int64_t, arg4 stri
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddTransactionOutput_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_312)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_313)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_314)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddTransactionOutput_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_319)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_320)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_321)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -5159,7 +5211,7 @@ func CfdUpdateWitnessStack(arg1 uintptr, arg2 uintptr, arg3 int, arg4 string, ar
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6.Swigcptr()
 	_swig_i_6 := arg7
-	swig_r = (int)(C._wrap_CfdUpdateWitnessStack_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_315)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.uintptr_t(_swig_i_5), *(*C.swig_type_316)(unsafe.Pointer(&_swig_i_6))))
+	swig_r = (int)(C._wrap_CfdUpdateWitnessStack_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_322)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.uintptr_t(_swig_i_5), *(*C.swig_type_323)(unsafe.Pointer(&_swig_i_6))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -5175,7 +5227,7 @@ func CfdClearWitnessStack(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32_t
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdClearWitnessStack_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_317)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdClearWitnessStack_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_324)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5189,7 +5241,7 @@ func CfdUpdateTxInScriptSig(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5
-	swig_r = (int)(C._wrap_CfdUpdateTxInScriptSig_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_318)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_319)(unsafe.Pointer(&_swig_i_4))))
+	swig_r = (int)(C._wrap_CfdUpdateTxInScriptSig_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_325)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_326)(unsafe.Pointer(&_swig_i_4))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5206,7 +5258,7 @@ func CfdUpdateTxInSequence(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32_
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
-	swig_r = (int)(C._wrap_CfdUpdateTxInSequence_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_320)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdUpdateTxInSequence_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_327)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5226,7 +5278,7 @@ func CfdSetTransactionUtxoData(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uin
 	_swig_i_8 := arg9
 	_swig_i_9 := arg10
 	_swig_i_10 := arg11
-	swig_r = (int)(C._wrap_CfdSetTransactionUtxoData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_321)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_322)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_323)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_324)(unsafe.Pointer(&_swig_i_7)), *(*C.swig_type_325)(unsafe.Pointer(&_swig_i_8)), *(*C.swig_type_326)(unsafe.Pointer(&_swig_i_9)), C._Bool(_swig_i_10)))
+	swig_r = (int)(C._wrap_CfdSetTransactionUtxoData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_328)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_329)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_330)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_331)(unsafe.Pointer(&_swig_i_7)), *(*C.swig_type_332)(unsafe.Pointer(&_swig_i_8)), *(*C.swig_type_333)(unsafe.Pointer(&_swig_i_9)), C._Bool(_swig_i_10)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5262,7 +5314,7 @@ func CfdCreateSighashByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint
 	_swig_i_9 := arg10.Swigcptr()
 	_swig_i_10 := arg11
 	_swig_i_11 := arg12
-	swig_r = (int)(C._wrap_CfdCreateSighashByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_327)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), C._Bool(_swig_i_5), *(*C.swig_type_328)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_329)(unsafe.Pointer(&_swig_i_7)), *(*C.swig_type_330)(unsafe.Pointer(&_swig_i_8)), C.uintptr_t(_swig_i_9), *(*C.swig_type_331)(unsafe.Pointer(&_swig_i_10)), C.swig_voidp(_swig_i_11)))
+	swig_r = (int)(C._wrap_CfdCreateSighashByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_334)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), C._Bool(_swig_i_5), *(*C.swig_type_335)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_336)(unsafe.Pointer(&_swig_i_7)), *(*C.swig_type_337)(unsafe.Pointer(&_swig_i_8)), C.uintptr_t(_swig_i_9), *(*C.swig_type_338)(unsafe.Pointer(&_swig_i_10)), C.swig_voidp(_swig_i_11)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5293,7 +5345,7 @@ func CfdAddSignWithPrivkeyByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9
 	_swig_i_9 := arg10
-	swig_r = (int)(C._wrap_CfdAddSignWithPrivkeyByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_332)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_333)(unsafe.Pointer(&_swig_i_4)), C.swig_intgo(_swig_i_5), C._Bool(_swig_i_6), C._Bool(_swig_i_7), *(*C.swig_type_334)(unsafe.Pointer(&_swig_i_8)), *(*C.swig_type_335)(unsafe.Pointer(&_swig_i_9))))
+	swig_r = (int)(C._wrap_CfdAddSignWithPrivkeyByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_339)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_340)(unsafe.Pointer(&_swig_i_4)), C.swig_intgo(_swig_i_5), C._Bool(_swig_i_6), C._Bool(_swig_i_7), *(*C.swig_type_341)(unsafe.Pointer(&_swig_i_8)), *(*C.swig_type_342)(unsafe.Pointer(&_swig_i_9))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5315,7 +5367,7 @@ func CfdVerifyTxSignByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint3
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdVerifyTxSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_336)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdVerifyTxSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_343)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5334,7 +5386,7 @@ func CfdAddTxSignByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32_t
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9
 	_swig_i_9 := arg10
-	swig_r = (int)(C._wrap_CfdAddTxSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_337)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), *(*C.swig_type_338)(unsafe.Pointer(&_swig_i_5)), C._Bool(_swig_i_6), C.swig_intgo(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9)))
+	swig_r = (int)(C._wrap_CfdAddTxSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_344)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), *(*C.swig_type_345)(unsafe.Pointer(&_swig_i_5)), C._Bool(_swig_i_6), C.swig_intgo(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5354,7 +5406,7 @@ func CfdAddTaprootSignByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uin
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
 	_swig_i_7 := arg8
-	swig_r = (int)(C._wrap_CfdAddTaprootSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_339)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_340)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_341)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_342)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_343)(unsafe.Pointer(&_swig_i_7))))
+	swig_r = (int)(C._wrap_CfdAddTaprootSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_346)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_347)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_348)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_349)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_350)(unsafe.Pointer(&_swig_i_7))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5385,7 +5437,7 @@ func CfdAddPubkeyHashSignByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9
 	_swig_i_9 := arg10
-	swig_r = (int)(C._wrap_CfdAddPubkeyHashSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_344)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), *(*C.swig_type_345)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_346)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C.swig_intgo(_swig_i_8), C._Bool(_swig_i_9)))
+	swig_r = (int)(C._wrap_CfdAddPubkeyHashSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_351)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), *(*C.swig_type_352)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_353)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C.swig_intgo(_swig_i_8), C._Bool(_swig_i_9)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5406,7 +5458,7 @@ func CfdAddScriptHashLastSignByHandle(arg1 uintptr, arg2 uintptr, arg3 string, a
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddScriptHashLastSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_347)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), *(*C.swig_type_348)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddScriptHashLastSignByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_354)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_intgo(_swig_i_4), *(*C.swig_type_355)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5450,7 +5502,7 @@ func CfdAddSplitTxOutData(arg1 uintptr, arg2 uintptr, arg3 Int64_t, arg4 string,
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddSplitTxOutData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_349)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_350)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_351)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddSplitTxOutData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_356)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_357)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_358)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -5479,7 +5531,7 @@ func CfdUpdateTxOutAmount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, ar
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdUpdateTxOutAmount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_352)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdUpdateTxOutAmount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_359)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5500,7 +5552,7 @@ func CfdAddTxSign(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_
 	_swig_i_9 := arg10
 	_swig_i_10 := arg11
 	_swig_i_11 := arg12
-	swig_r = (int)(C._wrap_CfdAddTxSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_353)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_354)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_355)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C.swig_intgo(_swig_i_8), C._Bool(_swig_i_9), C._Bool(_swig_i_10), C.swig_voidp(_swig_i_11)))
+	swig_r = (int)(C._wrap_CfdAddTxSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_360)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_361)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_362)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C.swig_intgo(_swig_i_8), C._Bool(_swig_i_9), C._Bool(_swig_i_10), C.swig_voidp(_swig_i_11)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5527,7 +5579,7 @@ func CfdAddPubkeyHashSign(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5
 	_swig_i_9 := arg10
 	_swig_i_10 := arg11
 	_swig_i_11 := arg12
-	swig_r = (int)(C._wrap_CfdAddPubkeyHashSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_356)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_357)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_358)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_359)(unsafe.Pointer(&_swig_i_7)), C._Bool(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C.swig_voidp(_swig_i_11)))
+	swig_r = (int)(C._wrap_CfdAddPubkeyHashSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_363)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_364)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_365)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_366)(unsafe.Pointer(&_swig_i_7)), C._Bool(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C.swig_voidp(_swig_i_11)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5554,7 +5606,7 @@ func CfdAddScriptHashSign(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5
 	_swig_i_6 := arg7
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9
-	swig_r = (int)(C._wrap_CfdAddScriptHashSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_360)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_361)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_362)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C.swig_voidp(_swig_i_8)))
+	swig_r = (int)(C._wrap_CfdAddScriptHashSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_367)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_368)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_369)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C.swig_voidp(_swig_i_8)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5582,7 +5634,7 @@ func CfdAddSignWithPrivkeySimple(arg1 uintptr, arg2 int, arg3 string, arg4 strin
 	_swig_i_10 := arg11
 	_swig_i_11 := arg12
 	_swig_i_12 := arg13
-	swig_r = (int)(C._wrap_CfdAddSignWithPrivkeySimple_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_363)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_364)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_365)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_366)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C._Bool(_swig_i_11), C.swig_voidp(_swig_i_12)))
+	swig_r = (int)(C._wrap_CfdAddSignWithPrivkeySimple_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_370)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_371)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_372)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_373)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C._Bool(_swig_i_11), C.swig_voidp(_swig_i_12)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5612,7 +5664,7 @@ func CfdAddMultisigSignData(arg1 uintptr, arg2 uintptr, arg3 string, arg4 string
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdAddMultisigSignData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_367)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_368)(unsafe.Pointer(&_swig_i_3))))
+	swig_r = (int)(C._wrap_CfdAddMultisigSignData_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_374)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_375)(unsafe.Pointer(&_swig_i_3))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5630,7 +5682,7 @@ func CfdAddMultisigSignDataToDer(arg1 uintptr, arg2 uintptr, arg3 string, arg4 i
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddMultisigSignDataToDer_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_369)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_370)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddMultisigSignDataToDer_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_376)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_377)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5651,7 +5703,7 @@ func CfdFinalizeMultisigSign(arg1 uintptr, arg2 uintptr, arg3 int, arg4 string, 
 	_swig_i_6 := arg7
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9
-	swig_r = (int)(C._wrap_CfdFinalizeMultisigSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_371)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_372)(unsafe.Pointer(&_swig_i_4)), C.uintptr_t(_swig_i_5), C.swig_intgo(_swig_i_6), *(*C.swig_type_373)(unsafe.Pointer(&_swig_i_7)), C.swig_voidp(_swig_i_8)))
+	swig_r = (int)(C._wrap_CfdFinalizeMultisigSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_378)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_379)(unsafe.Pointer(&_swig_i_4)), C.uintptr_t(_swig_i_5), C.swig_intgo(_swig_i_6), *(*C.swig_type_380)(unsafe.Pointer(&_swig_i_7)), C.swig_voidp(_swig_i_8)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -5687,7 +5739,7 @@ func CfdVerifySignature(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 i
 	_swig_i_10 := arg11
 	_swig_i_11 := arg12.Swigcptr()
 	_swig_i_12 := arg13
-	swig_r = (int)(C._wrap_CfdVerifySignature_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_374)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_375)(unsafe.Pointer(&_swig_i_3)), C.swig_intgo(_swig_i_4), *(*C.swig_type_376)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_377)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_378)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C.uintptr_t(_swig_i_11), *(*C.swig_type_379)(unsafe.Pointer(&_swig_i_12))))
+	swig_r = (int)(C._wrap_CfdVerifySignature_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_381)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_382)(unsafe.Pointer(&_swig_i_3)), C.swig_intgo(_swig_i_4), *(*C.swig_type_383)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_384)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_385)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C.uintptr_t(_swig_i_11), *(*C.swig_type_386)(unsafe.Pointer(&_swig_i_12))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5721,7 +5773,7 @@ func CfdVerifyTxSign(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint
 	_swig_i_7 := arg8
 	_swig_i_8 := arg9.Swigcptr()
 	_swig_i_9 := arg10
-	swig_r = (int)(C._wrap_CfdVerifyTxSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_380)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_381)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), *(*C.swig_type_382)(unsafe.Pointer(&_swig_i_5)), C.swig_intgo(_swig_i_6), *(*C.swig_type_383)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), *(*C.swig_type_384)(unsafe.Pointer(&_swig_i_9))))
+	swig_r = (int)(C._wrap_CfdVerifyTxSign_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_387)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_388)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), *(*C.swig_type_389)(unsafe.Pointer(&_swig_i_5)), C.swig_intgo(_swig_i_6), *(*C.swig_type_390)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), *(*C.swig_type_391)(unsafe.Pointer(&_swig_i_9))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5754,7 +5806,7 @@ func CfdCreateSighash(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uin
 	_swig_i_9 := arg10
 	_swig_i_10 := arg11
 	_swig_i_11 := arg12
-	swig_r = (int)(C._wrap_CfdCreateSighash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_385)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_386)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_387)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_388)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C.swig_voidp(_swig_i_11)))
+	swig_r = (int)(C._wrap_CfdCreateSighash_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_392)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_393)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.swig_intgo(_swig_i_5), *(*C.swig_type_394)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_395)(unsafe.Pointer(&_swig_i_7)), C.uintptr_t(_swig_i_8), C.swig_intgo(_swig_i_9), C._Bool(_swig_i_10), C.swig_voidp(_swig_i_11)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5782,7 +5834,7 @@ func CfdGetTxInfo(arg1 uintptr, arg2 int, arg3 string, arg4 *string, arg5 *strin
 	_swig_i_7 := arg8.Swigcptr()
 	_swig_i_8 := arg9.Swigcptr()
 	_swig_i_9 := arg10.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxInfo_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_389)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6), C.uintptr_t(_swig_i_7), C.uintptr_t(_swig_i_8), C.uintptr_t(_swig_i_9)))
+	swig_r = (int)(C._wrap_CfdGetTxInfo_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_396)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6), C.uintptr_t(_swig_i_7), C.uintptr_t(_swig_i_8), C.uintptr_t(_swig_i_9)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5799,7 +5851,7 @@ func CfdGetTxIn(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 *string
 	_swig_i_5 := arg6.Swigcptr()
 	_swig_i_6 := arg7.Swigcptr()
 	_swig_i_7 := arg8
-	swig_r = (int)(C._wrap_CfdGetTxIn_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_390)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6), C.swig_voidp(_swig_i_7)))
+	swig_r = (int)(C._wrap_CfdGetTxIn_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_397)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.swig_voidp(_swig_i_4), C.uintptr_t(_swig_i_5), C.uintptr_t(_swig_i_6), C.swig_voidp(_swig_i_7)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5814,7 +5866,7 @@ func CfdGetTxInWitness(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdGetTxInWitness_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_391)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetTxInWitness_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_398)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5829,7 +5881,7 @@ func CfdGetTxOut(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Int64_
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdGetTxOut_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_392)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), C.swig_voidp(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetTxOut_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_399)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), C.swig_voidp(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5842,7 +5894,7 @@ func CfdGetTxInCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t) (_swig_
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxInCount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_393)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdGetTxInCount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_400)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5856,7 +5908,7 @@ func CfdGetTxInWitnessCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, 
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxInWitnessCount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_394)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdGetTxInWitnessCount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_401)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5869,7 +5921,7 @@ func CfdGetTxOutCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t) (_swig
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxOutCount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_395)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdGetTxOutCount_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_402)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5884,7 +5936,7 @@ func CfdGetTxInIndex(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxInIndex_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_396)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_397)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.uintptr_t(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetTxInIndex_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_403)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_404)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4), C.uintptr_t(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5902,7 +5954,7 @@ func CfdGetTxOutIndex(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 str
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxOutIndex_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_398)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_399)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_400)(unsafe.Pointer(&_swig_i_4)), C.uintptr_t(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetTxOutIndex_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_405)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_406)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_407)(unsafe.Pointer(&_swig_i_4)), C.uintptr_t(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -5921,7 +5973,7 @@ func CfdInitializeTxDataHandle(arg1 uintptr, arg2 int, arg3 string, arg4 *uintpt
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_CfdInitializeTxDataHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_401)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
+	swig_r = (int)(C._wrap_CfdInitializeTxDataHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_408)(unsafe.Pointer(&_swig_i_2)), C.swig_voidp(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6033,7 +6085,7 @@ func CfdGetTxInIndexByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint3
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxInIndexByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_402)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdGetTxInIndexByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_409)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6047,7 +6099,7 @@ func CfdGetTxOutIndexByHandle(arg1 uintptr, arg2 uintptr, arg3 string, arg4 stri
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxOutIndexByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_403)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_404)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdGetTxOutIndexByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_410)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_411)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6065,7 +6117,7 @@ func CfdGetTxOutIndexWithOffsetByHandle(arg1 uintptr, arg2 uintptr, arg3 Uint32_
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6.Swigcptr()
-	swig_r = (int)(C._wrap_CfdGetTxOutIndexWithOffsetByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_405)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_406)(unsafe.Pointer(&_swig_i_4)), C.uintptr_t(_swig_i_5)))
+	swig_r = (int)(C._wrap_CfdGetTxOutIndexWithOffsetByHandle_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_412)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_413)(unsafe.Pointer(&_swig_i_4)), C.uintptr_t(_swig_i_5)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -6082,7 +6134,7 @@ func CfdInitializeFundRawTx(arg1 uintptr, arg2 int, arg3 Uint32_t, arg4 string, 
 	_swig_i_2 := arg3.Swigcptr()
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (int)(C._wrap_CfdInitializeFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_407)(unsafe.Pointer(&_swig_i_3)), C.swig_voidp(_swig_i_4)))
+	swig_r = (int)(C._wrap_CfdInitializeFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_414)(unsafe.Pointer(&_swig_i_3)), C.swig_voidp(_swig_i_4)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -6103,7 +6155,7 @@ func CfdAddTxInForFundRawTx(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32
 	_swig_i_9 := arg10
 	_swig_i_10 := arg11.Swigcptr()
 	_swig_i_11 := arg12
-	swig_r = (int)(C._wrap_CfdAddTxInForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_408)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_409)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_410)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9), C.uintptr_t(_swig_i_10), *(*C.swig_type_411)(unsafe.Pointer(&_swig_i_11))))
+	swig_r = (int)(C._wrap_CfdAddTxInForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_415)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_416)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_417)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9), C.uintptr_t(_swig_i_10), *(*C.swig_type_418)(unsafe.Pointer(&_swig_i_11))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6134,7 +6186,7 @@ func CfdAddTxInTemplateForFundRawTx(arg1 uintptr, arg2 uintptr, arg3 string, arg
 	_swig_i_10 := arg11.Swigcptr()
 	_swig_i_11 := arg12
 	_swig_i_12 := arg13
-	swig_r = (int)(C._wrap_CfdAddTxInTemplateForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_412)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_413)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_414)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9), C.uintptr_t(_swig_i_10), *(*C.swig_type_415)(unsafe.Pointer(&_swig_i_11)), *(*C.swig_type_416)(unsafe.Pointer(&_swig_i_12))))
+	swig_r = (int)(C._wrap_CfdAddTxInTemplateForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_419)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_420)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_421)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9), C.uintptr_t(_swig_i_10), *(*C.swig_type_422)(unsafe.Pointer(&_swig_i_11)), *(*C.swig_type_423)(unsafe.Pointer(&_swig_i_12))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6169,7 +6221,7 @@ func CfdAddTxInputForFundRawTx(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uin
 	_swig_i_11 := arg12.Swigcptr()
 	_swig_i_12 := arg13.Swigcptr()
 	_swig_i_13 := arg14
-	swig_r = (int)(C._wrap_CfdAddTxInputForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_417)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_418)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_419)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9), *(*C.swig_type_420)(unsafe.Pointer(&_swig_i_10)), C.uintptr_t(_swig_i_11), C.uintptr_t(_swig_i_12), *(*C.swig_type_421)(unsafe.Pointer(&_swig_i_13))))
+	swig_r = (int)(C._wrap_CfdAddTxInputForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_424)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_425)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_426)(unsafe.Pointer(&_swig_i_6)), C._Bool(_swig_i_7), C._Bool(_swig_i_8), C._Bool(_swig_i_9), *(*C.swig_type_427)(unsafe.Pointer(&_swig_i_10)), C.uintptr_t(_swig_i_11), C.uintptr_t(_swig_i_12), *(*C.swig_type_428)(unsafe.Pointer(&_swig_i_13))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6197,7 +6249,7 @@ func CfdAddUtxoForFundRawTx(arg1 uintptr, arg2 uintptr, arg3 string, arg4 Uint32
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
-	swig_r = (int)(C._wrap_CfdAddUtxoForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_422)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_423)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_424)(unsafe.Pointer(&_swig_i_6))))
+	swig_r = (int)(C._wrap_CfdAddUtxoForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_429)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_430)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_431)(unsafe.Pointer(&_swig_i_6))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6220,7 +6272,7 @@ func CfdAddUtxoTemplateForFundRawTx(arg1 uintptr, arg2 uintptr, arg3 string, arg
 	_swig_i_5 := arg6
 	_swig_i_6 := arg7
 	_swig_i_7 := arg8
-	swig_r = (int)(C._wrap_CfdAddUtxoTemplateForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_425)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_426)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_427)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_428)(unsafe.Pointer(&_swig_i_7))))
+	swig_r = (int)(C._wrap_CfdAddUtxoTemplateForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_432)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4), *(*C.swig_type_433)(unsafe.Pointer(&_swig_i_5)), *(*C.swig_type_434)(unsafe.Pointer(&_swig_i_6)), *(*C.swig_type_435)(unsafe.Pointer(&_swig_i_7))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
@@ -6244,7 +6296,7 @@ func CfdAddTargetAmountForFundRawTx(arg1 uintptr, arg2 uintptr, arg3 Uint32_t, a
 	_swig_i_3 := arg4.Swigcptr()
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (int)(C._wrap_CfdAddTargetAmountForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3), *(*C.swig_type_429)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_430)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (int)(C._wrap_CfdAddTargetAmountForFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3), *(*C.swig_type_436)(unsafe.Pointer(&_swig_i_4)), *(*C.swig_type_437)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg5
 	}
@@ -6275,7 +6327,7 @@ func CfdFinalizeFundRawTx(arg1 uintptr, arg2 uintptr, arg3 string, arg4 float64,
 	_swig_i_4 := arg5.Swigcptr()
 	_swig_i_5 := arg6.Swigcptr()
 	_swig_i_6 := arg7
-	swig_r = (int)(C._wrap_CfdFinalizeFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_431)(unsafe.Pointer(&_swig_i_2)), C.double(_swig_i_3), C.uintptr_t(_swig_i_4), C.uintptr_t(_swig_i_5), C.swig_voidp(_swig_i_6)))
+	swig_r = (int)(C._wrap_CfdFinalizeFundRawTx_cfdgo_3ba1877d699189c4(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_438)(unsafe.Pointer(&_swig_i_2)), C.double(_swig_i_3), C.uintptr_t(_swig_i_4), C.uintptr_t(_swig_i_5), C.swig_voidp(_swig_i_6)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
 	}
