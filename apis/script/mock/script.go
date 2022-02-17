@@ -34,6 +34,21 @@ func (m *MockScriptApi) EXPECT() *MockScriptApiMockRecorder {
 	return m.recorder
 }
 
+// AnalyzeLockingScript mocks base method.
+func (m *MockScriptApi) AnalyzeLockingScript(script *types.Script) (types.HashType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnalyzeLockingScript", script)
+	ret0, _ := ret[0].(types.HashType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AnalyzeLockingScript indicates an expected call of AnalyzeLockingScript.
+func (mr *MockScriptApiMockRecorder) AnalyzeLockingScript(script interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnalyzeLockingScript", reflect.TypeOf((*MockScriptApi)(nil).AnalyzeLockingScript), script)
+}
+
 // CreateFromAsm mocks base method.
 func (m *MockScriptApi) CreateFromAsm(asm string) (*types.Script, error) {
 	m.ctrl.T.Helper()
@@ -77,6 +92,21 @@ func (m *MockScriptApi) CreateMultisig(pubkeys []types.Pubkey, requireSigNum uin
 func (mr *MockScriptApiMockRecorder) CreateMultisig(pubkeys, requireSigNum interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMultisig", reflect.TypeOf((*MockScriptApi)(nil).CreateMultisig), pubkeys, requireSigNum)
+}
+
+// IsCheckHashType mocks base method.
+func (m *MockScriptApi) IsCheckHashType(hashType types.HashType, script *types.Script) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsCheckHashType", hashType, script)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsCheckHashType indicates an expected call of IsCheckHashType.
+func (mr *MockScriptApiMockRecorder) IsCheckHashType(hashType, script interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsCheckHashType", reflect.TypeOf((*MockScriptApi)(nil).IsCheckHashType), hashType, script)
 }
 
 // Parse mocks base method.

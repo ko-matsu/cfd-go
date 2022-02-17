@@ -228,3 +228,41 @@ func TestParseDescriptorByFilter(t *testing.T) {
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
+
+func TestNewDescriptorFromExtPubkey(t *testing.T) {
+	descApi := NewDescriptorApi(config.NetworkOption(types.ElementsRegtest))
+	assert.NoError(t, descApi.GetError())
+
+	desc, err := descApi.NewDescriptorFromExtPubkey(
+		types.P2wpkh,
+		&types.ExtPubkey{Key: "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF"})
+	assert.NoError(t, err)
+	assert.Equal(t,
+		"wpkh(tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF)",
+		desc.OutputDescriptor)
+
+	desc, err = descApi.NewDescriptorFromExtPubkey(
+		types.P2pkh,
+		&types.ExtPubkey{Key: "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF"})
+	assert.NoError(t, err)
+	assert.Equal(t,
+		"pkh(tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF)",
+		desc.OutputDescriptor)
+
+	desc, err = descApi.NewDescriptorFromExtPubkey(
+		types.P2shP2wpkh,
+		&types.ExtPubkey{Key: "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF"})
+	assert.NoError(t, err)
+	assert.Equal(t,
+		"sh(wpkh(tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF))",
+		desc.OutputDescriptor)
+
+	// unmatch network type
+	_, err = descApi.NewDescriptorFromExtPubkey(
+		types.P2wpkh,
+		&types.ExtPubkey{Key: "xpub6Bc3MkV9ZCh8ipiRMK4pbhBs3JwuFcG4vp4CvJmVQKDVcpsQzizhL2DErc5DHMQuKwBxTg1jLP6PCqriLmLsJzjB2kD9TE9hvqxQ4yLKtcV"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "CFD Error: Unmatch network type on extpubkey")
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
