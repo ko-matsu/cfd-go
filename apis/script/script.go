@@ -33,6 +33,7 @@ type ScriptApi interface {
 	ParseMultisig(script *types.Script) (pubkey []types.Pubkey, requireSigNum uint32, err error)
 	CreateMultisig(pubkeys []types.Pubkey, requireSigNum uint32) (script *types.Script, err error)
 	AnalyzeLockingScript(script *types.Script) (hashType types.HashType, err error)
+	IsCheckHashType(hashType types.HashType, script *types.Script) (bool, error)
 }
 
 // TODO(k-matsuzawa): Implement APIs for the following functions in the future.
@@ -217,13 +218,17 @@ func (s *ScriptApiImpl) AnalyzeLockingScript(script *types.Script) (
 		}
 	case 3:
 		if s.isP2sh(asmStrings) {
-			return types.P2pkh, nil
+			return types.P2sh, nil
 		}
 	case 2:
-		if strings.HasPrefix(asmStrings[0], "OP_") || strings.HasPrefix(asmStrings[1], "OP_") {
-			return hashType, nil
+		if strings.HasPrefix(asmStrings[1], "OP_") {
+			return hashType, errors.Errorf("unknown locking script format")
 		}
-		witnessVersion, err := strconv.Atoi(asmStrings[0])
+		witVerStr := asmStrings[0]
+		if strings.HasPrefix(asmStrings[0], "OP_") {
+			witVerStr = asmStrings[0][3:]
+		}
+		witnessVersion, err := strconv.Atoi(witVerStr)
 		if err != nil {
 			return hashType, errors.Wrap(err, "analyze witness version error")
 		}
@@ -244,6 +249,18 @@ func (s *ScriptApiImpl) AnalyzeLockingScript(script *types.Script) (
 	return hashType, errors.Errorf("unknown locking script format")
 }
 
+func (s *ScriptApiImpl) IsCheckHashType(
+	hashType types.HashType,
+	script *types.Script,
+) (bool, error) {
+	targetHashType, err := s.AnalyzeLockingScript(script)
+	if err != nil {
+		return false, err
+	}
+	isEquals := (hashType == targetHashType)
+	return isEquals, nil
+}
+
 func (s *ScriptApiImpl) isP2pkh(asmStrings []string) bool {
 	switch {
 	case len(asmStrings) != 5:
@@ -252,7 +269,7 @@ func (s *ScriptApiImpl) isP2pkh(asmStrings []string) bool {
 	case asmStrings[3] != "OP_EQUALVERIFY":
 	case asmStrings[4] != "OP_CHECKSIG":
 	case strings.HasPrefix(asmStrings[2], "OP_"):
-	case len(asmStrings[2]) != 20:
+	case len(asmStrings[2]) != 20*2:
 	default:
 		return true
 	}
@@ -265,7 +282,7 @@ func (s *ScriptApiImpl) isP2sh(asmStrings []string) bool {
 	case asmStrings[0] != "OP_HASH160":
 	case asmStrings[2] != "OP_EQUAL":
 	case strings.HasPrefix(asmStrings[1], "OP_"):
-	case len(asmStrings[1]) != 20:
+	case len(asmStrings[1]) != 20*2:
 	default:
 		return true
 	}

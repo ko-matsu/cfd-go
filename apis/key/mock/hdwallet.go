@@ -35,6 +35,21 @@ func (m *MockExtPubkeyApi) EXPECT() *MockExtPubkeyApiMockRecorder {
 	return m.recorder
 }
 
+// ConvertToBip32 mocks base method.
+func (m *MockExtPubkeyApi) ConvertToBip32(extPubkey *types.ExtPubkey) (*types.ExtPubkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConvertToBip32", extPubkey)
+	ret0, _ := ret[0].(*types.ExtPubkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConvertToBip32 indicates an expected call of ConvertToBip32.
+func (mr *MockExtPubkeyApiMockRecorder) ConvertToBip32(extPubkey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConvertToBip32", reflect.TypeOf((*MockExtPubkeyApi)(nil).ConvertToBip32), extPubkey)
+}
+
 // GetData mocks base method.
 func (m *MockExtPubkeyApi) GetData(extPubkey *types.ExtPubkey) (*types.ExtkeyData, error) {
 	m.ctrl.T.Helper()

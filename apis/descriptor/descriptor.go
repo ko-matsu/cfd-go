@@ -6,6 +6,7 @@ import (
 
 	cfd "github.com/cryptogarageinc/cfd-go"
 	"github.com/cryptogarageinc/cfd-go/apis/address"
+	"github.com/cryptogarageinc/cfd-go/apis/key"
 	"github.com/cryptogarageinc/cfd-go/config"
 	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
 	"github.com/cryptogarageinc/cfd-go/types"
@@ -19,7 +20,7 @@ import (
 //go:generate goimports -w mock/descriptor.go
 
 type DescriptorApi interface {
-	// GetNetworkTypes returnss the available network types.
+	// GetNetworkTypes returns the available network types.
 	GetNetworkTypes() []types.NetworkType
 	// NewDescriptorFromAddress returns a Descriptor from pubkey.
 	NewDescriptorFromPubkey(
@@ -36,6 +37,11 @@ type DescriptorApi interface {
 	NewDescriptorFromLockingScript(lockingScript string) *types.Descriptor
 	// NewDescriptorFromAddress returns a Descriptor from address.
 	NewDescriptorFromAddress(address string) *types.Descriptor
+	// NewDescriptorFromExtPubkey returns a Descriptor.
+	NewDescriptorFromExtPubkey(
+		hashType types.HashType,
+		extPubkey *types.ExtPubkey,
+	) (*types.Descriptor, error)
 	// ParseByString returns a Descriptor parsing data.
 	ParseByString(descriptor string) (
 		data *types.DescriptorRootData,
@@ -98,6 +104,14 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 		} else {
 			api.addressApi = addressApi
 		}
+
+		extPubkeyApi := key.NewExtPubkeyApi(
+			config.NetworkOption(network.ToBitcoinType()))
+		if extPubkeyApi.HasError() {
+			api.SetError(extPubkeyApi.GetError())
+		} else {
+			api.extPubkeyApi = extPubkeyApi
+		}
 	}
 	return &api
 }
@@ -109,8 +123,9 @@ func NewDescriptorApi(options ...config.CfdConfigOption) *DescriptorApiImpl {
 // Descriptor This struct use for the output descriptor.
 type DescriptorApiImpl struct {
 	cfdErrors.HasInitializeError
-	network    *types.NetworkType // Network Type
-	addressApi address.AddressApi
+	network      *types.NetworkType // Network Type
+	addressApi   address.AddressApi
+	extPubkeyApi key.ExtPubkeyApi
 }
 
 // WithAddressApi This function set an address api.
@@ -127,7 +142,19 @@ func (p *DescriptorApiImpl) WithAddressApi(addressApi address.AddressApi) *Descr
 	return p
 }
 
-// GetNetworkTypes returnss the available network types.
+// WithExtPubkeyApi This function set an extend pubkey api.
+func (p *DescriptorApiImpl) WithExtPubkeyApi(extPubkeyApi key.ExtPubkeyApi) *DescriptorApiImpl {
+	if extPubkeyApi == nil {
+		p.SetError(cfdErrors.ErrParameterNil)
+	} else if p.network == nil {
+		p.SetError(cfdErrors.ErrNetworkConfig)
+	} else {
+		p.extPubkeyApi = extPubkeyApi
+	}
+	return p
+}
+
+// GetNetworkTypes returns the available network types.
 func (d *DescriptorApiImpl) GetNetworkTypes() []types.NetworkType {
 	networks := []types.NetworkType{}
 	if err := d.validConfig(); err != nil {
@@ -169,6 +196,36 @@ func (d *DescriptorApiImpl) NewDescriptorFromMultisig(hashType types.HashType, p
 	return &types.Descriptor{
 		OutputDescriptor: desc,
 	}
+}
+
+// NewDescriptorFromExtPubkey returns a Descriptor.
+func (d *DescriptorApiImpl) NewDescriptorFromExtPubkey(
+	hashType types.HashType, extPubkey *types.ExtPubkey,
+) (desc *types.Descriptor, err error) {
+	if err = d.validConfig(); err != nil {
+		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	}
+	keyInfo, err := d.extPubkeyApi.GetData(extPubkey)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse extPubkey error")
+	} else if keyInfo.KeyType != types.ExtPubkeyType {
+		return nil, errors.Errorf("invalid extkey type")
+	}
+	// FIXME(k-matsuzawa): check keyVersion & hashType
+
+	var descStr string
+	switch hashType {
+	case types.P2shP2wpkh:
+		descStr = "sh(wpkh(" + extPubkey.Key + "))"
+	case types.P2wpkh:
+		descStr = "wpkh(" + extPubkey.Key + ")"
+	case types.P2pkh:
+		descStr = "pkh(" + extPubkey.Key + ")"
+	default:
+		return nil, errors.Errorf("unsupported hash type")
+	}
+	desc = &types.Descriptor{OutputDescriptor: descStr}
+	return desc, nil
 }
 
 // NewDescriptor returns a Descriptor.

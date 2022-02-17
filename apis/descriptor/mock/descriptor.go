@@ -77,6 +77,21 @@ func (mr *MockDescriptorApiMockRecorder) NewDescriptorFromAddress(address interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewDescriptorFromAddress", reflect.TypeOf((*MockDescriptorApi)(nil).NewDescriptorFromAddress), address)
 }
 
+// NewDescriptorFromExtPubkey mocks base method.
+func (m *MockDescriptorApi) NewDescriptorFromExtPubkey(hashType types.HashType, extPubkey *types.ExtPubkey) (*types.Descriptor, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewDescriptorFromExtPubkey", hashType, extPubkey)
+	ret0, _ := ret[0].(*types.Descriptor)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NewDescriptorFromExtPubkey indicates an expected call of NewDescriptorFromExtPubkey.
+func (mr *MockDescriptorApiMockRecorder) NewDescriptorFromExtPubkey(hashType, extPubkey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewDescriptorFromExtPubkey", reflect.TypeOf((*MockDescriptorApi)(nil).NewDescriptorFromExtPubkey), hashType, extPubkey)
+}
+
 // NewDescriptorFromLockingScript mocks base method.
 func (m *MockDescriptorApi) NewDescriptorFromLockingScript(lockingScript string) *types.Descriptor {
 	m.ctrl.T.Helper()

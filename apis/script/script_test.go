@@ -55,3 +55,46 @@ func TestCreateMultisig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "52210205ffcdde75f262d66ada3dd877c7471f8f8ee9ee24d917c3e18d01cee458bafe2102be61f4350b4ae7544f99649a917f48ba16cf48c983ac1599774958d88ad17ec552ae", script.ToHex())
 }
+
+func TestAnalyzeScript(t *testing.T) {
+	scriptApi := NewScriptApi()
+
+	isMatch, err := scriptApi.IsCheckHashType(
+		types.P2sh,
+		types.NewScriptFromHexIgnoreError("a914178e9e3f51ee683bd915795653f05256db68c27887"))
+	assert.NoError(t, err)
+	assert.Equal(t, true, isMatch)
+	isMatch, err = scriptApi.IsCheckHashType(
+		types.P2wsh,
+		types.NewScriptFromHexIgnoreError("a914178e9e3f51ee683bd915795653f05256db68c27887"))
+	assert.NoError(t, err)
+	assert.Equal(t, false, isMatch)
+
+	isMatch, err = scriptApi.IsCheckHashType(
+		types.P2wsh,
+		types.NewScriptFromHexIgnoreError("0020f39f6272ba6b57918eb047c5dc44fb475356b0f24c12fca39b19284e80008a42"))
+	assert.NoError(t, err)
+	assert.Equal(t, true, isMatch)
+
+	isMatch, err = scriptApi.IsCheckHashType(
+		types.P2pkh,
+		types.NewScriptFromHexIgnoreError("76a914ef692e4bf0cd5ed05235a4fc582ec4a4ff9695b488ac"))
+	assert.NoError(t, err)
+	assert.Equal(t, true, isMatch)
+	isMatch, err = scriptApi.IsCheckHashType(
+		types.P2sh,
+		types.NewScriptFromHexIgnoreError("a9147200818f884ee12b964442b059c11d0712b6abe787"))
+	assert.NoError(t, err)
+	assert.Equal(t, true, isMatch)
+	isMatch, err = scriptApi.IsCheckHashType(
+		types.P2wpkh,
+		types.NewScriptFromHexIgnoreError("0014ef692e4bf0cd5ed05235a4fc582ec4a4ff9695b4"))
+	assert.NoError(t, err)
+	assert.Equal(t, true, isMatch)
+
+	isMatch, err = scriptApi.IsCheckHashType(
+		types.Taproot,
+		types.NewScriptFromHexIgnoreError("512005ffcdde75f262d66ada3dd877c7471f8f8ee9ee24d917c3e18d01cee458bafe"))
+	assert.NoError(t, err)
+	assert.Equal(t, true, isMatch)
+}
