@@ -32,6 +32,8 @@ type ScriptApi interface {
 	Parse(script *types.Script) (asmStrings []string, err error)
 	ParseMultisig(script *types.Script) (pubkey []types.Pubkey, requireSigNum uint32, err error)
 	CreateMultisig(pubkeys []types.Pubkey, requireSigNum uint32) (script *types.Script, err error)
+	AnalyzeLockingScript(script *types.Script) (hashType types.HashType, err error)
+	IsCheckHashType(hashType types.HashType, script *types.Script) (bool, error)
 }
 
 // TODO(k-matsuzawa): Implement APIs for the following functions in the future.
@@ -195,4 +197,115 @@ func (s *ScriptApiImpl) CreateMultisig(pubkeys []types.Pubkey, requireSigNum uin
 	}
 	script = &scriptObj
 	return script, nil
+}
+
+func (s *ScriptApiImpl) AnalyzeLockingScript(script *types.Script) (
+	hashType types.HashType, err error,
+) {
+	hashType = types.UnknownType
+	asmStrings, err := s.Parse(script)
+	if err != nil {
+		return hashType, err
+	}
+	for i := range asmStrings {
+		asmStrings[i] = strings.ToUpper(asmStrings[i])
+	}
+
+	switch len(asmStrings) {
+	case 5:
+		if s.isP2pkh(asmStrings) {
+			return types.P2pkh, nil
+		}
+	case 3:
+		if s.isP2sh(asmStrings) {
+			return types.P2sh, nil
+		}
+	case 2:
+		if strings.HasPrefix(asmStrings[1], "OP_") {
+			return hashType, errors.Errorf("unknown locking script format")
+		}
+		witVerStr := asmStrings[0]
+		if strings.HasPrefix(asmStrings[0], "OP_") {
+			witVerStr = asmStrings[0][3:]
+		}
+		witnessVersion, err := strconv.Atoi(witVerStr)
+		if err != nil {
+			return hashType, errors.Wrap(err, "analyze witness version error")
+		}
+		switch {
+		case s.isP2wpkh(witnessVersion, asmStrings[1]):
+			return types.P2wpkh, nil
+		case s.isP2wsh(witnessVersion, asmStrings[1]):
+			return types.P2wsh, nil
+		case s.isP2tr(witnessVersion, asmStrings[1]):
+			return types.Taproot, nil
+		default:
+			// do nothing
+		}
+		if witnessVersion == 0 || witnessVersion == 1 {
+			return hashType, errors.Errorf("Invalid witness-%d format", witnessVersion)
+		}
+	}
+	return hashType, errors.Errorf("unknown locking script format")
+}
+
+func (s *ScriptApiImpl) IsCheckHashType(
+	hashType types.HashType,
+	script *types.Script,
+) (bool, error) {
+	targetHashType, err := s.AnalyzeLockingScript(script)
+	if err != nil {
+		return false, err
+	}
+	isEquals := (hashType == targetHashType)
+	return isEquals, nil
+}
+
+func (s *ScriptApiImpl) isP2pkh(asmStrings []string) bool {
+	switch {
+	case len(asmStrings) != 5:
+	case asmStrings[0] != "OP_DUP":
+	case asmStrings[1] != "OP_HASH160":
+	case asmStrings[3] != "OP_EQUALVERIFY":
+	case asmStrings[4] != "OP_CHECKSIG":
+	case strings.HasPrefix(asmStrings[2], "OP_"):
+	case len(asmStrings[2]) != 20*2:
+	default:
+		return true
+	}
+	return false
+}
+
+func (s *ScriptApiImpl) isP2sh(asmStrings []string) bool {
+	switch {
+	case len(asmStrings) != 3:
+	case asmStrings[0] != "OP_HASH160":
+	case asmStrings[2] != "OP_EQUAL":
+	case strings.HasPrefix(asmStrings[1], "OP_"):
+	case len(asmStrings[1]) != 20*2:
+	default:
+		return true
+	}
+	return false
+}
+
+func (s *ScriptApiImpl) isP2wpkh(witnessVersion int, hash string) bool {
+	if (witnessVersion != 0) || strings.HasPrefix(hash, "OP_") || (len(hash) != 20*2) {
+		return false
+	}
+	return true
+}
+
+func (s *ScriptApiImpl) isP2wsh(witnessVersion int, hash string) bool {
+	if (witnessVersion != 0) || strings.HasPrefix(hash, "OP_") || (len(hash) != 32*2) {
+		return false
+	}
+	return true
+}
+
+func (s *ScriptApiImpl) isP2tr(witnessVersion int, hash string) bool {
+	if (witnessVersion != 1) || strings.HasPrefix(hash, "OP_") || (len(hash) != 32*2) {
+		return false
+	}
+	return true
 }
