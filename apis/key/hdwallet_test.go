@@ -103,3 +103,61 @@ func TestCfdExtkey(t *testing.T) {
 		assert.Equal(t, "xpub6EXtjFtcPwmae296sZGckBgbfCHnodfjWujbGK7hhzRybmWJhmgeusFbiiZyG1iSeiBcQ7diPeUC9vtP9wLS44bWpqH4kuQQD5N4gA3LaFE", extkey)
 	*/
 }
+
+func TestConvertToBip32(t *testing.T) {
+	network := types.Mainnet
+	cfdCfg := config.NetworkOption(network)
+	extPubkeyApiImpl := NewExtPubkeyApi(cfdCfg)
+
+	// BIP84
+	bip32Pub, err := extPubkeyApiImpl.ConvertToBip32(&types.ExtPubkey{
+		Key: "zpub6jftahH18ngZxmWMzHpqkSuYWXAxxQNKY7Z7dhL8WXvXn74v79MXo16RujDNiprgNfpHNYzmaPQAKAkf8mXRXpxx29DbpsdKFQEahN6FZ3c",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "xpub661MyMwAqRbcGB88KaFbLGiYAat55APKhtWg4uYMkXAmfuSTbq2QYsn9sKJCj1YqZPafsboef4h4YbXXhNhPwMbkHTpkf3zLhx7HvFw1NDy", bip32Pub.Key)
+	}
+
+	bip32Pub, err = extPubkeyApiImpl.ConvertToBip32(&types.ExtPubkey{
+		Key: "zpub6qGZy5pyrZn6RR6f22e51sNsPFEo8rF4m36eV6ZGAKyFj2VsW3Kpa9XWu1zPHAik9DRZxdCrFhoUyR5qnAAtuU6NmRbzd3ngUJ5gr3YCyeg",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "xpub6Bc3MkV9ZCh8ipiRMK4pbhBs3JwuFcG4vp4CvJmVQKDVcpsQzizhL2DErc5DHMQuKwBxTg1jLP6PCqriLmLsJzjB2kD9TE9hvqxQ4yLKtcV", bip32Pub.Key)
+	}
+
+	// BIP49
+	bip32Pub, err = extPubkeyApiImpl.ConvertToBip32(&types.ExtPubkey{
+		Key: "ypub6QqdH2c5z7967UKF9w3DYMp3LZ2X1nNpd12trJSF8XYej1FgrVByAwSHtXFnivCky2hUd5QD7j3cRt96R57QjbHM9oXBExopygAwJmSSGxE",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "xpub661MyMwAqRbcGB88KaFbLGiYAat55APKhtWg4uYMkXAmfuSTbq2QYsn9sKJCj1YqZPafsboef4h4YbXXhNhPwMbkHTpkf3zLhx7HvFw1NDy", bip32Pub.Key)
+	}
+
+	bip32Pub, err = extPubkeyApiImpl.ConvertToBip32(&types.ExtPubkey{
+		Key: "ypub6WSJfRA4htEca7uYBfrSonHNDH6MCEFZqvaRhhfNnKbNfvgeFPAFx5sNsp2oHG4pjaJmD9cHo3Sw68UH4Tkt7EQmu5ua38yCCa23TX34ahn",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "xpub6Bc3MkV9ZCh8ipiRMK4pbhBs3JwuFcG4vp4CvJmVQKDVcpsQzizhL2DErc5DHMQuKwBxTg1jLP6PCqriLmLsJzjB2kD9TE9hvqxQ4yLKtcV", bip32Pub.Key)
+	}
+
+	// testnet
+	cfdCfg = config.NetworkOption(types.Regtest)
+	extPubkeyApiImpl = NewExtPubkeyApi(cfdCfg)
+	bip32Pub, err = extPubkeyApiImpl.ConvertToBip32(&types.ExtPubkey{
+		Key: "vpub5SLqN2bLY4WeZajtergLv6XXpebBBvQKsfUEW7kazWR1Zhp16WhHJkTspuP2jCEzk7M4NecXjjyxn2JQFysNLtEYYnRuVEMNAVz194Xi9T8",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF", bip32Pub.Key)
+	}
+	bip32Pub, err = extPubkeyApiImpl.ConvertToBip32(&types.ExtPubkey{
+		Key: "upub57Wa4MvRPNyAiHYmpVtii1S2egSjFJQpxYx1iirhcW38WbzmqrXiggojohRSjHb5LUEFdB1yH5dQtjgqYHTMYeYwgSjUuKXstmvMkXnT6zh",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF", bip32Pub.Key)
+	}
+}

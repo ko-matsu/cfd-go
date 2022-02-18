@@ -22,6 +22,8 @@ type ExtPubkeyApi interface {
 	// GetExtPubkeyByPath ...
 	GetExtPubkeyByPath(extPubkey *types.ExtPubkey, bip32Path string) (derivedPubkey *types.ExtPubkey, err error)
 	GetData(extPubkey *types.ExtPubkey) (data *types.ExtkeyData, err error)
+	// ConvertToBip32 ...
+	ConvertToBip32(extPubkey *types.ExtPubkey) (bip32ExtPubkey *types.ExtPubkey, err error)
 }
 
 type ExtPrivkeyApi interface {
@@ -159,6 +161,32 @@ func (k *ExtPubkeyApiImpl) Valid(extPubkey *types.ExtPubkey) error {
 		return errors.Wrap(err, "validate extkey error")
 	}
 	return nil
+}
+
+// ConvertToBip32 ...
+func (k *ExtPubkeyApiImpl) ConvertToBip32(extPubkey *types.ExtPubkey) (bip32ExtPubkey *types.ExtPubkey, err error) {
+	prefix := ""
+	if err = k.validConfig(); err != nil {
+		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
+	} else if extPubkey == nil {
+		return nil, errors.Errorf("CFD Error: extPubkey is nil")
+	} else if strings.HasPrefix(extPubkey.Key, "zpub") || strings.HasPrefix(extPubkey.Key, "ypub") {
+		prefix = "0488b21e" // mainnet
+	} else if strings.HasPrefix(extPubkey.Key, "vpub") || strings.HasPrefix(extPubkey.Key, "upub") {
+		prefix = "043587cf" // testnet/regtest
+	} else {
+		return extPubkey, nil
+	}
+	base58Data, err := cfd.CfdGoDecodeBase58(extPubkey.Key, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "DecodeBase58 failed")
+	}
+	key, err := cfd.CfdGoEncodeBase58(prefix+base58Data[8:], true)
+	if err != nil {
+		return nil, errors.Wrap(err, "EncodeBase58 failed")
+	}
+	bip32ExtPubkey = &types.ExtPubkey{Key: key}
+	return bip32ExtPubkey, nil
 }
 
 // validExtkeyInfo ...
