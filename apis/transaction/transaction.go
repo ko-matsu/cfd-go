@@ -12,8 +12,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source transaction.go -destination mock/transaction.go -package mock
-//go:generate goimports -w mock/transaction.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source transaction.go -destination mock/transaction.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/transaction.go
 
 // -------------------------------------
 // API

@@ -1,17 +1,20 @@
 .PHONY: all
-all: gettools generate format
+all: generate format
 
-gettools:
-	go install golang.org/x/tools/cmd/goimports@v0.1.5
+get-cache:
+	go install golang.org/x/tools/cmd/goimports@v0.1.9
 	go install github.com/golang/mock/mockgen@v1.6.0
+	go mod download
+
+update:
+	go mod download all
 	go mod tidy
 
 generate:
 	go generate ./apis/... ./service/...
 
 format:
-	go fmt . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
-	goimports -w .
+	go run golang.org/x/tools/cmd/goimports@v0.1.9 -w .
 	go vet . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
 	go mod tidy
 
@@ -49,4 +52,4 @@ test-win:
 
 gen-swig:
 	./tools/gen_swig.sh
-	goimports -w .
+	make format

@@ -16,8 +16,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source descriptor.go -destination mock/descriptor.go -package mock
-//go:generate goimports -w mock/descriptor.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source descriptor.go -destination mock/descriptor.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/descriptor.go
 
 type DescriptorApi interface {
 	// GetNetworkTypes returns the available network types.

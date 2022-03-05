@@ -16,8 +16,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source elements_tx.go -destination mock/elements_tx.go -package mock
-//go:generate goimports -w mock/elements_tx.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source elements_tx.go -destination mock/elements_tx.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/elements_tx.go
 
 const (
 	EmptyBlinder string = types.EmptyBlinder

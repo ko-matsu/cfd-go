@@ -864,9 +864,11 @@ extern swig_intgo _wrap_CfdFreeFundRawTxHandle_cfdgo_3ba1877d699189c4(uintptr_t 
 */
 import "C"
 
-import "unsafe"
-import _ "runtime/cgo"
-import "sync"
+import (
+	_ "runtime/cgo"
+	"sync"
+	"unsafe"
+)
 
 type _ unsafe.Pointer
 
