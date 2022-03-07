@@ -6,6 +6,16 @@ get-cache:
 	go install github.com/golang/mock/mockgen@v1.6.0
 	go mod download
 
+install-go-tools:
+	$(eval BIN:=$(abspath .bin))
+	mkdir -p ./.bin
+	GOBIN="$(BIN)" go run ./tools/go_install.go
+
+install-mockgen:
+	$(eval BIN:=$(abspath .bin))
+	mkdir -p ./.bin
+	GOBIN="$(BIN)" go run ./tools/go_install.go github.com/golang/mock
+
 update:
 	go mod download all
 	go mod tidy
