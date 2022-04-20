@@ -134,6 +134,8 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []types.Pub
 			num, err := strconv.Atoi(numStr)
 			if err != nil {
 				return nil, 0, errors.Wrap(err, cfdErrors.ErrMultisigScript.Error())
+			} else if num < 0 {
+				return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 			}
 			if i == 0 {
 				reqSigNum = num
