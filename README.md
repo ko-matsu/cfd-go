@@ -53,14 +53,10 @@ Useful when developing applications for cryptocurrencies.
 
 ## Dependencies
 
-- Go (1.12 or higher)
+- Go (1.17 or higher)
 - C/C++ Compiler
   - can compile c++11
 - CMake (3.14.3 or higher)
-- When using npm scripts and cmake-js
-  - node.js (stable version)
-  - Python 3.x
-    - for building libwally-core js wrapper
 
 ### Windows (MinGW)
 
@@ -70,7 +66,7 @@ attention: Cgo can only be used on the `make` platform.
 
 download and install files.
 
-- go (1.12 or higher)
+- go (1.17 or higher)
 - [CMake](https://cmake.org/) (3.14.3 or higher)
 - [MinGW](http://mingw-w64.org/) (Add to PATH after install)
 
@@ -83,14 +79,14 @@ download and install files.
 xcode-select --install
 
 # install dependencies using Homebrew
-brew install cmake go node
+brew install cmake go
 ```
 
 ### Linux(Ubuntu)
 
 ```Shell
 # install dependencies using APT package Manager
-apt-get install -y build-essential golang cmake nodejs
+apt-get install -y build-essential golang cmake
 ```
 
 cmake version 3.14.2 or lower, [download from website](https://cmake.org/download/) and install cmake.
@@ -100,19 +96,6 @@ go version 1.11 or lower, get `golang.org/dl/go1.12` or higher.
 ---
 
 ## Build
-
-### Using cmake-js
-
-(If you want to install, [see the installation](#Using-cmake-js-install). Introduces build and install command.)
-
-When using the cmake-js package and npm script, the options for compilation are already set.
-
-```Shell
-npm install
-npm run cmake_release
-go mod download
-go build
-```
 
 ### Using CMake
 
@@ -172,34 +155,6 @@ sudo unzip -q cfdgo-v0.3.2-ubuntu2004-gcc-x86_64.zip -d /
 ### install (after build)
 
 install for `/usr/local/lib`.
-
-#### Using cmake-js install
-
-When using the cmake-js package and npm script, the options for compilation are already set.
-
-Attention: Currently, there is a problem with ExternalProject, so a problem occurs when performing update processing. Please perform cleanup when building before installation.
-
-```Shell
-(cleanup)
-./tools/cmake_cleanup.sh
-sudo ./tools/cleanup_install_files.sh
-
-(build and install by using makefile)
-npm run cmake_make_install
-(Enter the password when prompted to use the sudo command.)
-```
-
-cmake version is 3.15 or higher:
-
-```Shell
-(cleanup)
-./tools/cmake_cleanup.sh
-sudo ./tools/cleanup_install_files.sh
-
-(build and install by using ninja or makefile)
-npm run cmake_install
-(Enter the password when prompted to use the sudo command.)
-```
 
 #### Using CMake install
 
@@ -364,10 +319,10 @@ mingw32-make
 #### mockgen
 
 ```sh
-make
+make generate
 
 (windows)
-mingw32-make
+mingw32-make generate
 ```
 
 ### develop tools by docker compose
