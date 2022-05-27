@@ -1,13 +1,14 @@
 .PHONY: all
 all: generate format
 
+# for docker
 get-cache:
 	go install golang.org/x/tools/cmd/goimports@v0.1.9
 	go install github.com/golang/mock/mockgen@v1.6.0
 	go mod download
 
 update:
-	go mod download all
+	go mod download
 	go mod tidy
 
 generate:
