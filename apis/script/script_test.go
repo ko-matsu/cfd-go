@@ -46,7 +46,7 @@ func TestParseMultisig(t *testing.T) {
 
 func TestCreateMultisig(t *testing.T) {
 	scriptApi := NewScriptApi()
-	pubkeys := []types.Pubkey{
+	pubkeys := []*types.Pubkey{
 		{Hex: "0205ffcdde75f262d66ada3dd877c7471f8f8ee9ee24d917c3e18d01cee458bafe"},
 		{Hex: "02be61f4350b4ae7544f99649a917f48ba16cf48c983ac1599774958d88ad17ec5"},
 	}

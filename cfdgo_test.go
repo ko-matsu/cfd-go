@@ -1916,11 +1916,11 @@ func TestTaprootSchnorr1(t *testing.T) {
 	assert.NoError(t, err)
 	sig, err := util.AddSighashTypeInSignature(&signature, sighashType)
 	assert.NoError(t, err)
-	assert.Equal(t, "61f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f2087201", sig.ToHex())
+	assert.Equal(t, "42ec41bf6c27451b785da1f4e8d50ffa0d9360e3265b55e3b044ed4b96f32d1b13c61987ffd13da2a444d495856a9c97d91b72b61d105921285271bac30ff7c701", sig.ToHex())
 
 	txHex, err = CfdGoAddTaprootSchnorrSign(networkType, txHex, txid, vout, sig, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014161f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f208720100000000", txHex)
+	assert.Equal(t, "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014142ec41bf6c27451b785da1f4e8d50ffa0d9360e3265b55e3b044ed4b96f32d1b13c61987ffd13da2a444d495856a9c97d91b72b61d105921285271bac30ff7c70100000000", txHex)
 
 	isVerify, reason, err := CfdGoVerifySign(networkType, txHex, utxos, txid, vout)
 	assert.NoError(t, err)
@@ -1958,7 +1958,7 @@ func TestTaprootSchnorr2(t *testing.T) {
 	sighashType := NewSigHashType(int(KCfdSigHashAll))
 	txHex, err = CfdGoAddTxSignWithPrivkeyByUtxoList(networkType, txHex, utxos, txid, vout, sk.ToHex(), sighashType, true, nil, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014161f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f208720100000000", txHex)
+	assert.Equal(t, "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014142ec41bf6c27451b785da1f4e8d50ffa0d9360e3265b55e3b044ed4b96f32d1b13c61987ffd13da2a444d495856a9c97d91b72b61d105921285271bac30ff7c70100000000", txHex)
 
 	isVerify, reason, err := CfdGoVerifySign(networkType, txHex, utxos, txid, vout)
 	assert.NoError(t, err)
@@ -2023,12 +2023,12 @@ func TestTapScript(t *testing.T) {
 	assert.NoError(t, err)
 	sig, err := util.AddSighashTypeInSignature(&signature, sighashType)
 	assert.NoError(t, err)
-	assert.Equal(t, "f5aa6b260f9df687786cd3813ba83b476e195041bccea800f2571212f4aae9848a538b6175a4f8ea291d38e351ea7f612a3d700dca63cd3aff05d315c5698ee901", sig.ToHex())
+	assert.Equal(t, "46f705415495d40c409565862c6da85f4a74318f9d5733b073318059500cf5705ef4ecdc3da1f71d9a687a974433e030395e7876271bf2d80d7880006ede7fd701", sig.ToHex())
 
 	signDataList := []ByteData{*sig}
 	txHex, err = CfdGoAddTapScriptSign(networkType, txHex, txid, vout, signDataList, &scriptCheckSig, controlBlock, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "020000000001015b80a1af0e00c700bee9c8e4442bec933fcdc0c686dac2dc336caaaf186c5d190000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50341f5aa6b260f9df687786cd3813ba83b476e195041bccea800f2571212f4aae9848a538b6175a4f8ea291d38e351ea7f612a3d700dca63cd3aff05d315c5698ee90122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d5400000000", txHex)
+	assert.Equal(t, "020000000001015b80a1af0e00c700bee9c8e4442bec933fcdc0c686dac2dc336caaaf186c5d190000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5034146f705415495d40c409565862c6da85f4a74318f9d5733b073318059500cf5705ef4ecdc3da1f71d9a687a974433e030395e7876271bf2d80d7880006ede7fd70122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d5400000000", txHex)
 
 	isVerify, reason, err := CfdGoVerifySign(networkType, txHex, utxos, txid, vout)
 	assert.Error(t, err)

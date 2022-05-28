@@ -124,6 +124,7 @@ type ElementsUtxoData struct {
 	OutPoint          OutPoint             // OutPoint
 	Asset             string               // Asset
 	AssetBlindFactor  string               // Asset BlindFactor
+	AssetCommitment   string               // Asset commitment
 	Amount            int64                // satoshi value
 	ValueBlindFactor  string               // Value BlindFactor
 	AmountCommitment  string               // Amount commitment
@@ -291,6 +292,9 @@ func (u ElementsUtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
 		Asset:             u.Asset,
 		Descriptor:        u.Descriptor,
 		AmountCommitment:  u.AmountCommitment,
+		AssetCommitment:   u.AssetCommitment,
+		AmountBlinder:     u.ValueBlindFactor,
+		AssetBlinder:      u.AssetBlindFactor,
 		IsIssuance:        u.IsIssuance,
 		IsBlindIssuance:   u.IsBlindIssuance,
 		ScriptSigTemplate: u.ScriptSigTemplate,

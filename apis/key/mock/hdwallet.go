@@ -265,6 +265,36 @@ func (mr *MockHdWalletApiMockRecorder) GetExtPrivkeyByPath(seed, bip32Path inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExtPrivkeyByPath", reflect.TypeOf((*MockHdWalletApi)(nil).GetExtPrivkeyByPath), seed, bip32Path)
 }
 
+// GetExtPrivkeyByPathWithFormat mocks base method.
+func (m *MockHdWalletApi) GetExtPrivkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (*types.ExtPrivkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExtPrivkeyByPathWithFormat", seed, bip32Path, formatType)
+	ret0, _ := ret[0].(*types.ExtPrivkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExtPrivkeyByPathWithFormat indicates an expected call of GetExtPrivkeyByPathWithFormat.
+func (mr *MockHdWalletApiMockRecorder) GetExtPrivkeyByPathWithFormat(seed, bip32Path, formatType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExtPrivkeyByPathWithFormat", reflect.TypeOf((*MockHdWalletApi)(nil).GetExtPrivkeyByPathWithFormat), seed, bip32Path, formatType)
+}
+
+// GetExtPrivkeyWithFormat mocks base method.
+func (m *MockHdWalletApi) GetExtPrivkeyWithFormat(seed *types.ByteData, formatType types.ExtkeyFormatType) (*types.ExtPrivkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExtPrivkeyWithFormat", seed, formatType)
+	ret0, _ := ret[0].(*types.ExtPrivkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExtPrivkeyWithFormat indicates an expected call of GetExtPrivkeyWithFormat.
+func (mr *MockHdWalletApiMockRecorder) GetExtPrivkeyWithFormat(seed, formatType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExtPrivkeyWithFormat", reflect.TypeOf((*MockHdWalletApi)(nil).GetExtPrivkeyWithFormat), seed, formatType)
+}
+
 // GetExtPubkeyByPath mocks base method.
 func (m *MockHdWalletApi) GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (*types.ExtPubkey, error) {
 	m.ctrl.T.Helper()
@@ -278,6 +308,21 @@ func (m *MockHdWalletApi) GetExtPubkeyByPath(seed *types.ByteData, bip32Path str
 func (mr *MockHdWalletApiMockRecorder) GetExtPubkeyByPath(seed, bip32Path interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExtPubkeyByPath", reflect.TypeOf((*MockHdWalletApi)(nil).GetExtPubkeyByPath), seed, bip32Path)
+}
+
+// GetExtPubkeyByPathWithFormat mocks base method.
+func (m *MockHdWalletApi) GetExtPubkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (*types.ExtPubkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExtPubkeyByPathWithFormat", seed, bip32Path, formatType)
+	ret0, _ := ret[0].(*types.ExtPubkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExtPubkeyByPathWithFormat indicates an expected call of GetExtPubkeyByPathWithFormat.
+func (mr *MockHdWalletApiMockRecorder) GetExtPubkeyByPathWithFormat(seed, bip32Path, formatType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExtPubkeyByPathWithFormat", reflect.TypeOf((*MockHdWalletApi)(nil).GetExtPubkeyByPathWithFormat), seed, bip32Path, formatType)
 }
 
 // GetMnemonicFromEntropy mocks base method.

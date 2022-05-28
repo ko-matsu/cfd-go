@@ -51,7 +51,7 @@ func (mr *MockPeginMockRecorder) CreatePeginAddress(addressType, pubkey, fedpegS
 }
 
 // CreatePeginTransaction mocks base method.
-func (m *MockPegin) CreatePeginTransaction(peginOutPoint *types.OutPoint, peginData *types.InputPeginData, utxoList []*types.ElementsUtxoData, sendList []types.InputConfidentialTxOut, changeAddress *string, option *types.PeginTxOption) (*types.ConfidentialTx, *types.ConfidentialTx, error) {
+func (m *MockPegin) CreatePeginTransaction(peginOutPoint *types.OutPoint, peginData *types.InputPeginData, utxoList []*types.ElementsUtxoData, sendList []*types.InputConfidentialTxOut, changeAddress *string, option *types.PeginTxOption) (*types.ConfidentialTx, *types.ConfidentialTx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePeginTransaction", peginOutPoint, peginData, utxoList, sendList, changeAddress, option)
 	ret0, _ := ret[0].(*types.ConfidentialTx)

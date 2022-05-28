@@ -86,6 +86,9 @@ type HdWalletApi interface {
 	GetExtPrivkey(seed *types.ByteData) (privkey *types.ExtPrivkey, err error)
 	GetExtPrivkeyByPath(seed *types.ByteData, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error)
 	GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (derivedPubkey *types.ExtPubkey, err error)
+	GetExtPrivkeyWithFormat(seed *types.ByteData, formatType types.ExtkeyFormatType) (privkey *types.ExtPrivkey, err error)
+	GetExtPrivkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPrivkey *types.ExtPrivkey, err error)
+	GetExtPubkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPubkey *types.ExtPubkey, err error)
 	GetSeedFromMnemonicEng(mnemonic []string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetSeedFromMnemonicEngAndPassphrase(mnemonic []string, passphrase string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetMnemonicFromEntropyEng(entropy *types.ByteData) (mnemonic *[]string, err error)
@@ -383,14 +386,25 @@ func (k *ExtPrivkeyApiImpl) validConfig() error {
 // -------------------------------------
 // implement HdWalletApiImpl
 // -------------------------------------
-
 func (h *HdWalletApiImpl) GetExtPrivkey(seed *types.ByteData) (privkey *types.ExtPrivkey, err error) {
+	return h.GetExtPrivkeyWithFormat(seed, types.ExtkeyFormatTypeBip32)
+}
+
+func (h *HdWalletApiImpl) GetExtPrivkeyByPath(seed *types.ByteData, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error) {
+	return h.GetExtPrivkeyByPathWithFormat(seed, bip32Path, types.ExtkeyFormatTypeBip32)
+}
+
+func (h *HdWalletApiImpl) GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (derivedPubkey *types.ExtPubkey, err error) {
+	return h.GetExtPubkeyByPathWithFormat(seed, bip32Path, types.ExtkeyFormatTypeBip32)
+}
+
+func (h *HdWalletApiImpl) GetExtPrivkeyWithFormat(seed *types.ByteData, formatType types.ExtkeyFormatType) (privkey *types.ExtPrivkey, err error) {
 	if err := h.validConfig(); err != nil {
 		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	} else if seed == nil {
 		return nil, errors.Errorf("CFD Error: seed is nil")
 	}
-	key, err := cfd.CfdGoCreateExtkeyFromSeed(seed.ToHex(), h.network.ToCfdValue(), int(cfd.KCfdExtPrivkey))
+	key, err := cfd.CfdGoCreateExtkeyByFormatFromSeed(seed.ToHex(), h.network.ToCfdValue(), int(cfd.KCfdExtPrivkey), cfd.ExtkeyFormatType(formatType))
 	if err != nil {
 		return nil, errors.Wrap(err, "create extkey error")
 	}
@@ -398,8 +412,8 @@ func (h *HdWalletApiImpl) GetExtPrivkey(seed *types.ByteData) (privkey *types.Ex
 	return privkey, nil
 }
 
-func (h *HdWalletApiImpl) GetExtPrivkeyByPath(seed *types.ByteData, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error) {
-	privkey, err := h.GetExtPrivkey(seed)
+func (h *HdWalletApiImpl) GetExtPrivkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPrivkey *types.ExtPrivkey, err error) {
+	privkey, err := h.GetExtPrivkeyWithFormat(seed, formatType)
 	if err != nil {
 		return nil, errors.Wrap(err, "get extprivkey error")
 	}
@@ -411,8 +425,8 @@ func (h *HdWalletApiImpl) GetExtPrivkeyByPath(seed *types.ByteData, bip32Path st
 	return derivedPrivkey, nil
 }
 
-func (h *HdWalletApiImpl) GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (derivedPubkey *types.ExtPubkey, err error) {
-	privkey, err := h.GetExtPrivkey(seed)
+func (h *HdWalletApiImpl) GetExtPubkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPubkey *types.ExtPubkey, err error) {
+	privkey, err := h.GetExtPrivkeyWithFormat(seed, formatType)
 	if err != nil {
 		return nil, errors.Wrap(err, "get extprivkey error")
 	}

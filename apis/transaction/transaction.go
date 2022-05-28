@@ -20,12 +20,12 @@ import (
 // -------------------------------------
 
 type TransactionApi interface {
-	Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error)
-	Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error
+	Create(version uint32, locktime uint32, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) (tx *types.Transaction, err error)
+	Add(tx *types.Transaction, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) error
 	AddPubkeySign(tx *types.Transaction, outpoint *types.OutPoint, hashType types.HashType, pubkey *types.Pubkey, signature string) error
 	AddPubkeySignByDescriptor(tx *types.Transaction, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signature string) error
-	SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList *[]types.UtxoData) error
-	VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error)
+	SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList []*types.UtxoData) error
+	VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList []*types.UtxoData) (isVerify bool, reason string, err error)
 	GetTxid(tx *types.Transaction) string
 	GetTxOut(tx *types.Transaction, vout uint32) (txout *types.TxOut, err error)
 }
@@ -73,7 +73,7 @@ func (p *TransactionApiImpl) WithBitcoinDescriptorApi(descriptorApi descriptor.D
 	return p
 }
 
-func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (tx *types.Transaction, err error) {
+func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) (tx *types.Transaction, err error) {
 	if err = t.validConfig(); err != nil {
 		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
@@ -95,7 +95,7 @@ func (t *TransactionApiImpl) Create(version uint32, locktime uint32, txinList *[
 	return tx, nil
 }
 
-func (t *TransactionApiImpl) Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
+func (t *TransactionApiImpl) Add(tx *types.Transaction, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) error {
 	if err := t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
@@ -161,7 +161,7 @@ func (t *TransactionApiImpl) AddPubkeySignByDescriptor(tx *types.Transaction, ou
 }
 
 // SignWithPrivkey ...
-func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList *[]types.UtxoData) error {
+func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList []*types.UtxoData) error {
 	if err := t.validConfig(); err != nil {
 		return errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
@@ -171,9 +171,9 @@ func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *ty
 		Rangeproof:   sighashType.Rangeproof,
 	}
 	txinUtxoList := []cfd.CfdUtxo{}
-	if utxoList != nil {
-		txinUtxoList = make([]cfd.CfdUtxo, len(*utxoList))
-		for i, utxo := range *utxoList {
+	if len(utxoList) > 0 {
+		txinUtxoList = make([]cfd.CfdUtxo, len(utxoList))
+		for i, utxo := range utxoList {
 			txinUtxoList[i] = utxo.ConvertToCfdUtxo()
 		}
 	}
@@ -186,14 +186,14 @@ func (t *TransactionApiImpl) SignWithPrivkey(tx *types.Transaction, outpoint *ty
 }
 
 // VerifySign ...
-func (t *TransactionApiImpl) VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (isVerify bool, reason string, err error) {
+func (t *TransactionApiImpl) VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList []*types.UtxoData) (isVerify bool, reason string, err error) {
 	if err := t.validConfig(); err != nil {
 		return false, "", errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
 	utxoList := []cfd.CfdUtxo{}
-	if txinUtxoList != nil {
-		utxoList = make([]cfd.CfdUtxo, len(*txinUtxoList))
-		for i, utxo := range *txinUtxoList {
+	if len(txinUtxoList) > 0 {
+		utxoList = make([]cfd.CfdUtxo, len(txinUtxoList))
+		for i, utxo := range txinUtxoList {
 			utxoList[i] = utxo.ConvertToCfdUtxo()
 		}
 	}
@@ -253,31 +253,27 @@ func (t *TransactionApiImpl) validConfig() error {
 }
 
 // addConidentialTx ...
-func addTransaction(txHandle uintptr, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
+func addTransaction(txHandle uintptr, locktime uint32, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) error {
 	var err error
-	if txinList != nil {
-		for i := 0; i < len(*txinList); i++ {
-			seq := (*txinList)[i].Sequence
-			if seq == 0 {
-				if locktime == 0 {
-					seq = uint32(cfd.KCfdSequenceLockTimeFinal)
-				} else {
-					seq = uint32(cfd.KCfdSequenceLockTimeEnableMax)
-				}
+	for _, txin := range txinList {
+		seq := txin.Sequence
+		if seq == 0 {
+			if locktime == 0 {
+				seq = uint32(cfd.KCfdSequenceLockTimeFinal)
+			} else {
+				seq = uint32(cfd.KCfdSequenceLockTimeEnableMax)
 			}
-			err = cfd.AddTransactionInput(txHandle, (*txinList)[i].OutPoint.Txid, (*txinList)[i].OutPoint.Vout, seq)
-			if err != nil {
-				return errors.Wrap(err, "add txin error")
-			}
+		}
+		err = cfd.AddTransactionInput(txHandle, txin.OutPoint.Txid, txin.OutPoint.Vout, seq)
+		if err != nil {
+			return errors.Wrap(err, "add txin error")
 		}
 	}
 
-	if txoutList != nil {
-		for i := 0; i < len(*txoutList); i++ {
-			err = cfd.AddTransactionOutput(txHandle, (*txoutList)[i].Amount, (*txoutList)[i].Address, (*txoutList)[i].LockingScript, "")
-			if err != nil {
-				return errors.Wrap(err, "add txout error")
-			}
+	for _, txout := range txoutList {
+		err = cfd.AddTransactionOutput(txHandle, txout.Amount, txout.Address, txout.LockingScript, "")
+		if err != nil {
+			return errors.Wrap(err, "add txout error")
 		}
 	}
 	return nil

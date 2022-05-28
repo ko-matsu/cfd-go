@@ -30,8 +30,8 @@ type ScriptApi interface {
 	CreateFromAsm(asm string) (script *types.Script, err error)
 	CreateFromAsmStrings(asmStrings []string) (script *types.Script, err error)
 	Parse(script *types.Script) (asmStrings []string, err error)
-	ParseMultisig(script *types.Script) (pubkey []types.Pubkey, requireSigNum uint32, err error)
-	CreateMultisig(pubkeys []types.Pubkey, requireSigNum uint32) (script *types.Script, err error)
+	ParseMultisig(script *types.Script) (pubkey []*types.Pubkey, requireSigNum uint32, err error)
+	CreateMultisig(pubkeys []*types.Pubkey, requireSigNum uint32) (script *types.Script, err error)
 	AnalyzeLockingScript(script *types.Script) (hashType types.HashType, err error)
 	IsCheckHashType(hashType types.HashType, script *types.Script) (bool, error)
 }
@@ -103,7 +103,7 @@ func (s *ScriptApiImpl) Parse(script *types.Script) (asmStrings []string, err er
 	return asmStrings, nil
 }
 
-func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []types.Pubkey, requireSigNum uint32, err error) {
+func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pubkey, requireSigNum uint32, err error) {
 	if s == nil {
 		return nil, 0, errors.New(cfdErrors.InternalError.Error())
 	} else if script == nil {
@@ -120,7 +120,7 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []types.Pub
 
 	reqSigNum := 0
 	totalNum := 0
-	pubkeys = make([]types.Pubkey, 0, len(scriptItems)-2)
+	pubkeys = make([]*types.Pubkey, 0, len(scriptItems)-2)
 	for i, item := range scriptItems {
 		switch i {
 		case 0, len(scriptItems) - 2:
@@ -147,8 +147,8 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []types.Pub
 				return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 			}
 		default:
-			pk := types.Pubkey{Hex: item}
-			err := s.pubkeyApi.Verify(&pk)
+			pk := &types.Pubkey{Hex: item}
+			err := s.pubkeyApi.Verify(pk)
 			if err != nil {
 				return nil, 0, errors.Wrap(err, cfdErrors.ErrMultisigScript.Error())
 			}
@@ -168,7 +168,7 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []types.Pub
 	}
 	if totalNum > MaxP2shMultisigPubkeyNum {
 		for _, pubkey := range pubkeys {
-			if err := s.pubkeyApi.IsCompressed(&pubkey); err != nil {
+			if err := s.pubkeyApi.IsCompressed(pubkey); err != nil {
 				return nil, 0, errors.Wrap(err, cfdErrors.ErrMultisigScript.Error())
 			}
 		}
@@ -177,7 +177,7 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []types.Pub
 	return pubkeys, requireSigNum, nil
 }
 
-func (s *ScriptApiImpl) CreateMultisig(pubkeys []types.Pubkey, requireSigNum uint32) (script *types.Script, err error) {
+func (s *ScriptApiImpl) CreateMultisig(pubkeys []*types.Pubkey, requireSigNum uint32) (script *types.Script, err error) {
 	if s == nil {
 		return nil, errors.New(cfdErrors.InternalError.Error())
 	} else if len(pubkeys) == 0 {

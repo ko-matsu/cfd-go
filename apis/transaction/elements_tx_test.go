@@ -97,22 +97,22 @@ func TestCreateClaimPeginTx(t *testing.T) {
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
 	}
-	btcInputs := []types.InputTxIn{
+	btcInputs := []*types.InputTxIn{
 		{
 			OutPoint: utxoOutPoint,
 			Sequence: types.SequenceLockTimeFinal,
 		},
 	}
-	btcOutputs := []types.InputTxOut{
+	btcOutputs := []*types.InputTxOut{
 		{
 			Amount:  peginAmount,
 			Address: peginAddr.Address,
 		},
 	}
-	btcTx, err := btcTxUtil.Create(uint32(2), uint32(0), &btcInputs, &btcOutputs)
+	btcTx, err := btcTxUtil.Create(uint32(2), uint32(0), btcInputs, btcOutputs)
 	assert.NoError(t, err)
 	// add sign
-	utxos := []types.UtxoData{
+	utxos := []*types.UtxoData{
 		{
 			OutPoint:   utxoOutPoint,
 			Amount:     amount,
@@ -121,7 +121,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	}
 	utxoPrivkey, err := keyUtil.GetPrivkeyFromWif("cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH")
 	assert.NoError(t, err)
-	err = btcTxUtil.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, &utxos)
+	err = btcTxUtil.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, utxos)
 	assert.NoError(t, err)
 	assert.Equal(t, "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad800000000", btcTx.Hex)
 
@@ -145,7 +145,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
 	}
-	inputs := []types.InputConfidentialTxIn{
+	inputs := []*types.InputConfidentialTxIn{
 		{
 			OutPoint: peginOutPoint,
 			PeginInput: &types.InputPeginData{
@@ -157,7 +157,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 			},
 		},
 	}
-	outputs := []types.InputConfidentialTxOut{
+	outputs := []*types.InputConfidentialTxOut{
 		{
 			Amount: 99998500,
 			//Address: "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
@@ -170,12 +170,12 @@ func TestCreateClaimPeginTx(t *testing.T) {
 			IsFee:  true,
 		},
 	}
-	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, nil)
+	tx, err := txUtil.Create(uint32(2), uint32(0), inputs, outputs, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, "0200000001017b9c531679cc8b8310338e350dbfd89bbfaf19fd227e3d1a69f8baf0088570120000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5db2403b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc160014f3ea0aba73fdb23912ebd21f46e156cdd9e942800125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014e794713e386d83f32baa0e9d03e47c0839dc57a8c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000", tx.Hex)
 
 	// blind
-	blindTxInList := []types.BlindInputData{
+	blindTxInList := []*types.BlindInputData{
 		{
 			OutPoint: peginOutPoint,
 			Asset:    asset,
@@ -228,7 +228,7 @@ func TestCreateClaimPeginTx(t *testing.T) {
 	assert.Equal(t, outputs[0].Amount, unblindData.Amount)
 	assert.Equal(t, outputs[0].Asset, unblindData.Asset)
 
-	unblindedData, err := txUtil.UnblindByTxOut(&outList[0], blindingKey)
+	unblindedData, err := txUtil.UnblindByTxOut(outList[0], blindingKey)
 	assert.NoError(t, err)
 	assert.Equal(t, outputs[0].Amount, unblindedData.Amount)
 	assert.Equal(t, outputs[0].Asset, unblindedData.Asset)
@@ -300,7 +300,7 @@ func TestCreatePegoutTx(t *testing.T) {
 		}
 	}
 	pegoutAddrList := []string{}
-	inputs := []types.InputConfidentialTxIn{
+	inputs := []*types.InputConfidentialTxIn{
 		{
 			OutPoint: types.OutPoint{
 				Txid: "4aa201f333e80b8f62ba5b593edb47b4730212e2917b21279f389ba1c14588a3",
@@ -309,7 +309,7 @@ func TestCreatePegoutTx(t *testing.T) {
 			Sequence: 4294967293,
 		},
 	}
-	outputs := []types.InputConfidentialTxOut{
+	outputs := []*types.InputConfidentialTxOut{
 		{
 			Amount:  209998999992700,
 			Address: "XBMr6srTXmWuHifFd8gs54xYfiCBsvrksA",
@@ -332,7 +332,7 @@ func TestCreatePegoutTx(t *testing.T) {
 			IsFee:  true,
 		},
 	}
-	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, &pegoutAddrList)
+	tx, err := txUtil.Create(uint32(2), uint32(0), inputs, outputs, &pegoutAddrList)
 	assert.NoError(t, err)
 	assert.Equal(t, "020000000001a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000fdffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c0017a914001d6db698e75a5a8af771730c4ab258af30546b870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca0000a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914efbced4774546c03a8554ce2da27c0300c9dd43b88ac2103700dcb030588ed828d85f645b48971de0d31e8c0244da46710d18681627f5a4a4101044e949dcf8ac2daac82a3e4999ee28e2711661793570c4daab34cd38d76a425d6bfe102f3fea8be12109925fad32c78b65afea4de1d17a826e7375d0e2d00660125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c84000000000000", tx.Hex)
 	assert.Equal(t, 1, len(pegoutAddrList))
@@ -377,22 +377,22 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
 	}
-	btcInputs := []types.InputTxIn{
+	btcInputs := []*types.InputTxIn{
 		{
 			OutPoint: utxoOutPoint,
 			Sequence: types.SequenceLockTimeFinal,
 		},
 	}
-	btcOutputs := []types.InputTxOut{
+	btcOutputs := []*types.InputTxOut{
 		{
 			Amount:  peginAmount,
 			Address: peginAddr.Address,
 		},
 	}
-	btcTx, err := btcTxUtil.Create(uint32(2), uint32(0), &btcInputs, &btcOutputs)
+	btcTx, err := btcTxUtil.Create(uint32(2), uint32(0), btcInputs, btcOutputs)
 	assert.NoError(t, err)
 	// add sign
-	utxos := []types.UtxoData{
+	utxos := []*types.UtxoData{
 		{
 			OutPoint:   utxoOutPoint,
 			Amount:     amount,
@@ -401,7 +401,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	}
 	utxoPrivkey, err := keyApi.GetPrivkeyFromWif("cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH")
 	assert.NoError(t, err)
-	err = btcTxUtil.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, &utxos)
+	err = btcTxUtil.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, utxos)
 	assert.NoError(t, err)
 	assert.Equal(t, "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad800000000", btcTx.Hex)
 
@@ -417,7 +417,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		Txid: btcTxUtil.GetTxid(btcTx),
 		Vout: peginIndex,
 	}
-	inputs := []types.InputConfidentialTxIn{
+	inputs := []*types.InputConfidentialTxIn{
 		{
 			OutPoint: peginOutPoint,
 			PeginInput: &types.InputPeginData{
@@ -427,7 +427,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 			},
 		},
 	}
-	outputs := []types.InputConfidentialTxOut{
+	outputs := []*types.InputConfidentialTxOut{
 		{
 			Amount:  99998500,
 			Address: "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
@@ -437,12 +437,12 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 			IsFee:  true,
 		},
 	}
-	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, nil)
+	tx, err := txUtil.Create(uint32(2), uint32(0), inputs, outputs, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, "0200000001017b9c531679cc8b8310338e350dbfd89bbfaf19fd227e3d1a69f8baf0088570120000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5db2402fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014e794713e386d83f32baa0e9d03e47c0839dc57a8c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000", tx.Hex)
 
 	// blind
-	blindTxInList := []types.BlindInputData{
+	blindTxInList := []*types.BlindInputData{
 		{
 			OutPoint: peginOutPoint,
 			Amount:   peginAmount,
@@ -517,7 +517,7 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 	// create pegout tx
 	txUtil := NewConfidentialTxApi()
 	pegoutAddrList := []string{}
-	inputs := []types.InputConfidentialTxIn{
+	inputs := []*types.InputConfidentialTxIn{
 		{
 			OutPoint: types.OutPoint{
 				Txid: "4aa201f333e80b8f62ba5b593edb47b4730212e2917b21279f389ba1c14588a3",
@@ -526,7 +526,7 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 			Sequence: 4294967293,
 		},
 	}
-	outputs := []types.InputConfidentialTxOut{
+	outputs := []*types.InputConfidentialTxOut{
 		{
 			Amount:  209998999992700,
 			Address: "XBMr6srTXmWuHifFd8gs54xYfiCBsvrksA",
@@ -545,7 +545,7 @@ func TestCreatePegoutTxByCfdConf(t *testing.T) {
 			IsFee:  true,
 		},
 	}
-	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, &pegoutAddrList)
+	tx, err := txUtil.Create(uint32(2), uint32(0), inputs, outputs, &pegoutAddrList)
 	assert.NoError(t, err)
 	assert.Equal(t, "020000000001a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000fdffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c0017a914001d6db698e75a5a8af771730c4ab258af30546b870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca0000a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914efbced4774546c03a8554ce2da27c0300c9dd43b88ac2103700dcb030588ed828d85f645b48971de0d31e8c0244da46710d18681627f5a4a4101044e949dcf8ac2daac82a3e4999ee28e2711661793570c4daab34cd38d76a425d6bfe102f3fea8be12109925fad32c78b65afea4de1d17a826e7375d0e2d00660125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c84000000000000", tx.Hex)
 	assert.Equal(t, 1, len(pegoutAddrList))
@@ -610,7 +610,7 @@ func TestCfdAddMultisigSignConfidentialTxManual(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "30440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a7901", derSignature2.ToHex())
 
-	signDataList := []types.SignParameter{
+	signDataList := []*types.SignParameter{
 		{
 			IsDerEncode: false,
 			SigHashType: sigHashType,
@@ -689,7 +689,7 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "30440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a7901", derSignature2.ToHex())
 
-	signDataList := []types.SignParameter{
+	signDataList := []*types.SignParameter{
 		{
 			Data:          *types.NewScriptFromHexIgnoreError(signature1.ToHex()),
 			IsDerEncode:   true,
@@ -708,7 +708,7 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0200000001020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000000004004730440220795dbf165d3197fe27e2b73d57cacfb8d742029c972b109040c7785aee4e75ea022065f7a985efe82eba1d0e0cafd7cf711bb8c65485bddc4e495315dd92bd7e4a790147304402202ce4acde192e4109832d46970b510158d42fc156c92afff137157ebfc2a03e2a02200b7dfd3a92770d79d29b3c55fb6325b22bce0e1362de74b2dac80d9689b5a89b0147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae00000000000000000000000000", tx.Hex)
 
-	isVerify, err := api.VerifyEcSignatureByUtxo(&tx, &outPoint, &utxo, &signDataList[1])
+	isVerify, err := api.VerifyEcSignatureByUtxo(&tx, &outPoint, &utxo, signDataList[1])
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 
@@ -815,7 +815,7 @@ func TestBlindTransaction(t *testing.T) {
 	ca2, err := caApi.Create(desc.Address.Address, confidentialKey2)
 	assert.NoError(t, err)
 
-	inputs := []types.InputConfidentialTxIn{
+	inputs := []*types.InputConfidentialTxIn{
 		{
 			OutPoint: outpoint1,
 		},
@@ -823,7 +823,7 @@ func TestBlindTransaction(t *testing.T) {
 			OutPoint: outpoint2,
 		},
 	}
-	outputs := []types.InputConfidentialTxOut{
+	outputs := []*types.InputConfidentialTxOut{
 		{
 			Amount:  outputAmount1,
 			Address: ca1.ConfidentialAddress,
@@ -840,12 +840,12 @@ func TestBlindTransaction(t *testing.T) {
 			IsFee:  true,
 		},
 	}
-	tx, err := txUtil.Create(uint32(2), uint32(0), &inputs, &outputs, nil)
+	tx, err := txUtil.Create(uint32(2), uint32(0), inputs, outputs, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, "0200000000024430470004000000000000ac8895a1b0829073813ba42c63d6aa9ffa1189b1dc0100000000ffffffff5564cc020027b9290000000001ed6927df918c89b5e3d8b5062acab2c749a3290200000000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000008f0d18003b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc160014f3ea0aba73fdb23912ebd21f46e156cdd9e942800125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000001c9c18c03d5ea88cc41bb5eae228fe83332f9ad1375e3b731b9d0dfc5f37222527c5147d02200205921dfe0a2763e39b3e96f93c8493ede64644a3d1c39882d529fea254546ef6b0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000001f4000000000000", tx.Hex)
 
 	// blind
-	blindTxInList := []types.BlindInputData{
+	blindTxInList := []*types.BlindInputData{
 		{
 			OutPoint: outpoint1,
 			Asset:    asset,
@@ -901,7 +901,7 @@ func TestBlindTransaction(t *testing.T) {
 	assert.NoError(t, err)
 	signature2, err := privkeyUtil.CreateEcSignature(accountPrivkey, sighash, &types.SigHashTypeAll)
 	assert.NoError(t, err)
-	signs := []types.SignParameter{
+	signs := []*types.SignParameter{
 		{
 			Data:          *types.NewScriptFromHexIgnoreError(signature1.ToHex()),
 			RelatedPubkey: pubkey,
@@ -913,10 +913,10 @@ func TestBlindTransaction(t *testing.T) {
 	}
 
 	// verify signature
-	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, utxos[1], &signs[0])
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, utxos[1], signs[0])
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
-	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, utxos[1], &signs[1])
+	isVerify, err = txUtil.VerifyEcSignatureByUtxo(tx, &outpoint2, utxos[1], signs[1])
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
 

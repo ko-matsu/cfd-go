@@ -21,6 +21,8 @@ type PubkeyApi interface {
 	IsCompressed(pubkey *types.Pubkey) error
 	// VerifyEcSignature ...
 	VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error)
+	// VerifyMessage ...
+	VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, err error)
 }
 
 // PrivkeyApi This interface has privkey operation API.
@@ -32,6 +34,7 @@ type PrivkeyApi interface {
 	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
 	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
 	CreateEcSignatureGrindR(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType, grindR bool) (signature *types.ByteData, err error)
+	SignMessage(privkey *types.Privkey, message, magic string, isOutputBase64 bool) (signature string, err error)
 }
 
 func NewPubkeyApi() *PubkeyApiImpl {
@@ -102,6 +105,18 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 		return false, errors.Wrap(err, "verify ec signature error")
 	}
 	return isVerify, nil
+}
+
+// VerifyMessage ...
+func (p *PubkeyApiImpl) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, err error) {
+	pk, err := cfd.CfdGoVerifyMessage(signature, pubkey.Hex, message, magic)
+	if err != nil {
+		return nil, err
+	}
+	recoveredPubkey = &types.Pubkey{
+		Hex: pk,
+	}
+	return recoveredPubkey, nil
 }
 
 // -------------------------------------
@@ -190,6 +205,11 @@ func (k *PrivkeyApiImpl) CreateEcSignatureGrindR(privkey *types.Privkey, sighash
 	}
 	signature = types.NewByteDataFromHexIgnoreError(derSig)
 	return signature, nil
+}
+
+// SignMessage ...
+func (k *PrivkeyApiImpl) SignMessage(privkey *types.Privkey, message, magic string, isOutputBase64 bool) (signature string, err error) {
+	return cfd.CfdGoSignMessage(privkey.Hex, message, magic, isOutputBase64)
 }
 
 // validConfig ...

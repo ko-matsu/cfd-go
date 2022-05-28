@@ -24,7 +24,7 @@ type AddressApi interface {
 	ParseAddress(addressString string) (address *types.Address, err error)
 	CreateByPubkey(pubkey *types.Pubkey, addressType types.AddressType) (address *types.Address, err error)
 	CreateByScript(redeemScript *types.Script, addressType types.AddressType) (address *types.Address, err error)
-	CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error)
+	CreateMultisigAddress(pubkeys []*types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error)
 }
 
 // ElementsAddressApi This interface handles elements addresses.
@@ -127,13 +127,13 @@ func (u *AddressApiImpl) CreateByScript(redeemScript *types.Script, addressType 
 }
 
 // CreateMultisigAddress ...
-func (u *AddressApiImpl) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error) {
+func (u *AddressApiImpl) CreateMultisigAddress(pubkeys []*types.Pubkey, requireNum uint32, addressType types.AddressType) (address *types.Address, redeemScript *types.Script, err error) {
 	if err = u.validConfig(); err != nil {
 		return nil, nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
-	pubkeyList := make([]string, len(*pubkeys))
-	for i := 0; i < len(*pubkeys); i++ {
-		pubkeyList[i] = (*pubkeys)[i].Hex
+	pubkeyList := make([]string, len(pubkeys))
+	for i, pk := range pubkeys {
+		pubkeyList[i] = pk.Hex
 	}
 	addr, script, witnessScript, err := cfd.CfdGoCreateMultisigScript(u.network.ToCfdValue(), addressType.ToHashType().ToCfdValue(), pubkeyList, requireNum)
 	if err != nil {

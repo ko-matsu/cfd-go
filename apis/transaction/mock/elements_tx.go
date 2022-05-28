@@ -35,7 +35,7 @@ func (m *MockConfidentialTxApi) EXPECT() *MockConfidentialTxApiMockRecorder {
 }
 
 // Add mocks base method.
-func (m *MockConfidentialTxApi) Add(tx *types.ConfidentialTx, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
+func (m *MockConfidentialTxApi) Add(tx *types.ConfidentialTx, txinList []*types.InputConfidentialTxIn, txoutList []*types.InputConfidentialTxOut, pegoutAddressList *[]string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Add", tx, txinList, txoutList, pegoutAddressList)
 	ret0, _ := ret[0].(error)
@@ -77,7 +77,7 @@ func (mr *MockConfidentialTxApiMockRecorder) AddPubkeySignByDescriptor(tx, outpo
 }
 
 // AddScriptSign mocks base method.
-func (m *MockConfidentialTxApi) AddScriptSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error {
+func (m *MockConfidentialTxApi) AddScriptSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []*types.SignParameter, redeemScript *types.Script) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddScriptSign", tx, outpoint, hashType, signList, redeemScript)
 	ret0, _ := ret[0].(error)
@@ -91,7 +91,7 @@ func (mr *MockConfidentialTxApiMockRecorder) AddScriptSign(tx, outpoint, hashTyp
 }
 
 // AddScriptSignByDescriptor mocks base method.
-func (m *MockConfidentialTxApi) AddScriptSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error {
+func (m *MockConfidentialTxApi) AddScriptSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []*types.SignParameter) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddScriptSignByDescriptor", tx, outpoint, outputDescriptor, signList)
 	ret0, _ := ret[0].(error)
@@ -105,7 +105,7 @@ func (mr *MockConfidentialTxApiMockRecorder) AddScriptSignByDescriptor(tx, outpo
 }
 
 // AddTxMultisigSign mocks base method.
-func (m *MockConfidentialTxApi) AddTxMultisigSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []types.SignParameter, redeemScript *types.Script) error {
+func (m *MockConfidentialTxApi) AddTxMultisigSign(tx *types.ConfidentialTx, outpoint *types.OutPoint, hashType types.HashType, signList []*types.SignParameter, redeemScript *types.Script) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddTxMultisigSign", tx, outpoint, hashType, signList, redeemScript)
 	ret0, _ := ret[0].(error)
@@ -119,7 +119,7 @@ func (mr *MockConfidentialTxApiMockRecorder) AddTxMultisigSign(tx, outpoint, has
 }
 
 // AddTxMultisigSignByDescriptor mocks base method.
-func (m *MockConfidentialTxApi) AddTxMultisigSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []types.SignParameter) error {
+func (m *MockConfidentialTxApi) AddTxMultisigSignByDescriptor(tx *types.ConfidentialTx, outpoint *types.OutPoint, outputDescriptor *types.Descriptor, signList []*types.SignParameter) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddTxMultisigSignByDescriptor", tx, outpoint, outputDescriptor, signList)
 	ret0, _ := ret[0].(error)
@@ -133,7 +133,7 @@ func (mr *MockConfidentialTxApiMockRecorder) AddTxMultisigSignByDescriptor(tx, o
 }
 
 // Blind mocks base method.
-func (m *MockConfidentialTxApi) Blind(tx *types.ConfidentialTx, txinList []types.BlindInputData, txoutList *[]types.BlindOutputData, option *types.BlindTxOption) error {
+func (m *MockConfidentialTxApi) Blind(tx *types.ConfidentialTx, txinList []*types.BlindInputData, txoutList []*types.BlindOutputData, option *types.BlindTxOption) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Blind", tx, txinList, txoutList, option)
 	ret0, _ := ret[0].(error)
@@ -147,7 +147,7 @@ func (mr *MockConfidentialTxApiMockRecorder) Blind(tx, txinList, txoutList, opti
 }
 
 // Create mocks base method.
-func (m *MockConfidentialTxApi) Create(version, locktime uint32, txinList *[]types.InputConfidentialTxIn, txoutList *[]types.InputConfidentialTxOut, pegoutAddressList *[]string) (*types.ConfidentialTx, error) {
+func (m *MockConfidentialTxApi) Create(version, locktime uint32, txinList []*types.InputConfidentialTxIn, txoutList []*types.InputConfidentialTxOut, pegoutAddressList *[]string) (*types.ConfidentialTx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", version, locktime, txinList, txoutList, pegoutAddressList)
 	ret0, _ := ret[0].(*types.ConfidentialTx)
@@ -177,12 +177,12 @@ func (mr *MockConfidentialTxApiMockRecorder) FilterUtxoByTxInList(tx, utxoList i
 }
 
 // GetAll mocks base method.
-func (m *MockConfidentialTxApi) GetAll(tx *types.ConfidentialTx, hasWitness bool) (*types.TransactionData, []types.ConfidentialTxIn, []types.ConfidentialTxOut, error) {
+func (m *MockConfidentialTxApi) GetAll(tx *types.ConfidentialTx, hasWitness bool) (*types.TransactionData, []*types.ConfidentialTxIn, []*types.ConfidentialTxOut, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAll", tx, hasWitness)
 	ret0, _ := ret[0].(*types.TransactionData)
-	ret1, _ := ret[1].([]types.ConfidentialTxIn)
-	ret2, _ := ret[2].([]types.ConfidentialTxOut)
+	ret1, _ := ret[1].([]*types.ConfidentialTxIn)
+	ret2, _ := ret[2].([]*types.ConfidentialTxOut)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
@@ -194,12 +194,12 @@ func (mr *MockConfidentialTxApiMockRecorder) GetAll(tx, hasWitness interface{}) 
 }
 
 // GetAllWithAddress mocks base method.
-func (m *MockConfidentialTxApi) GetAllWithAddress(tx *types.ConfidentialTx, hasWitness bool) (*types.TransactionData, []types.ConfidentialTxIn, []types.ConfidentialTxOut, error) {
+func (m *MockConfidentialTxApi) GetAllWithAddress(tx *types.ConfidentialTx, hasWitness bool) (*types.TransactionData, []*types.ConfidentialTxIn, []*types.ConfidentialTxOut, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllWithAddress", tx, hasWitness)
 	ret0, _ := ret[0].(*types.TransactionData)
-	ret1, _ := ret[1].([]types.ConfidentialTxIn)
-	ret2, _ := ret[2].([]types.ConfidentialTxOut)
+	ret1, _ := ret[1].([]*types.ConfidentialTxIn)
+	ret2, _ := ret[2].([]*types.ConfidentialTxOut)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
@@ -284,6 +284,20 @@ func (m *MockConfidentialTxApi) GetTxid(tx *types.ConfidentialTx) string {
 func (mr *MockConfidentialTxApiMockRecorder) GetTxid(tx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxid", reflect.TypeOf((*MockConfidentialTxApi)(nil).GetTxid), tx)
+}
+
+// SignWithPrivkey mocks base method.
+func (m *MockConfidentialTxApi) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, txinUtxoList []*types.UtxoData) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignWithPrivkey", tx, outpoint, privkey, sighashType, txinUtxoList)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SignWithPrivkey indicates an expected call of SignWithPrivkey.
+func (mr *MockConfidentialTxApiMockRecorder) SignWithPrivkey(tx, outpoint, privkey, sighashType, txinUtxoList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignWithPrivkey", reflect.TypeOf((*MockConfidentialTxApi)(nil).SignWithPrivkey), tx, outpoint, privkey, sighashType, txinUtxoList)
 }
 
 // UnblindByTxOut mocks base method.

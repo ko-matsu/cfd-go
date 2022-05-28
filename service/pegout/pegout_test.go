@@ -1025,7 +1025,7 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 			Descriptor: "wpkh([d7f351ee/" + utxoPath + "]" + utxoPubkey.Hex + ")",
 		},
 	}
-	txouts := []types.InputConfidentialTxOut{
+	txouts := []*types.InputConfidentialTxOut{
 		{
 			Amount:  200000000000000,
 			Address: "lq1qqgv5wwfp4h0pfnyy2kkxl0kg3qnahcpfq7emrxu9xusz879axq0spg9cxu8wf72ktsft5r8vxnkfd8s5kmg32fvy8texp5p6s",
@@ -1034,7 +1034,7 @@ func TestCreatePegoutTxWithUnblindUtxoByCfdConf(t *testing.T) {
 	changeAddress := "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8"
 	option := types.NewPegoutTxOption()
 	option.KnapsackMinChange = 0
-	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, &txouts, &changeAddress, &option)
+	tx, pegoutAddr, unblindTx, err := pegoutApi.CreatePegoutTransaction(utxos, pegoutData, txouts, &changeAddress, &option)
 	assert.NoError(t, err)
 	assert.Equal(t, "1D4YiPF4k9qotSS3QWMa2E8Bt4jV9SZPmE", pegoutAddr.Address)
 
