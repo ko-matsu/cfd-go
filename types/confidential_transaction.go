@@ -358,13 +358,13 @@ func (c ConfidentialTxOut) HasBlinding() bool {
 	return len(c.CommitmentValue) == 66 || len(c.CommitmentNonce) == 66
 }
 
-type ConfidentialTxOutSet []ConfidentialTxOut
+type ConfidentialTxOutSet []*ConfidentialTxOut
 type ConfidentialTxOutIndexMap map[uint32]*ConfidentialTxOut
 
 func (c ConfidentialTxOutSet) FindByAddressFirst(address string) (*ConfidentialTxOut, uint32) {
 	for i, txout := range c {
 		if len(txout.Address) > 0 && txout.Address == address {
-			return &txout, uint32(i)
+			return txout, uint32(i)
 		}
 	}
 	return nil, 0
@@ -374,7 +374,7 @@ func (c ConfidentialTxOutSet) FindByAddress(address string) map[uint32]*Confiden
 	txouts := make(map[uint32]*ConfidentialTxOut)
 	for i, txout := range c {
 		if len(txout.Address) > 0 && txout.Address == address {
-			txouts[uint32(i)] = &txout
+			txouts[uint32(i)] = txout
 		}
 	}
 	return txouts
@@ -383,7 +383,7 @@ func (c ConfidentialTxOutSet) FindByAddress(address string) map[uint32]*Confiden
 func (c ConfidentialTxOutSet) FindByLockingScriptFirst(lockingScript string) (*ConfidentialTxOut, uint32) {
 	for i, txout := range c {
 		if txout.LockingScript == lockingScript {
-			return &txout, uint32(i)
+			return txout, uint32(i)
 		}
 	}
 	return nil, 0
@@ -393,7 +393,7 @@ func (c ConfidentialTxOutSet) FindByLockingScript(lockingScript string) map[uint
 	txouts := make(map[uint32]*ConfidentialTxOut)
 	for i, txout := range c {
 		if txout.LockingScript == lockingScript {
-			txouts[uint32(i)] = &txout
+			txouts[uint32(i)] = txout
 		}
 	}
 	return txouts
@@ -412,8 +412,8 @@ func (c ConfidentialTxOutSet) GetFeeAmount() int64 {
 func (c ConfidentialTxOutSet) Filter(filterFunc func(*ConfidentialTxOut) bool) ConfidentialTxOutIndexMap {
 	txouts := make(map[uint32]*ConfidentialTxOut)
 	for i, txout := range c {
-		if filterFunc(&txout) {
-			txouts[uint32(i)] = &txout
+		if filterFunc(txout) {
+			txouts[uint32(i)] = txout
 		}
 	}
 	return txouts

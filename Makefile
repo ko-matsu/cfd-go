@@ -19,6 +19,9 @@ format:
 	go vet . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
 	go mod tidy
 
+lint:
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2 run
+
 build-lib:
 	echo "build for Linux/MacOS"
 	./tools/simple_build.sh
