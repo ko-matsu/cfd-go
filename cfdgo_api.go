@@ -5257,7 +5257,7 @@ type TapBranch struct {
 }
 
 // internalLoadTapBranchFromStringByNodes This function has load branch by nodes.
-func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) error {
+func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string, networkType int) error {
 	script := ""
 	node := ""
 	if tapscript != nil {
@@ -5265,6 +5265,9 @@ func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr 
 		node = targetNodes
 	}
 	leafVersion := uint8(0xc0)
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	ret := CfdSetScriptTreeFromString(handle, treeHandle, treeStr, script, leafVersionPtr, node)
 	return convertCfdError(ret, handle)
@@ -5291,6 +5294,9 @@ func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscr
 	var hash string
 	var tempScript string
 	leafVersion := uint8(0xc0)
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	depth := uint8(0)
 	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
@@ -5367,6 +5373,9 @@ func internalNewTapBranchFromTapScript(tapscript *Script, networkType int) (*Tap
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
 	leafVersion := uint8(0xc0)
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	ret := CfdSetInitialTapLeaf(handle, treeHandle, tapscript.ToHex(), leafVersionPtr)
 	err = convertCfdError(ret, handle)
@@ -5431,7 +5440,7 @@ func internalNewTapBranchFromStringByNodes(treeStr string, tapscript *Script, no
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, treeStr, tapscript, targetNodes)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, treeStr, tapscript, targetNodes, networkType)
 	if err != nil {
 		return nil, err
 	}
@@ -5471,6 +5480,9 @@ func internalNewTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Scr
 	var tempScript string
 	var hash string
 	leafVersion := uint8(0xc0)
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	index := uint8(0)
 	indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
@@ -5541,7 +5553,7 @@ func (obj *TapBranch) AddBranchByString(treeStr string) error {
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return err
 	}
@@ -5576,7 +5588,7 @@ func (obj *TapBranch) GetMaxBranchCount() (count uint32, err error) {
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return
 	}
@@ -5596,7 +5608,7 @@ func (obj *TapBranch) GetBranch(index uint8) (branch *TapBranch, err error) {
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return
 	}
@@ -5658,7 +5670,7 @@ func (obj *TapBranch) GetTweakedPubkey(internalPubkey *ByteData) (pubkey *ByteDa
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -5689,7 +5701,7 @@ func (obj *TapBranch) GetTweakedPrivkey(internalPrivkey *ByteData) (privkey *Byt
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return nil, err
 	}
@@ -5795,7 +5807,7 @@ func SetElementsUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo)
 
 	isAlreadySetGenesisBlockHash := false
 	for _, utxo := range txinUtxoList {
-		if !isAlreadySetGenesisBlockHash {
+		if !isAlreadySetGenesisBlockHash && utxo.GenesisBlockHash != "" {
 			ret := CfdSetConfidentialTxGenesisBlockHashByHandle(handle, createTxHandle, utxo.GenesisBlockHash)
 			if err = convertCfdError(ret, handle); err != nil {
 				return err

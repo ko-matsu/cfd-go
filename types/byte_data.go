@@ -42,11 +42,17 @@ func NewByteDataFromHexIgnoreError(hexStr string) *ByteData {
 
 // ToHex This function return a hex string.
 func (obj *ByteData) ToHex() string {
+	if obj == nil {
+		return ""
+	}
 	return obj.hex
 }
 
 // ToHex This function return a byte array.
 func (obj *ByteData) ToSlice() []byte {
+	if obj == nil {
+		return []byte{}
+	}
 	data, osErr := hex.DecodeString(obj.hex)
 	if osErr != nil {
 		return []byte{}
