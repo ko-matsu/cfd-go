@@ -134,6 +134,7 @@ type ElementsUtxoData struct {
 	IsIssuance        bool                 // is issuance output
 	IsBlindIssuance   bool                 // is blind issuance output
 	PeginData         *PeginUtxoData       // pegin data
+	GenesisBlockHash  *string              // genesis block hash
 }
 
 type UnblindData struct {
@@ -308,6 +309,9 @@ func (u ElementsUtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
 		utxo.ClaimScript = u.PeginData.ClaimScript
 		utxo.PeginBtcTxSize = uint32(len(u.PeginData.BitcoinTransaction) / 2)
 		utxo.PeginTxOutProofSize = uint32(len(u.PeginData.TxOutProof) / 2)
+	}
+	if u.GenesisBlockHash != nil {
+		utxo.GenesisBlockHash = *u.GenesisBlockHash
 	}
 	return utxo
 }

@@ -494,6 +494,8 @@ type CfdUtxo struct {
 	AmountBlinder string
 	// asset blinder hex
 	AssetBlinder string
+	// genesis block hash
+	GenesisBlockHash string
 }
 
 /**
@@ -5791,7 +5793,16 @@ func SetElementsUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo)
 	}
 	defer CfdGoFreeHandle(handle)
 
+	isAlreadySetGenesisBlockHash := false
 	for _, utxo := range txinUtxoList {
+		if !isAlreadySetGenesisBlockHash {
+			ret := CfdSetConfidentialTxGenesisBlockHashByHandle(handle, createTxHandle, utxo.GenesisBlockHash)
+			if err = convertCfdError(ret, handle); err != nil {
+				return err
+			}
+			isAlreadySetGenesisBlockHash = true
+		}
+
 		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxo.Vout)))
 		satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxo.Amount)))
 		ret := CfdSetConfidentialTxUtxoDataByHandle(handle, createTxHandle, utxo.Txid, voutPtr, satoshiAmountPtr, utxo.AmountCommitment, utxo.Descriptor, "", utxo.Asset, utxo.AssetCommitment, utxo.AmountBlinder, utxo.AssetBlinder, utxo.ScriptSigTemplate, false)
@@ -5801,6 +5812,18 @@ func SetElementsUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo)
 	}
 
 	return nil
+}
+
+// SetConfidentialTxGenesisBlockHashByHandle set the genesis block hash for tx handle.
+func SetConfidentialTxGenesisBlockHashByHandle(createTxHandle uintptr, genesisBlockHash string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdSetConfidentialTxGenesisBlockHashByHandle(handle, createTxHandle, genesisBlockHash)
+	return convertCfdError(ret, handle)
 }
 
 // CfdGoAddTxSignWithPrivkeyByUtxoList This function add sign with prikey.
