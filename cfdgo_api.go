@@ -6950,16 +6950,14 @@ func CfdGoClearCustomPrefix() error {
 	return err
 }
 
-type ExtkeyFormatType int
-
 const (
-	ExtkeyFormatTypeBip32 ExtkeyFormatType = 0
-	ExtkeyFormatTypeBip49 ExtkeyFormatType = 1
-	ExtkeyFormatTypeBip84 ExtkeyFormatType = 2
+	ExtkeyFormatTypeBip32 int = 0
+	ExtkeyFormatTypeBip49 int = 1
+	ExtkeyFormatTypeBip84 int = 2
 )
 
 // CfdGoCreateExtkeyByFormat create extended key by format.
-func CfdGoCreateExtkeyByFormat(networkType int, extkeyType int, fingerprint string, key string, chainCode string, depth byte, childNumber uint32, formatType ExtkeyFormatType) (extkey string, err error) {
+func CfdGoCreateExtkeyByFormat(networkType int, extkeyType int, fingerprint string, key string, chainCode string, depth byte, childNumber uint32, formatType int) (extkey string, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -6967,20 +6965,34 @@ func CfdGoCreateExtkeyByFormat(networkType int, extkeyType int, fingerprint stri
 	defer CfdGoFreeHandle(handle)
 
 	childNumberPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&childNumber)))
-	ret := CfdCreateExtkeyByFormat(handle, networkType, extkeyType, "", fingerprint, key, chainCode, depth, childNumberPtr, int(formatType), &extkey)
+	ret := CfdCreateExtkeyByFormat(handle, networkType, extkeyType, "", fingerprint, key, chainCode, depth, childNumberPtr, formatType, &extkey)
 	err = convertCfdError(ret, handle)
 	return extkey, err
 }
 
-// CfdGoCreateExtkeyByFormatFromSeed create extended key by format.
-func CfdGoCreateExtkeyByFormatFromSeed(seed string, networkType int, keyType int, formatType ExtkeyFormatType) (extkey string, err error) {
+// CfdGoCreateExtkeyByFormatFromParent create extended key by format.
+func CfdGoCreateExtkeyByFormatFromParent(networkType int, extkeyType int, parentKey string, key string, chainCode string, depth byte, childNumber uint32, formatType int) (extkey string, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
 	}
 	defer CfdGoFreeHandle(handle)
 
-	ret := CfdCreateExtkeyByFormatFromSeed(handle, seed, networkType, keyType, int(formatType), &extkey)
+	childNumberPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&childNumber)))
+	ret := CfdCreateExtkeyByFormat(handle, networkType, extkeyType, parentKey, "", key, chainCode, depth, childNumberPtr, formatType, &extkey)
+	err = convertCfdError(ret, handle)
+	return extkey, err
+}
+
+// CfdGoCreateExtkeyByFormatFromSeed create extended key by format.
+func CfdGoCreateExtkeyByFormatFromSeed(seed string, networkType int, keyType int, formatType int) (extkey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdCreateExtkeyByFormatFromSeed(handle, seed, networkType, keyType, formatType, &extkey)
 	err = convertCfdError(ret, handle)
 	return extkey, err
 }

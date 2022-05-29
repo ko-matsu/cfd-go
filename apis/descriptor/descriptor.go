@@ -211,7 +211,17 @@ func (d *DescriptorApiImpl) NewDescriptorFromExtPubkey(
 	} else if keyInfo.KeyType != types.ExtPubkeyType {
 		return nil, errors.Errorf("invalid extkey type")
 	}
-	// FIXME(k-matsuzawa): check keyVersion & hashType
+	// check keyVersion & hashType
+	switch keyInfo.Version {
+	case key.Bip49PubkeyVersionMainnet, key.Bip49PubkeyVersionTestnet:
+		hashType = types.P2shP2wpkh
+	case key.Bip84PubkeyVersionMainnet, key.Bip84PubkeyVersionTestnet:
+		hashType = types.P2wpkh
+	case key.Bip32PubkeyVersionMainnet, key.Bip32PubkeyVersionTestnet:
+		// unchecked
+	default:
+		return nil, errors.Errorf("unsupported extPubkey version, %s", keyInfo.Version)
+	}
 
 	var descStr string
 	switch hashType {
