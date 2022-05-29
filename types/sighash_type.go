@@ -1,5 +1,11 @@
 package types
 
+import (
+	"strings"
+
+	cfdgo "github.com/cryptogarageinc/cfd-go"
+)
+
 // SigHashType This struct use for the sighashtype utility function.
 type SigHashType struct {
 	Type         int
@@ -18,6 +24,52 @@ func NewSigHashType(sighashType int) *SigHashType {
 	if (sighashType & 0x40) != 0 {
 		isRangeproof = true
 	}
+	return &SigHashType{
+		Type:         value,
+		AnyoneCanPay: anyoneCanPay,
+		Rangeproof:   isRangeproof,
+	}
+}
+
+// NewSigHashTypeFromString return a SigHashType.
+func NewSigHashTypeFromString(sighashType string) *SigHashType {
+	var sighashTypes []string
+	if strings.Contains(sighashType, "|") {
+		sighashTypes = strings.Split(sighashType, "|")
+	} else {
+		sighashTypes = strings.Split(sighashType, "+")
+	}
+	anyoneCanPay := false
+	isRangeproof := false
+	var value int
+
+	for i, typeStr := range sighashTypes {
+		typeStr = strings.ToLower(typeStr)
+		if i == 0 {
+			switch typeStr {
+			case "default":
+				value = 0
+			case "all":
+				value = 1
+			case "none":
+				value = 2
+			case "single":
+				value = 3
+			default:
+				panic("invalid sighash type: " + sighashType)
+			}
+		} else {
+			switch typeStr {
+			case "anyonecanpay":
+				anyoneCanPay = true
+			case "rangeproof":
+				isRangeproof = true
+			default:
+				panic("invalid sighash type: " + sighashType)
+			}
+		}
+	}
+
 	return &SigHashType{
 		Type:         value,
 		AnyoneCanPay: anyoneCanPay,
@@ -68,6 +120,14 @@ func (obj *SigHashType) String() string {
 		result += "+rangeproof"
 	}
 	return result
+}
+
+func (obj *SigHashType) ToCfdValue() *cfdgo.SigHashType {
+	return &cfdgo.SigHashType{
+		Type:         obj.Type,
+		AnyoneCanPay: obj.AnyoneCanPay,
+		Rangeproof:   obj.Rangeproof,
+	}
 }
 
 var SigHashTypeDefault SigHashType = *NewSigHashType(0)

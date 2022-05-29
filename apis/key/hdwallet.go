@@ -11,6 +11,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	Bip32PubkeyVersionMainnet string = "0488b21e"
+	Bip49PubkeyVersionMainnet string = "049d7cb2"
+	Bip84PubkeyVersionMainnet string = "04b24746"
+	Bip32PubkeyVersionTestnet string = "043587cf"
+	Bip49PubkeyVersionTestnet string = "044a5262"
+	Bip84PubkeyVersionTestnet string = "045f1cf6"
+)
+
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source hdwallet.go -destination mock/hdwallet.go -package mock
@@ -404,7 +413,7 @@ func (h *HdWalletApiImpl) GetExtPrivkeyWithFormat(seed *types.ByteData, formatTy
 	} else if seed == nil {
 		return nil, errors.Errorf("CFD Error: seed is nil")
 	}
-	key, err := cfd.CfdGoCreateExtkeyByFormatFromSeed(seed.ToHex(), h.network.ToCfdValue(), int(cfd.KCfdExtPrivkey), cfd.ExtkeyFormatType(formatType))
+	key, err := cfd.CfdGoCreateExtkeyByFormatFromSeed(seed.ToHex(), h.network.ToCfdValue(), int(cfd.KCfdExtPrivkey), formatType.ToCfdValue())
 	if err != nil {
 		return nil, errors.Wrap(err, "create extkey error")
 	}

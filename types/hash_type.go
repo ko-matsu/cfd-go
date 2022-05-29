@@ -159,6 +159,17 @@ func (n HashType) IsWitnessV1OrLater() bool {
 	}
 }
 
+func (n HashType) GetWitnessVersion() int {
+	switch n {
+	case P2wpkh, P2wsh, P2shP2wpkh, P2shP2wsh:
+		return 0
+	case Taproot:
+		return 1
+	default:
+		return -1
+	}
+}
+
 type HashTypes []HashType
 
 func (d HashTypes) IsValid() bool {

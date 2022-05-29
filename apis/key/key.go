@@ -22,7 +22,7 @@ type PubkeyApi interface {
 	// VerifyEcSignature ...
 	VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error)
 	// VerifyMessage ...
-	VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, err error)
+	VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, isVerify bool, err error)
 }
 
 // PrivkeyApi This interface has privkey operation API.
@@ -108,15 +108,15 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 }
 
 // VerifyMessage ...
-func (p *PubkeyApiImpl) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, err error) {
-	pk, err := cfd.CfdGoVerifyMessage(signature, pubkey.Hex, message, magic)
+func (p *PubkeyApiImpl) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, isVerify bool, err error) {
+	pk, isVerify, err := cfd.CfdGoVerifyMessage(signature, pubkey.Hex, message, magic)
 	if err != nil {
-		return nil, err
+		return nil, isVerify, err
 	}
 	recoveredPubkey = &types.Pubkey{
 		Hex: pk,
 	}
-	return recoveredPubkey, nil
+	return recoveredPubkey, isVerify, nil
 }
 
 // -------------------------------------
