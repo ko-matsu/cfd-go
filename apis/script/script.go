@@ -118,8 +118,7 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pu
 		return nil, 0, cfdErrors.ErrMultisigScript
 	}
 
-	reqSigNum := 0
-	totalNum := 0
+	var reqSigNum, totalNum uint32
 	pubkeys = make([]*types.Pubkey, 0, len(scriptItems)-2)
 	for i, item := range scriptItems {
 		switch i {
@@ -131,16 +130,16 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pu
 			} else {
 				numStr = nums[0]
 			}
-			num, err := strconv.Atoi(numStr)
+			num, err := strconv.ParseUint(numStr, 10, 32)
 			if err != nil {
 				return nil, 0, errors.Wrap(err, cfdErrors.ErrMultisigScript.Error())
 			} else if num < 0 {
 				return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 			}
 			if i == 0 {
-				reqSigNum = num
+				reqSigNum = uint32(num)
 			} else {
-				totalNum = num
+				totalNum = uint32(num)
 			}
 		case len(scriptItems) - 1:
 			if item != "OP_CHECKMULTISIG" {
@@ -161,7 +160,7 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pu
 		return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 	case reqSigNum < totalNum:
 		return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
-	case totalNum != len(pubkeys):
+	case totalNum != uint32(len(pubkeys)):
 		return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 	case totalNum > MaxMultisigPubkeyNum:
 		return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
@@ -173,8 +172,7 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pu
 			}
 		}
 	}
-	requireSigNum = uint32(reqSigNum)
-	return pubkeys, requireSigNum, nil
+	return pubkeys, reqSigNum, nil
 }
 
 func (s *ScriptApiImpl) CreateMultisig(pubkeys []*types.Pubkey, requireSigNum uint32) (script *types.Script, err error) {
