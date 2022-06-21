@@ -16,8 +16,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source pegin.go -destination mock/pegin.go -package mock
-//go:generate goimports -w mock/pegin.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source pegin.go -destination mock/pegin.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/pegin.go
 
 // Pegin This interface defines the API used by the pegin function.
 type Pegin interface {
@@ -41,7 +41,7 @@ type Pegin interface {
 		peginOutPoint *types.OutPoint,
 		peginData *types.InputPeginData,
 		utxoList []*types.ElementsUtxoData,
-		sendList []types.InputConfidentialTxOut,
+		sendList []*types.InputConfidentialTxOut,
 		changeAddress *string,
 		option *types.PeginTxOption,
 	) (
@@ -269,7 +269,7 @@ func (p *PeginService) CreatePeginTransaction(
 	peginOutPoint *types.OutPoint,
 	peginData *types.InputPeginData,
 	utxoList []*types.ElementsUtxoData,
-	sendList []types.InputConfidentialTxOut,
+	sendList []*types.InputConfidentialTxOut,
 	changeAddress *string,
 	option *types.PeginTxOption,
 ) (tx *types.ConfidentialTx, unblindTx *types.ConfidentialTx, err error) {
@@ -297,7 +297,7 @@ func (p *PeginService) CreatePeginTransaction(
 		return nil, nil, errors.Wrap(err, "Pegin changeAddress validation error")
 	}
 
-	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxOutList(&sendList, changeAddr)
+	blindOutputCount, hasAppendDummyOutput, amount, err := p.validateTxOutList(sendList, changeAddr)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Pegin sendList validation error")
 	}
@@ -307,13 +307,13 @@ func (p *PeginService) CreatePeginTransaction(
 		return nil, nil, errors.Wrap(err, "Pegin sendList exist blinding output error")
 	}
 
-	txins := []types.InputConfidentialTxIn{
+	txins := []*types.InputConfidentialTxIn{
 		{
 			OutPoint:   *peginOutPoint,
 			PeginInput: peginData,
 		},
 	}
-	tx, err = p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &sendList, nil)
+	tx, err = p.elementsTxApi.Create(uint32(2), uint32(0), txins, sendList, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Pegin CT.Create error")
 	}
@@ -409,9 +409,11 @@ func (p *PeginService) CreatePeginTransaction(
 	// 5. blind
 	unblindTx = &types.ConfidentialTx{Hex: tx.Hex}
 	if option.IsBlindTx {
-		blindInputList := make([]types.BlindInputData, len(inputs))
+		blindInputList := make([]*types.BlindInputData, len(inputs))
 		for i, txin := range inputs {
-			blindInputList[i].OutPoint = txin.OutPoint
+			blindInputList[i] = &types.BlindInputData{
+				OutPoint: txin.OutPoint,
+			}
 			if txin.OutPoint.Equal(*peginOutPoint) {
 				blindInputList[i].Amount = peginAmount
 				blindInputList[i].Asset = assetId
@@ -565,12 +567,12 @@ func validateDerivedExtPubkey(extPubkey *types.ExtPubkey) error {
 	return nil
 }
 
-func (p *PeginService) validateTxOutList(sendList *[]types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
+func (p *PeginService) validateTxOutList(sendList []*types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
 	caApi := address.ConfidentialAddressApiImpl{}
 	blindOutputCount = uint32(0)
 	unblindOutputCount := uint32(0)
 	feeCount := uint32(0)
-	for index, txout := range *sendList {
+	for index, txout := range sendList {
 		isFee := false
 		switch {
 		case txout.PegoutInput != nil:

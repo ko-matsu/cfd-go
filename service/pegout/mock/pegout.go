@@ -65,10 +65,10 @@ func (mr *MockPegoutMockRecorder) CreateOnlinePrivateKey() *gomock.Call {
 }
 
 // CreatePakEntry mocks base method.
-func (m *MockPegout) CreatePakEntry(accountExtPubkey *types.ExtPubkey, onlinePrivkey *types.Privkey) (*types.ByteData, error) {
+func (m *MockPegout) CreatePakEntry(accountExtPubkey *types.ExtPubkey, onlinePrivkey *types.Privkey) (*types.PakEntry, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePakEntry", accountExtPubkey, onlinePrivkey)
-	ret0, _ := ret[0].(*types.ByteData)
+	ret0, _ := ret[0].(*types.PakEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -96,7 +96,7 @@ func (mr *MockPegoutMockRecorder) CreatePegoutAddress(addressType, accountExtPub
 }
 
 // CreatePegoutTransaction mocks base method.
-func (m *MockPegout) CreatePegoutTransaction(utxoList []*types.ElementsUtxoData, pegoutData types.InputConfidentialTxOut, sendList *[]types.InputConfidentialTxOut, changeAddress *string, option *types.PegoutTxOption) (*types.ConfidentialTx, *types.Address, *types.ConfidentialTx, error) {
+func (m *MockPegout) CreatePegoutTransaction(utxoList []*types.ElementsUtxoData, pegoutData types.InputConfidentialTxOut, sendList []*types.InputConfidentialTxOut, changeAddress *string, option *types.PegoutTxOption) (*types.ConfidentialTx, *types.Address, *types.ConfidentialTx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePegoutTransaction", utxoList, pegoutData, sendList, changeAddress, option)
 	ret0, _ := ret[0].(*types.ConfidentialTx)

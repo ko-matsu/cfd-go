@@ -77,6 +77,22 @@ func (mr *MockPubkeyApiMockRecorder) VerifyEcSignature(pubkey, sighash, signatur
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyEcSignature", reflect.TypeOf((*MockPubkeyApi)(nil).VerifyEcSignature), pubkey, sighash, signature)
 }
 
+// VerifyMessage mocks base method.
+func (m *MockPubkeyApi) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (*types.Pubkey, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyMessage", pubkey, signature, message, magic)
+	ret0, _ := ret[0].(*types.Pubkey)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// VerifyMessage indicates an expected call of VerifyMessage.
+func (mr *MockPubkeyApiMockRecorder) VerifyMessage(pubkey, signature, message, magic interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMessage", reflect.TypeOf((*MockPubkeyApi)(nil).VerifyMessage), pubkey, signature, message, magic)
+}
+
 // MockPrivkeyApi is a mock of PrivkeyApi interface.
 type MockPrivkeyApi struct {
 	ctrl     *gomock.Controller
@@ -202,4 +218,19 @@ func (m *MockPrivkeyApi) HasWif(wif string) bool {
 func (mr *MockPrivkeyApiMockRecorder) HasWif(wif interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasWif", reflect.TypeOf((*MockPrivkeyApi)(nil).HasWif), wif)
+}
+
+// SignMessage mocks base method.
+func (m *MockPrivkeyApi) SignMessage(privkey *types.Privkey, message, magic string, isOutputBase64 bool) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignMessage", privkey, message, magic, isOutputBase64)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignMessage indicates an expected call of SignMessage.
+func (mr *MockPrivkeyApiMockRecorder) SignMessage(privkey, message, magic, isOutputBase64 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMessage", reflect.TypeOf((*MockPrivkeyApi)(nil).SignMessage), privkey, message, magic, isOutputBase64)
 }

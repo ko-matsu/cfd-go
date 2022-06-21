@@ -77,19 +77,19 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		Txid: "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
 		Vout: 0,
 	}
-	btcInputs := []types.InputTxIn{
+	btcInputs := []*types.InputTxIn{
 		{
 			OutPoint: utxoOutPoint,
 			Sequence: types.SequenceLockTimeFinal,
 		},
 	}
-	btcOutputs := []types.InputTxOut{
+	btcOutputs := []*types.InputTxOut{
 		{
 			Amount:  peginAmount,
 			Address: peginAddr.Address,
 		},
 	}
-	btcTx, err := btcTxApi.Create(uint32(2), uint32(0), &btcInputs, &btcOutputs)
+	btcTx, err := btcTxApi.Create(uint32(2), uint32(0), btcInputs, btcOutputs)
 	assert.NoError(t, err)
 
 	// add sign
@@ -100,14 +100,14 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 	assert.NoError(t, err)
 	utxoPrivkey, err := xprvApi.GetPrivkey(utxoExtPriv)
 	assert.NoError(t, err)
-	utxos := []types.UtxoData{
+	utxos := []*types.UtxoData{
 		{
 			OutPoint:   utxoOutPoint,
 			Amount:     amount,
 			Descriptor: "wpkh(" + utxoPubkey.Hex + ")",
 		},
 	}
-	err = btcTxApi.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, &utxos)
+	err = btcTxApi.SignWithPrivkey(btcTx, &utxoOutPoint, utxoPrivkey, types.SigHashTypeAll, utxos)
 	assert.NoError(t, err)
 	assert.Equal(t, "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc00000000", btcTx.Hex)
 
@@ -142,7 +142,7 @@ func TestCreateClaimPeginTxByCfdConf(t *testing.T) {
 		}
 	*/
 	outputAddr := "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex"
-	sendList := []types.InputConfidentialTxOut{}
+	sendList := []*types.InputConfidentialTxOut{}
 	option := types.NewPeginTxOption()
 	option.KnapsackMinChange = 0
 	option.EffectiveFeeRate = 0.1
@@ -338,7 +338,7 @@ func TestCreateClaimPeginTxOverrideApi(t *testing.T) {
 		TxOutProof:         txoutProof,
 	}
 	outputAddr := "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex"
-	sendList := []types.InputConfidentialTxOut{}
+	sendList := []*types.InputConfidentialTxOut{}
 	option := types.NewPeginTxOption()
 	option.KnapsackMinChange = 0
 	option.EffectiveFeeRate = 0.1
@@ -481,7 +481,7 @@ func TestCreateClaimPeginTxOverrideApiByMock(t *testing.T) {
 		TxOutProof:         txoutProof,
 	}
 	outputAddr := "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex"
-	sendList := []types.InputConfidentialTxOut{}
+	sendList := []*types.InputConfidentialTxOut{}
 	option := types.NewPeginTxOption()
 	option.KnapsackMinChange = 0
 	option.EffectiveFeeRate = 0.1

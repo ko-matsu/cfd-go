@@ -11,8 +11,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source ledger_liquid_lib.go -destination mock/ledger_liquid_lib.go -package mock
-//go:generate goimports -w mock/ledger_liquid_lib.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source ledger_liquid_lib.go -destination mock/ledger_liquid_lib.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/ledger_liquid_lib.go
 
 // ConfidentialTxApi This interface defines the API to operate Elements Confidential Transaction.
 type LedgerLiquidLibApi interface {

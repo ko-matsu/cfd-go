@@ -80,7 +80,7 @@ func (mr *MockScriptApiMockRecorder) CreateFromAsmStrings(asmStrings interface{}
 }
 
 // CreateMultisig mocks base method.
-func (m *MockScriptApi) CreateMultisig(pubkeys []types.Pubkey, requireSigNum uint32) (*types.Script, error) {
+func (m *MockScriptApi) CreateMultisig(pubkeys []*types.Pubkey, requireSigNum uint32) (*types.Script, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMultisig", pubkeys, requireSigNum)
 	ret0, _ := ret[0].(*types.Script)
@@ -125,10 +125,10 @@ func (mr *MockScriptApiMockRecorder) Parse(script interface{}) *gomock.Call {
 }
 
 // ParseMultisig mocks base method.
-func (m *MockScriptApi) ParseMultisig(script *types.Script) ([]types.Pubkey, uint32, error) {
+func (m *MockScriptApi) ParseMultisig(script *types.Script) ([]*types.Pubkey, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ParseMultisig", script)
-	ret0, _ := ret[0].([]types.Pubkey)
+	ret0, _ := ret[0].([]*types.Pubkey)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

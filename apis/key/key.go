@@ -10,8 +10,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source key.go -destination mock/key.go -package mock
-//go:generate goimports -w mock/key.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source key.go -destination mock/key.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/key.go
 
 // PubkeyApi This interface has pubkey operation API.
 type PubkeyApi interface {
@@ -21,6 +21,8 @@ type PubkeyApi interface {
 	IsCompressed(pubkey *types.Pubkey) error
 	// VerifyEcSignature ...
 	VerifyEcSignature(pubkey *types.Pubkey, sighash, signature string) (isVerify bool, err error)
+	// VerifyMessage ...
+	VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, isVerify bool, err error)
 }
 
 // PrivkeyApi This interface has privkey operation API.
@@ -32,6 +34,7 @@ type PrivkeyApi interface {
 	GetPubkey(privkey *types.Privkey) (pubkey *types.Pubkey, err error)
 	CreateEcSignature(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType) (signature *types.ByteData, err error)
 	CreateEcSignatureGrindR(privkey *types.Privkey, sighash *types.ByteData, sighashType *types.SigHashType, grindR bool) (signature *types.ByteData, err error)
+	SignMessage(privkey *types.Privkey, message, magic string, isOutputBase64 bool) (signature string, err error)
 }
 
 func NewPubkeyApi() *PubkeyApiImpl {
@@ -102,6 +105,18 @@ func (p *PubkeyApiImpl) VerifyEcSignature(pubkey *types.Pubkey, sighash, signatu
 		return false, errors.Wrap(err, "verify ec signature error")
 	}
 	return isVerify, nil
+}
+
+// VerifyMessage ...
+func (p *PubkeyApiImpl) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (recoveredPubkey *types.Pubkey, isVerify bool, err error) {
+	pk, isVerify, err := cfd.CfdGoVerifyMessage(signature, pubkey.Hex, message, magic)
+	if err != nil {
+		return nil, isVerify, err
+	}
+	recoveredPubkey = &types.Pubkey{
+		Hex: pk,
+	}
+	return recoveredPubkey, isVerify, nil
 }
 
 // -------------------------------------
@@ -190,6 +205,11 @@ func (k *PrivkeyApiImpl) CreateEcSignatureGrindR(privkey *types.Privkey, sighash
 	}
 	signature = types.NewByteDataFromHexIgnoreError(derSig)
 	return signature, nil
+}
+
+// SignMessage ...
+func (k *PrivkeyApiImpl) SignMessage(privkey *types.Privkey, message, magic string, isOutputBase64 bool) (signature string, err error) {
+	return cfd.CfdGoSignMessage(privkey.Hex, message, magic, isOutputBase64)
 }
 
 // validConfig ...

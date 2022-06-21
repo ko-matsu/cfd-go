@@ -17,8 +17,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source pegout.go -destination mock/pegout.go -package mock
-//go:generate goimports -w mock/pegout.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source pegout.go -destination mock/pegout.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/pegout.go
 
 const (
 	PegoutAmountMinimum int64 = 100000
@@ -32,7 +32,7 @@ type Pegout interface {
 	CreatePakEntry(
 		accountExtPubkey *types.ExtPubkey,
 		onlinePrivkey *types.Privkey,
-	) (pakEntry *types.ByteData, err error)
+	) (pakEntry *types.PakEntry, err error)
 	// CreatePegoutAddress This function create the pegout address for bitcoin network.
 	CreatePegoutAddress(
 		addressType types.AddressType,
@@ -43,7 +43,7 @@ type Pegout interface {
 	CreatePegoutTransaction(
 		utxoList []*types.ElementsUtxoData,
 		pegoutData types.InputConfidentialTxOut,
-		sendList *[]types.InputConfidentialTxOut,
+		sendList []*types.InputConfidentialTxOut,
 		changeAddress *string,
 		option *types.PegoutTxOption,
 	) (
@@ -207,7 +207,7 @@ func (p *PegoutService) CreateOnlinePrivateKey() (privkey *types.Privkey, err er
 func (p *PegoutService) CreatePakEntry(
 	accountExtPubkey *types.ExtPubkey,
 	onlinePrivkey *types.Privkey,
-) (pakEntry *types.ByteData, err error) {
+) (pakEntry *types.PakEntry, err error) {
 	if err = p.validConfig(); err != nil {
 		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	}
@@ -239,7 +239,7 @@ func (p *PegoutService) CreatePakEntry(
 	if err != nil {
 		return nil, errors.Wrap(err, "Pegout internal error")
 	}
-	pakEntry = &pakEntryObj
+	pakEntry = types.NewPakEntry(pakEntryObj)
 	return pakEntry, nil
 }
 
@@ -293,7 +293,7 @@ func (p *PegoutService) CreatePegoutAddress(
 func (p *PegoutService) CreatePegoutTransaction(
 	utxoList []*types.ElementsUtxoData,
 	pegoutData types.InputConfidentialTxOut,
-	sendList *[]types.InputConfidentialTxOut,
+	sendList []*types.InputConfidentialTxOut,
 	changeAddress *string,
 	option *types.PegoutTxOption,
 ) (tx *types.ConfidentialTx, pegoutAddress *types.Address, unblindTx *types.ConfidentialTx, err error) {
@@ -335,22 +335,18 @@ func (p *PegoutService) CreatePegoutTransaction(
 	}
 
 	// 1. create transaction
-	sendListNum := 0
-	if sendList != nil {
-		sendListNum = len(*sendList)
+	txins := []*types.InputConfidentialTxIn{}
+	txouts := make([]*types.InputConfidentialTxOut, len(sendList)+1)
+	txouts[0] = &types.InputConfidentialTxOut{
+		Asset:       assetId,
+		Amount:      workPegoutData.Amount,
+		PegoutInput: workPegoutData.PegoutInput,
 	}
-	txins := []types.InputConfidentialTxIn{}
-	txouts := make([]types.InputConfidentialTxOut, sendListNum+1)
-	txouts[0].Asset = assetId
-	txouts[0].Amount = workPegoutData.Amount
-	txouts[0].PegoutInput = workPegoutData.PegoutInput
-	if sendList != nil {
-		for i, output := range *sendList {
-			txouts[i+1] = output
-		}
+	for i, output := range sendList {
+		txouts[i+1] = output
 	}
 	pegoutAddrList := []string{}
-	tx, err = p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, &pegoutAddrList)
+	tx, err = p.elementsTxApi.Create(uint32(2), uint32(0), txins, txouts, &pegoutAddrList)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Pegout CT.Create error")
 	} else if len(pegoutAddrList) != 1 {
@@ -469,17 +465,19 @@ func (p *PegoutService) CreatePegoutTransaction(
 	// 5. blind
 	unblindTx = &types.ConfidentialTx{Hex: tx.Hex}
 	if option.IsBlindTx {
-		blindInputList := make([]types.BlindInputData, len(inputs))
+		blindInputList := make([]*types.BlindInputData, len(inputs))
 		for i, txin := range inputs {
 			utxo, ok := utxoMap[txin.OutPoint.String()]
 			if !ok {
 				return nil, nil, nil, errors.Errorf("CFD Error: Internal error")
 			}
-			blindInputList[i].OutPoint = txin.OutPoint
-			blindInputList[i].Amount = utxo.Amount
-			blindInputList[i].Asset = utxo.Asset
-			blindInputList[i].ValueBlindFactor = utxo.ValueBlindFactor
-			blindInputList[i].AssetBlindFactor = utxo.AssetBlindFactor
+			blindInputList[i] = &types.BlindInputData{
+				OutPoint:         txin.OutPoint,
+				Amount:           utxo.Amount,
+				Asset:            utxo.Asset,
+				ValueBlindFactor: utxo.ValueBlindFactor,
+				AssetBlindFactor: utxo.AssetBlindFactor,
+			}
 		}
 		blindOption := types.NewBlindTxOption()
 		blindOption.MinimumRangeValue = option.MinimumRangeValue
@@ -496,8 +494,8 @@ func (p *PegoutService) CreatePegoutTransaction(
 
 func (p *PegoutService) createPegoutTx(
 	pegoutData types.InputConfidentialTxOut,
-	txins []types.InputConfidentialTxIn,
-	txouts []types.InputConfidentialTxOut,
+	txins []*types.InputConfidentialTxIn,
+	txouts []*types.InputConfidentialTxOut,
 	assetId string,
 	fundTxInList []cfd.CfdUtxo,
 	fundUtxoList []cfd.CfdUtxo,
@@ -520,7 +518,7 @@ func (p *PegoutService) createPegoutTx(
 			return "", fee, errors.Errorf("pegout amount is low")
 		}
 		txouts[0].Amount = pegoutData.Amount - fee
-		tx, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
+		tx, err := p.elementsTxApi.Create(uint32(2), uint32(0), txins, txouts, nil)
 		if err != nil {
 			return "", fee, errors.Wrap(err, "Pegout CT.Create error")
 		}
@@ -556,7 +554,7 @@ func (p *PegoutService) createPegoutTx(
 			return "", fee, errors.Errorf("pegout amount is low")
 		}
 		txouts[0].Amount = pegoutData.Amount - fee
-		tx, err := p.elementsTxApi.Create(uint32(2), uint32(0), &txins, &txouts, nil)
+		tx, err := p.elementsTxApi.Create(uint32(2), uint32(0), txins, txouts, nil)
 		if err != nil {
 			return "", fee, errors.Wrap(err, "Pegout CT.Create error")
 		}
@@ -611,8 +609,8 @@ func (p *PegoutService) createPegoutTx(
 
 func (p *PegoutService) IsNeedDummyBlind(
 	utxoList []*types.ElementsUtxoData,
-	txinList []types.ConfidentialTxIn,
-	txoutList []types.ConfidentialTxOut,
+	txinList []*types.ConfidentialTxIn,
+	txoutList []*types.ConfidentialTxOut,
 ) bool {
 	utxoMap := make(map[string]*types.ElementsUtxoData, len(utxoList))
 	for _, utxo := range utxoList {
@@ -764,7 +762,7 @@ func validatePegoutExtPubkey(extPubkey *types.ExtPubkey) error {
 	return nil
 }
 
-func (p *PegoutService) validateTxInOutList(utxoList []*types.ElementsUtxoData, sendList *[]types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
+func (p *PegoutService) validateTxInOutList(utxoList []*types.ElementsUtxoData, sendList []*types.InputConfidentialTxOut, changeAddress *types.ConfidentialAddress) (blindOutputCount uint32, hasAppendDummyOutput bool, amount int64, err error) {
 	caApi := address.ConfidentialAddressApiImpl{}
 	blindOutputCount = uint32(0)
 	unblindOutputCount := uint32(0)
@@ -780,50 +778,48 @@ func (p *PegoutService) validateTxInOutList(utxoList []*types.ElementsUtxoData, 
 		hasAllInputBlinded = true
 	}
 
-	if sendList != nil {
-		for index, txout := range *sendList {
-			isFee := false
-			switch {
-			case txout.PegoutInput != nil:
-				return 0, false, 0, errors.Wrapf(err, "Pegout sendList exist pegout data error(n: %d)", index)
-			case txout.IsFee:
-				isFee = true
-			case len(txout.Nonce) == types.CommitmentHexDataSize:
-				if txout.IsDestroy || len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
-					blindOutputCount += 1
-					if txout.IsDestroy && (len(txout.LockingScript) > 0 || len(txout.Address) > 0) {
-						return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid destroy amount error(n: %d)", index)
-					}
-				} else {
-					return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid nonce error(n: %d)", index)
-				}
-			case txout.IsDestroy:
-				if len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
+	for index, txout := range sendList {
+		isFee := false
+		switch {
+		case txout.PegoutInput != nil:
+			return 0, false, 0, errors.Wrapf(err, "Pegout sendList exist pegout data error(n: %d)", index)
+		case txout.IsFee:
+			isFee = true
+		case len(txout.Nonce) == types.CommitmentHexDataSize:
+			if txout.IsDestroy || len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
+				blindOutputCount += 1
+				if txout.IsDestroy && (len(txout.LockingScript) > 0 || len(txout.Address) > 0) {
 					return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid destroy amount error(n: %d)", index)
 				}
-				unblindOutputCount += 1
-			case len(txout.Address) > 0:
-				addrInfo, err := caApi.Parse(txout.Address)
-				if err != nil {
-					return 0, false, 0, errors.Wrapf(err, "Pegout sendList address check error(n: %d)", index)
-				} else if addrInfo.Network != *p.network {
-					return 0, false, 0, errors.Wrapf(err, "Pegout sendList address network check error(n: %d)", index)
-				} else if len(addrInfo.ConfidentialAddress) > 0 {
-					blindOutputCount += 1
-				} else {
-					unblindOutputCount += 1
-				}
-			case len(txout.LockingScript) > 0:
-				unblindOutputCount += 1
-			default:
-				isFee = true
-			}
-
-			if isFee {
-				feeCount += 1
 			} else {
-				amount += txout.Amount
+				return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid nonce error(n: %d)", index)
 			}
+		case txout.IsDestroy:
+			if len(txout.LockingScript) > 0 || len(txout.Address) > 0 {
+				return 0, false, 0, errors.Wrapf(err, "Pegout sendList invalid destroy amount error(n: %d)", index)
+			}
+			unblindOutputCount += 1
+		case len(txout.Address) > 0:
+			addrInfo, err := caApi.Parse(txout.Address)
+			if err != nil {
+				return 0, false, 0, errors.Wrapf(err, "Pegout sendList address check error(n: %d)", index)
+			} else if addrInfo.Network != *p.network {
+				return 0, false, 0, errors.Wrapf(err, "Pegout sendList address network check error(n: %d)", index)
+			} else if len(addrInfo.ConfidentialAddress) > 0 {
+				blindOutputCount += 1
+			} else {
+				unblindOutputCount += 1
+			}
+		case len(txout.LockingScript) > 0:
+			unblindOutputCount += 1
+		default:
+			isFee = true
+		}
+
+		if isFee {
+			feeCount += 1
+		} else {
+			amount += txout.Amount
 		}
 	}
 

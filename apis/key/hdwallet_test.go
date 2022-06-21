@@ -102,6 +102,94 @@ func TestCfdExtkey(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "xpub6EXtjFtcPwmae296sZGckBgbfCHnodfjWujbGK7hhzRybmWJhmgeusFbiiZyG1iSeiBcQ7diPeUC9vtP9wLS44bWpqH4kuQQD5N4gA3LaFE", extkey)
 	*/
+
+	// BIP84
+	data, err = extPubkeyApi.GetData(&types.ExtPubkey{
+		Key: "zpub6jftahH18ngZxmWMzHpqkSuYWXAxxQNKY7Z7dhL8WXvXn74v79MXo16RujDNiprgNfpHNYzmaPQAKAkf8mXRXpxx29DbpsdKFQEahN6FZ3c",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "04b24746", data.Version)
+		assert.Equal(t, "00000000", data.Fingerprint)
+		assert.Equal(t, "a3fa8c983223306de0f0f65e74ebb1e98aba751633bf91d5fb56529aa5c132c1", data.ChainCode)
+		assert.Equal(t, (uint32)(0), data.Depth)
+		assert.Equal(t, (uint32)(0), data.ChildNumber)
+		assert.Equal(t, types.ExtPubkeyType, data.KeyType)
+		assert.Equal(t, network, data.Network)
+	}
+
+	data, err = extPubkeyApi.GetData(&types.ExtPubkey{
+		Key: "zpub6qGZy5pyrZn6RR6f22e51sNsPFEo8rF4m36eV6ZGAKyFj2VsW3Kpa9XWu1zPHAik9DRZxdCrFhoUyR5qnAAtuU6NmRbzd3ngUJ5gr3YCyeg",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "04b24746", data.Version)
+		assert.Equal(t, "f99a31bb", data.Fingerprint)
+		assert.Equal(t, "d5ee6edc2add795457af757b4a26d86a29f610784b3e12b4d1925aee9473ec99", data.ChainCode)
+		assert.Equal(t, (uint32)(2), data.Depth)
+		assert.Equal(t, (uint32)(2147483692), data.ChildNumber)
+		assert.Equal(t, types.ExtPubkeyType, data.KeyType)
+		assert.Equal(t, network, data.Network)
+	}
+
+	// BIP49
+	data, err = extPubkeyApi.GetData(&types.ExtPubkey{
+		Key: "ypub6QqdH2c5z7967UKF9w3DYMp3LZ2X1nNpd12trJSF8XYej1FgrVByAwSHtXFnivCky2hUd5QD7j3cRt96R57QjbHM9oXBExopygAwJmSSGxE",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "049d7cb2", data.Version)
+		assert.Equal(t, "00000000", data.Fingerprint)
+		assert.Equal(t, "a3fa8c983223306de0f0f65e74ebb1e98aba751633bf91d5fb56529aa5c132c1", data.ChainCode)
+		assert.Equal(t, (uint32)(0), data.Depth)
+		assert.Equal(t, (uint32)(0), data.ChildNumber)
+		assert.Equal(t, types.ExtPubkeyType, data.KeyType)
+		assert.Equal(t, network, data.Network)
+	}
+
+	data, err = extPubkeyApi.GetData(&types.ExtPubkey{
+		Key: "ypub6WSJfRA4htEca7uYBfrSonHNDH6MCEFZqvaRhhfNnKbNfvgeFPAFx5sNsp2oHG4pjaJmD9cHo3Sw68UH4Tkt7EQmu5ua38yCCa23TX34ahn",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "049d7cb2", data.Version)
+		assert.Equal(t, "f99a31bb", data.Fingerprint)
+		assert.Equal(t, "d5ee6edc2add795457af757b4a26d86a29f610784b3e12b4d1925aee9473ec99", data.ChainCode)
+		assert.Equal(t, (uint32)(2), data.Depth)
+		assert.Equal(t, (uint32)(2147483692), data.ChildNumber)
+		assert.Equal(t, types.ExtPubkeyType, data.KeyType)
+		assert.Equal(t, network, data.Network)
+	}
+
+	// testnet
+	cfdCfg = config.NetworkOption(types.Regtest)
+	extPubkeyApiImpl = NewExtPubkeyApi(cfdCfg)
+	data, err = extPubkeyApiImpl.GetData(&types.ExtPubkey{
+		Key: "vpub5SLqN2bLY4WeZajtergLv6XXpebBBvQKsfUEW7kazWR1Zhp16WhHJkTspuP2jCEzk7M4NecXjjyxn2JQFysNLtEYYnRuVEMNAVz194Xi9T8",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "045f1cf6", data.Version)
+		assert.Equal(t, "00000000", data.Fingerprint)
+		assert.Equal(t, "a3fa8c983223306de0f0f65e74ebb1e98aba751633bf91d5fb56529aa5c132c1", data.ChainCode)
+		assert.Equal(t, (uint32)(0), data.Depth)
+		assert.Equal(t, (uint32)(0), data.ChildNumber)
+		assert.Equal(t, types.ExtPubkeyType, data.KeyType)
+		assert.Equal(t, types.Testnet, data.Network)
+	}
+	data, err = extPubkeyApiImpl.GetData(&types.ExtPubkey{
+		Key: "upub57Wa4MvRPNyAiHYmpVtii1S2egSjFJQpxYx1iirhcW38WbzmqrXiggojohRSjHb5LUEFdB1yH5dQtjgqYHTMYeYwgSjUuKXstmvMkXnT6zh",
+	})
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "044a5262", data.Version)
+		assert.Equal(t, "00000000", data.Fingerprint)
+		assert.Equal(t, "a3fa8c983223306de0f0f65e74ebb1e98aba751633bf91d5fb56529aa5c132c1", data.ChainCode)
+		assert.Equal(t, (uint32)(0), data.Depth)
+		assert.Equal(t, (uint32)(0), data.ChildNumber)
+		assert.Equal(t, types.ExtPubkeyType, data.KeyType)
+		assert.Equal(t, types.Testnet, data.Network)
+	}
 }
 
 func TestConvertToBip32(t *testing.T) {
@@ -160,4 +248,12 @@ func TestConvertToBip32(t *testing.T) {
 	if err == nil {
 		assert.Equal(t, "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF", bip32Pub.Key)
 	}
+}
+
+func TestCreateBip32Path(t *testing.T) {
+	hdwalletApiImpl := NewHdWalletApi()
+
+	path, err := hdwalletApiImpl.CreateBip32Path(Bip32Root(), HardenedBip32ByNum(44), Bip32ByNum(0), Bip32ByString("5'"))
+	assert.NoError(t, err)
+	assert.Equal(t, "m/44'/0/5'", path)
 }

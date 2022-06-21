@@ -124,6 +124,7 @@ type ElementsUtxoData struct {
 	OutPoint          OutPoint             // OutPoint
 	Asset             string               // Asset
 	AssetBlindFactor  string               // Asset BlindFactor
+	AssetCommitment   string               // Asset commitment
 	Amount            int64                // satoshi value
 	ValueBlindFactor  string               // Value BlindFactor
 	AmountCommitment  string               // Amount commitment
@@ -133,6 +134,7 @@ type ElementsUtxoData struct {
 	IsIssuance        bool                 // is issuance output
 	IsBlindIssuance   bool                 // is blind issuance output
 	PeginData         *PeginUtxoData       // pegin data
+	GenesisBlockHash  *string              // genesis block hash
 }
 
 type UnblindData struct {
@@ -291,6 +293,9 @@ func (u ElementsUtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
 		Asset:             u.Asset,
 		Descriptor:        u.Descriptor,
 		AmountCommitment:  u.AmountCommitment,
+		AssetCommitment:   u.AssetCommitment,
+		AmountBlinder:     u.ValueBlindFactor,
+		AssetBlinder:      u.AssetBlindFactor,
 		IsIssuance:        u.IsIssuance,
 		IsBlindIssuance:   u.IsBlindIssuance,
 		ScriptSigTemplate: u.ScriptSigTemplate,
@@ -304,6 +309,9 @@ func (u ElementsUtxoData) ConvertToCfdUtxo() cfd.CfdUtxo {
 		utxo.ClaimScript = u.PeginData.ClaimScript
 		utxo.PeginBtcTxSize = uint32(len(u.PeginData.BitcoinTransaction) / 2)
 		utxo.PeginTxOutProofSize = uint32(len(u.PeginData.TxOutProof) / 2)
+	}
+	if u.GenesisBlockHash != nil {
+		utxo.GenesisBlockHash = *u.GenesisBlockHash
 	}
 	return utxo
 }
@@ -354,13 +362,13 @@ func (c ConfidentialTxOut) HasBlinding() bool {
 	return len(c.CommitmentValue) == 66 || len(c.CommitmentNonce) == 66
 }
 
-type ConfidentialTxOutSet []ConfidentialTxOut
+type ConfidentialTxOutSet []*ConfidentialTxOut
 type ConfidentialTxOutIndexMap map[uint32]*ConfidentialTxOut
 
 func (c ConfidentialTxOutSet) FindByAddressFirst(address string) (*ConfidentialTxOut, uint32) {
 	for i, txout := range c {
 		if len(txout.Address) > 0 && txout.Address == address {
-			return &txout, uint32(i)
+			return txout, uint32(i)
 		}
 	}
 	return nil, 0
@@ -370,7 +378,7 @@ func (c ConfidentialTxOutSet) FindByAddress(address string) map[uint32]*Confiden
 	txouts := make(map[uint32]*ConfidentialTxOut)
 	for i, txout := range c {
 		if len(txout.Address) > 0 && txout.Address == address {
-			txouts[uint32(i)] = &txout
+			txouts[uint32(i)] = txout
 		}
 	}
 	return txouts
@@ -379,7 +387,7 @@ func (c ConfidentialTxOutSet) FindByAddress(address string) map[uint32]*Confiden
 func (c ConfidentialTxOutSet) FindByLockingScriptFirst(lockingScript string) (*ConfidentialTxOut, uint32) {
 	for i, txout := range c {
 		if txout.LockingScript == lockingScript {
-			return &txout, uint32(i)
+			return txout, uint32(i)
 		}
 	}
 	return nil, 0
@@ -389,7 +397,7 @@ func (c ConfidentialTxOutSet) FindByLockingScript(lockingScript string) map[uint
 	txouts := make(map[uint32]*ConfidentialTxOut)
 	for i, txout := range c {
 		if txout.LockingScript == lockingScript {
-			txouts[uint32(i)] = &txout
+			txouts[uint32(i)] = txout
 		}
 	}
 	return txouts
@@ -408,8 +416,8 @@ func (c ConfidentialTxOutSet) GetFeeAmount() int64 {
 func (c ConfidentialTxOutSet) Filter(filterFunc func(*ConfidentialTxOut) bool) ConfidentialTxOutIndexMap {
 	txouts := make(map[uint32]*ConfidentialTxOut)
 	for i, txout := range c {
-		if filterFunc(&txout) {
-			txouts[uint32(i)] = &txout
+		if filterFunc(txout) {
+			txouts[uint32(i)] = txout
 		}
 	}
 	return txouts

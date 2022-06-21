@@ -65,7 +65,7 @@ func (mr *MockAddressApiMockRecorder) CreateByScript(redeemScript, addressType i
 }
 
 // CreateMultisigAddress mocks base method.
-func (m *MockAddressApi) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (*types.Address, *types.Script, error) {
+func (m *MockAddressApi) CreateMultisigAddress(pubkeys []*types.Pubkey, requireNum uint32, addressType types.AddressType) (*types.Address, *types.Script, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMultisigAddress", pubkeys, requireNum, addressType)
 	ret0, _ := ret[0].(*types.Address)
@@ -163,7 +163,7 @@ func (mr *MockElementsAddressApiMockRecorder) CreateByScript(redeemScript, addre
 }
 
 // CreateMultisigAddress mocks base method.
-func (m *MockElementsAddressApi) CreateMultisigAddress(pubkeys *[]types.Pubkey, requireNum uint32, addressType types.AddressType) (*types.Address, *types.Script, error) {
+func (m *MockElementsAddressApi) CreateMultisigAddress(pubkeys []*types.Pubkey, requireNum uint32, addressType types.AddressType) (*types.Address, *types.Script, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMultisigAddress", pubkeys, requireNum, addressType)
 	ret0, _ := ret[0].(*types.Address)

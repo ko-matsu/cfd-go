@@ -22,25 +22,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-#        os: [macos-10.15, macos-11.0, windows-2019, ubuntu-20.04, ubuntu-18.04]
-        os: [macos-10.15, windows-2019, ubuntu-20.04, ubuntu-18.04]
-        go-version: [1.16.x, 1.17.x]
+        os: [macos-12, macos-11, macos-10.15, windows-2022, windows-2019, ubuntu-22.04, ubuntu-20.04, ubuntu-18.04]
+        go-version: [1.16.x, 1.17.x, 1.18.x]
         exclude:
           - os: windows-2019
             go-version: 1.17.x
           - os: macos-10.15
             go-version: 1.17.x
-        include:
-          - os: windows-2019
-            generator: MSYS Makefiles
-          - os: macos-10.15
-            generator: Unix Makefiles
-#          - os: macos-11.0
-#            generator: Unix Makefiles
-          - os: ubuntu-20.04
-            generator: Unix Makefiles
-          - os: ubuntu-18.04
-            generator: Unix Makefiles
 
     steps:
     - name: setup go
@@ -48,8 +36,12 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v2
+    - name:  cmake-generate-windows
+      if: runner.os == 'Windows'
+      run: cmake -S . -B build -G "MSYS Makefiles" -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64;./build/Release"
     - name: cmake-generate
-      run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64;./build/Release"
+      if: runner.os != 'Windows'
+      run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64;./build/Release"
     - name: cmake-build
       run: |
         cmake --version

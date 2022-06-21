@@ -1,0 +1,45 @@
+service:
+  golangci-lint-version: 1.46.2
+run:
+  deadline: 30m
+  skip-dirs:
+    - cover
+    - external
+  modules-download-mode: readonly
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    # swig関連の指摘
+    - path: cfdgo\.go
+      text: 'S1021:'
+    - path: cfdgo\.go
+      text: '`_swig_memberptr` is unused'
+    - path: cfdgo\.go
+      text: '`_swig_fnptr` is unused'
+    - path: cfdgo_api\.go
+      source: 'defer CfdGoFreeHandle'
+    - path: cfdgo_api\.go
+      source: 'defer CfdGoFreeMultisigSignHandle'
+    - path: cfdgo_api\.go
+      source: 'defer CfdGoFreeScriptTreeHandle'
+    - path: cfdgo_api\.go
+      source: 'defer CfdGoFreeTxDataHandle'
+    - path: _test\.go
+      text: 'Error return value of `config.SetCfdConfig` is not checked'
+    - path: _test\.go
+      text: 'Error return value of `cfd.CfdGoFreeBlindHandle` is not checked'
+    - path: _test\.go
+      text: 'Error return value of `tree.AddBranchByHash` is not checked'
+    - linters:
+      - errcheck
+      text: 'Error return value of `cfdgo.CfdGoFreeTxDataHandle` is not checked'
+    - path: transaction\.go
+      text: 'Error return value of `cfd.CfdGoFreeTxDataHandle` is not checked'
+
+linters:
+  enable:
+    - exportloopref
+    - goimports
+  disable:
+    - structcheck

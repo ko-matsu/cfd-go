@@ -1,20 +1,26 @@
 .PHONY: all
-all: gettools generate format
+all: generate format
 
-gettools:
-	go get github.com/golang/mock/gomock@v1.6.0
-	go get github.com/golang/mock/mockgen@v1.6.0
-	go get golang.org/x/tools/cmd/goimports@v0.1.5
+# for docker
+get-cache:
+	go install golang.org/x/tools/cmd/goimports@v0.1.9
+	go install github.com/golang/mock/mockgen@v1.6.0
+	go mod download
+
+update:
+	go mod download
 	go mod tidy
 
 generate:
 	go generate ./apis/... ./service/...
 
 format:
-	go fmt . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
-	goimports -w .
+	go run golang.org/x/tools/cmd/goimports@v0.1.9 -w .
 	go vet . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
 	go mod tidy
+
+lint:
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2 run
 
 build-lib:
 	echo "build for Linux/MacOS"
@@ -50,4 +56,4 @@ test-win:
 
 gen-swig:
 	./tools/gen_swig.sh
-	goimports -w .
+	make format

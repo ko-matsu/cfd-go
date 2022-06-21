@@ -16,8 +16,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source descriptor.go -destination mock/descriptor.go -package mock
-//go:generate goimports -w mock/descriptor.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source descriptor.go -destination mock/descriptor.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/descriptor.go
 
 type DescriptorApi interface {
 	// GetNetworkTypes returns the available network types.
@@ -211,7 +211,17 @@ func (d *DescriptorApiImpl) NewDescriptorFromExtPubkey(
 	} else if keyInfo.KeyType != types.ExtPubkeyType {
 		return nil, errors.Errorf("invalid extkey type")
 	}
-	// FIXME(k-matsuzawa): check keyVersion & hashType
+	// check keyVersion & hashType
+	switch keyInfo.Version {
+	case key.Bip49PubkeyVersionMainnet, key.Bip49PubkeyVersionTestnet:
+		hashType = types.P2shP2wpkh
+	case key.Bip84PubkeyVersionMainnet, key.Bip84PubkeyVersionTestnet:
+		hashType = types.P2wpkh
+	case key.Bip32PubkeyVersionMainnet, key.Bip32PubkeyVersionTestnet:
+		// unchecked
+	default:
+		return nil, errors.Errorf("unsupported extPubkey version, %s", keyInfo.Version)
+	}
 
 	var descStr string
 	switch hashType {

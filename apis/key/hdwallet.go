@@ -1,6 +1,7 @@
 package key
 
 import (
+	"strconv"
 	"strings"
 
 	cfd "github.com/cryptogarageinc/cfd-go"
@@ -10,12 +11,68 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	Bip32PubkeyVersionMainnet string = "0488b21e"
+	Bip49PubkeyVersionMainnet string = "049d7cb2"
+	Bip84PubkeyVersionMainnet string = "04b24746"
+	Bip32PubkeyVersionTestnet string = "043587cf"
+	Bip49PubkeyVersionTestnet string = "044a5262"
+	Bip84PubkeyVersionTestnet string = "045f1cf6"
+)
+
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate mockgen -source hdwallet.go -destination mock/hdwallet.go -package mock
-//go:generate goimports -w mock/hdwallet.go
+//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source hdwallet.go -destination mock/hdwallet.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/hdwallet.go
 
 // FIXME split file
+
+type Bip32Item func() string
+
+// Bip32ByNum returns Bip32Item function.
+func Bip32ByNum(value int) Bip32Item {
+	return func() string {
+		if value < 0 {
+			val := value & 0x7fffffff
+			return strconv.Itoa(val) + "'"
+		}
+		return strconv.Itoa(value)
+	}
+}
+
+// HardenedBip32ByNum returns Bip32Item function.
+func HardenedBip32ByNum(value int) Bip32Item {
+	return func() string {
+		val := value & 0x7fffffff
+		return strconv.Itoa(val) + "'"
+	}
+}
+
+// Bip32ByString returns Bip32Item function.
+func Bip32ByString(value string) Bip32Item {
+	return func() string {
+		numStr := value
+		var hardenedStr string
+		switch {
+		case strings.HasSuffix(value, "h"), strings.HasSuffix(value, "'"):
+			hardenedStr = value[len(value)-1:]
+			numStr = value[:len(value)-1]
+		default:
+		}
+		num, err := strconv.ParseInt(numStr, 0, 32)
+		if err != nil || num < 0 {
+			return ""
+		}
+		return numStr + hardenedStr
+	}
+}
+
+// Bip32Root returns Bip32Item function.
+func Bip32Root() Bip32Item {
+	return func() string {
+		return "m"
+	}
+}
 
 type ExtPubkeyApi interface {
 	GetPubkey(extPubkey *types.ExtPubkey) (pubkey *types.Pubkey, err error)
@@ -38,12 +95,16 @@ type HdWalletApi interface {
 	GetExtPrivkey(seed *types.ByteData) (privkey *types.ExtPrivkey, err error)
 	GetExtPrivkeyByPath(seed *types.ByteData, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error)
 	GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (derivedPubkey *types.ExtPubkey, err error)
+	GetExtPrivkeyWithFormat(seed *types.ByteData, formatType types.ExtkeyFormatType) (privkey *types.ExtPrivkey, err error)
+	GetExtPrivkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPrivkey *types.ExtPrivkey, err error)
+	GetExtPubkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPubkey *types.ExtPubkey, err error)
 	GetSeedFromMnemonicEng(mnemonic []string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetSeedFromMnemonicEngAndPassphrase(mnemonic []string, passphrase string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetMnemonicFromEntropyEng(entropy *types.ByteData) (mnemonic *[]string, err error)
 	GetSeedFromMnemonic(mnemonic []string, language string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetSeedFromMnemonicAndPassphrase(mnemonic []string, language string, passphrase string) (seed *types.ByteData, entropy *types.ByteData, err error)
 	GetMnemonicFromEntropy(entropy *types.ByteData, language string) (mnemonic *[]string, err error)
+	CreateBip32Path(items ...Bip32Item) (path string, err error)
 }
 
 func NewExtPubkeyApi(options ...config.CfdConfigOption) *ExtPubkeyApiImpl {
@@ -334,14 +395,25 @@ func (k *ExtPrivkeyApiImpl) validConfig() error {
 // -------------------------------------
 // implement HdWalletApiImpl
 // -------------------------------------
-
 func (h *HdWalletApiImpl) GetExtPrivkey(seed *types.ByteData) (privkey *types.ExtPrivkey, err error) {
+	return h.GetExtPrivkeyWithFormat(seed, types.ExtkeyFormatTypeBip32)
+}
+
+func (h *HdWalletApiImpl) GetExtPrivkeyByPath(seed *types.ByteData, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error) {
+	return h.GetExtPrivkeyByPathWithFormat(seed, bip32Path, types.ExtkeyFormatTypeBip32)
+}
+
+func (h *HdWalletApiImpl) GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (derivedPubkey *types.ExtPubkey, err error) {
+	return h.GetExtPubkeyByPathWithFormat(seed, bip32Path, types.ExtkeyFormatTypeBip32)
+}
+
+func (h *HdWalletApiImpl) GetExtPrivkeyWithFormat(seed *types.ByteData, formatType types.ExtkeyFormatType) (privkey *types.ExtPrivkey, err error) {
 	if err := h.validConfig(); err != nil {
 		return nil, errors.Wrap(err, cfdErrors.InvalidConfigErrorMessage)
 	} else if seed == nil {
 		return nil, errors.Errorf("CFD Error: seed is nil")
 	}
-	key, err := cfd.CfdGoCreateExtkeyFromSeed(seed.ToHex(), h.network.ToCfdValue(), int(cfd.KCfdExtPrivkey))
+	key, err := cfd.CfdGoCreateExtkeyByFormatFromSeed(seed.ToHex(), h.network.ToCfdValue(), int(cfd.KCfdExtPrivkey), formatType.ToCfdValue())
 	if err != nil {
 		return nil, errors.Wrap(err, "create extkey error")
 	}
@@ -349,8 +421,8 @@ func (h *HdWalletApiImpl) GetExtPrivkey(seed *types.ByteData) (privkey *types.Ex
 	return privkey, nil
 }
 
-func (h *HdWalletApiImpl) GetExtPrivkeyByPath(seed *types.ByteData, bip32Path string) (derivedPrivkey *types.ExtPrivkey, err error) {
-	privkey, err := h.GetExtPrivkey(seed)
+func (h *HdWalletApiImpl) GetExtPrivkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPrivkey *types.ExtPrivkey, err error) {
+	privkey, err := h.GetExtPrivkeyWithFormat(seed, formatType)
 	if err != nil {
 		return nil, errors.Wrap(err, "get extprivkey error")
 	}
@@ -362,8 +434,8 @@ func (h *HdWalletApiImpl) GetExtPrivkeyByPath(seed *types.ByteData, bip32Path st
 	return derivedPrivkey, nil
 }
 
-func (h *HdWalletApiImpl) GetExtPubkeyByPath(seed *types.ByteData, bip32Path string) (derivedPubkey *types.ExtPubkey, err error) {
-	privkey, err := h.GetExtPrivkey(seed)
+func (h *HdWalletApiImpl) GetExtPubkeyByPathWithFormat(seed *types.ByteData, bip32Path string, formatType types.ExtkeyFormatType) (derivedPubkey *types.ExtPubkey, err error) {
+	privkey, err := h.GetExtPrivkeyWithFormat(seed, formatType)
 	if err != nil {
 		return nil, errors.Wrap(err, "get extprivkey error")
 	}
@@ -423,6 +495,23 @@ func (h *HdWalletApiImpl) GetMnemonicFromEntropy(entropy *types.ByteData, langua
 	mnemonicWords := strings.Split(mnemonicText, " ")
 	mnemonic = &mnemonicWords
 	return mnemonic, nil
+}
+
+func (h *HdWalletApiImpl) CreateBip32Path(items ...Bip32Item) (path string, err error) {
+	bip32Path := ""
+	for i, itemFunc := range items {
+		pathStr := itemFunc()
+		if pathStr == "" {
+			return "", errors.Errorf("CFD Error: invalid path")
+		} else if pathStr == "m" && i != 0 {
+			return "", errors.Errorf("CFD Error: invalid root item position")
+		}
+		if bip32Path != "" {
+			bip32Path += "/"
+		}
+		bip32Path += pathStr
+	}
+	return bip32Path, nil
 }
 
 // validConfig ...

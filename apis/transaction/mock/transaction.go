@@ -35,7 +35,7 @@ func (m *MockTransactionApi) EXPECT() *MockTransactionApiMockRecorder {
 }
 
 // Add mocks base method.
-func (m *MockTransactionApi) Add(tx *types.Transaction, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) error {
+func (m *MockTransactionApi) Add(tx *types.Transaction, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Add", tx, txinList, txoutList)
 	ret0, _ := ret[0].(error)
@@ -77,7 +77,7 @@ func (mr *MockTransactionApiMockRecorder) AddPubkeySignByDescriptor(tx, outpoint
 }
 
 // Create mocks base method.
-func (m *MockTransactionApi) Create(version, locktime uint32, txinList *[]types.InputTxIn, txoutList *[]types.InputTxOut) (*types.Transaction, error) {
+func (m *MockTransactionApi) Create(version, locktime uint32, txinList []*types.InputTxIn, txoutList []*types.InputTxOut) (*types.Transaction, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", version, locktime, txinList, txoutList)
 	ret0, _ := ret[0].(*types.Transaction)
@@ -121,7 +121,7 @@ func (mr *MockTransactionApiMockRecorder) GetTxid(tx interface{}) *gomock.Call {
 }
 
 // SignWithPrivkey mocks base method.
-func (m *MockTransactionApi) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList *[]types.UtxoData) error {
+func (m *MockTransactionApi) SignWithPrivkey(tx *types.Transaction, outpoint *types.OutPoint, privkey *types.Privkey, sighashType types.SigHashType, utxoList []*types.UtxoData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignWithPrivkey", tx, outpoint, privkey, sighashType, utxoList)
 	ret0, _ := ret[0].(error)
@@ -135,7 +135,7 @@ func (mr *MockTransactionApiMockRecorder) SignWithPrivkey(tx, outpoint, privkey,
 }
 
 // VerifySign mocks base method.
-func (m *MockTransactionApi) VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList *[]types.UtxoData) (bool, string, error) {
+func (m *MockTransactionApi) VerifySign(tx *types.Transaction, outpoint *types.OutPoint, amount int64, txinUtxoList []*types.UtxoData) (bool, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifySign", tx, outpoint, amount, txinUtxoList)
 	ret0, _ := ret[0].(bool)

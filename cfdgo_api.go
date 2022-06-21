@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"unsafe"
+
+	"github.com/pkg/errors"
 )
 
 /**
@@ -18,25 +20,25 @@ func ConvertCfdErrorCode(retCode int) (err error) {
 	case (int)(KCfdSuccess):
 		return nil
 	case (int)(KCfdUnknownError):
-		err = fmt.Errorf("CFD Error: Unknown error occered.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Unknown error occuered.: errorCode=[%d]", retCode)
 	case (int)(KCfdInternalError):
-		err = fmt.Errorf("CFD Error: Internal error occered.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Internal error occered.: errorCode=[%d]", retCode)
 	case (int)(KCfdMemoryFullError):
-		err = fmt.Errorf("CFD Error: Memory is full.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Memory is full.: errorCode=[%d]", retCode)
 	case (int)(KCfdIllegalArgumentError):
-		err = fmt.Errorf("CFD Error: Illegal argument passed.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Illegal argument passed.: errorCode=[%d]", retCode)
 	case (int)(KCfdIllegalStateError):
-		err = fmt.Errorf("CFD Error: Illegal state api call.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Illegal state api call.: errorCode=[%d]", retCode)
 	case (int)(KCfdOutOfRangeError):
-		err = fmt.Errorf("CFD Error: Out of range access occered.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Out of range access occered.: errorCode=[%d]", retCode)
 	case (int)(KCfdInvalidSettingError):
-		err = fmt.Errorf("CFD Error: Invalid setting api call.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Invalid setting api call.: errorCode=[%d]", retCode)
 	case (int)(KCfdConnectionError):
-		err = fmt.Errorf("CFD Error: Connection error occered.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Connection error occered.: errorCode=[%d]", retCode)
 	case (int)(KCfdDiskAccessError):
-		err = fmt.Errorf("CFD Error: Disk access error occered.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: Disk access error occered.: errorCode=[%d]", retCode)
 	case (int)(KCfdNotFoundError):
-		err = fmt.Errorf("CFD Error: NotFound error occered.: errorCode=[%d]", retCode)
+		err = errors.Errorf("CFD Error: NotFound error occered.: errorCode=[%d]", retCode)
 	}
 	return
 }
@@ -59,7 +61,7 @@ func convertCfdError(retCode int, handle uintptr) (err error) {
 	} else if ret := CfdGetLastErrorMessage(handle, &errorMsg); ret != (int)(KCfdSuccess) {
 		err = ConvertCfdErrorCode(retCode)
 	} else {
-		err = fmt.Errorf("CFD Error: message=[%s], code=[%d]", errorMsg, retCode)
+		err = errors.Errorf("CFD Error: message=[%s], code=[%d]", errorMsg, retCode)
 	}
 	return
 }
@@ -488,6 +490,14 @@ type CfdUtxo struct {
 	ScriptSigTemplate string
 	// amount commitment hex
 	AmountCommitment string
+	// asset commitment hex
+	AssetCommitment string
+	// amount blinder hex
+	AmountBlinder string
+	// asset blinder hex
+	AssetBlinder string
+	// genesis block hash
+	GenesisBlockHash string
 }
 
 /**
@@ -574,8 +584,8 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 	for i := int32(0); i < (int32)(utxoCount); i++ {
 		indexBuf := SwigcptrInt32_t(uintptr(unsafe.Pointer(&i)))
 		voutBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxos[i].Vout)))
-		amoutBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxos[i].Amount)))
-		ret = CfdAddCoinSelectionUtxoTemplate(handle, coinSelectHandle, indexBuf, utxos[i].Txid, voutBuf, amoutBuf, utxos[i].Asset, utxos[i].Descriptor, utxos[i].ScriptSigTemplate)
+		amountBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxos[i].Amount)))
+		ret = CfdAddCoinSelectionUtxoTemplate(handle, coinSelectHandle, indexBuf, utxos[i].Txid, voutBuf, amountBuf, utxos[i].Asset, utxos[i].Descriptor, utxos[i].ScriptSigTemplate)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
@@ -584,8 +594,8 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 
 	for i := uint32(0); i < amountCount; i++ {
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-		amoutBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&targetAmounts[i].Amount)))
-		ret = CfdAddCoinSelectionAmount(handle, coinSelectHandle, indexBuf, amoutBuf, targetAmounts[i].Asset)
+		amountBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&targetAmounts[i].Amount)))
+		ret = CfdAddCoinSelectionAmount(handle, coinSelectHandle, indexBuf, amountBuf, targetAmounts[i].Asset)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
@@ -2137,7 +2147,7 @@ func CfdGoParseConfidentialAddress(confidentialAddress string) (address string, 
 
 /**
  * Calculate ec-signature from privkey.
- * param: sighash              signatufe hash
+ * param: sighash              signature hash
  * param: privkeyHex           privkey hex (Specify either privkeyHex or privkeyWif)
  * param: privkeyWif           privkey WIF (Specify either privkeyHex or privkeyWif)
  * param: wifNetworkType       network type (for privkey WIF)
@@ -2546,7 +2556,7 @@ func CfdGoParseScript(script string) (scriptItems []string, err error) {
 /**
  * Convert script asm to hex.
  * param: scriptAsm       script assembly string.
- * return: script         hex encodeed script.
+ * return: script         hex encoded script.
  * return: err            error
  */
 func CfdGoConvertScriptAsmToHex(scriptAsm string) (script string, err error) {
@@ -2665,7 +2675,7 @@ func CfdGoSetElementsMultisigScriptSig(txHex string, txid string, vout uint32, s
 	}
 	scriptsigIndex := len(scriptsigItems)
 	if scriptsigIndex < 3 {
-		return "", fmt.Errorf("CFD Error: message=[%s], code=[%d]", "Invalid scriptsig array length.", KCfdIllegalArgumentError)
+		return "", errors.Errorf("CFD Error: message=[%s], code=[%d]", "Invalid scriptsig array length.", KCfdIllegalArgumentError)
 	}
 
 	redeemScript := ""
@@ -2683,7 +2693,7 @@ func CfdGoSetElementsMultisigScriptSig(txHex string, txid string, vout uint32, s
 			return "", convertCfdError(ret, handle)
 		}
 	} else {
-		return "", fmt.Errorf("CFD Error: message=[%s], code=[%d]", "Unsupported hashType.", KCfdIllegalArgumentError)
+		return "", errors.Errorf("CFD Error: message=[%s], code=[%d]", "Unsupported hashType.", KCfdIllegalArgumentError)
 	}
 
 	var multisigHandle uintptr
@@ -2812,7 +2822,7 @@ func CfdGoVerifyConfidentialTxSignature(
 
 /**
  * Normalize ec signature to low-s form
- * param: signature              ec signature to nomalize
+ * param: signature              ec signature to normalize
  * return: normalizeSignature    normalized signature
  * return: err                   error
  */
@@ -4399,7 +4409,7 @@ func CfdGoGetAssetCommitment(asset, assetBlinder string) (assetCommitment string
 	return assetCommitment, err
 }
 
-// CfdGoGetAssetCommitment get amount commitment.
+// CfdGoGetAmountCommitment get amount commitment.
 func CfdGoGetAmountCommitment(amount int64, assetCommitment, blinder string) (commitment string, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
@@ -4664,6 +4674,9 @@ func NewByteDataFromHexIgnoreError(hexStr string) *ByteData {
 
 // ToHex This function return a hex string.
 func (obj *ByteData) ToHex() string {
+	if obj == nil {
+		return ""
+	}
 	return obj.hex
 }
 
@@ -4717,17 +4730,18 @@ func (obj *SigHashType) GetValue() int {
 	return value
 }
 
-// EcdsaAdaptorUtil This struct use for the accessing to ecdsa-adaptor function.
-type EcdsaAdaptorUtil struct {
+// AdaptorSignature This struct use for the accessing to ecdsa-adaptor function.
+type AdaptorSignature struct {
+	Signature string
 }
 
-// NewEcdsaAdaptorUtil This function return a EcdsaAdaptorUtil.
-func NewEcdsaAdaptorUtil() *EcdsaAdaptorUtil {
-	return &EcdsaAdaptorUtil{}
+// NewAdaptorSignature This function return a ecdsa-adaptor's signature.
+func NewAdaptorSignature(adaptorSignature ByteData) *AdaptorSignature {
+	return &AdaptorSignature{Signature: adaptorSignature.hex}
 }
 
-// Sign This function return a ecdsa-adaptor's signature and proof.
-func (obj *EcdsaAdaptorUtil) Sign(msg, secretKey, adaptor ByteData) (adaptorSignature, adaptorProof ByteData, err error) {
+// EncryptEcdsaAdaptor This function return a ecdsa-adaptor's signature.
+func EncryptEcdsaAdaptor(msg, secretKey, encryptionKey ByteData) (adaptorSignature *AdaptorSignature, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4735,18 +4749,16 @@ func (obj *EcdsaAdaptorUtil) Sign(msg, secretKey, adaptor ByteData) (adaptorSign
 	defer CfdGoFreeHandle(handle)
 
 	var signature string
-	var proof string
-	ret := CfdSignEcdsaAdaptor(handle, msg.ToHex(), secretKey.ToHex(), adaptor.ToHex(), &signature, &proof)
+	ret := CfdEncryptEcdsaAdaptor(handle, msg.ToHex(), secretKey.ToHex(), encryptionKey.ToHex(), &signature)
 	err = convertCfdError(ret, handle)
 	if err == nil {
-		adaptorSignature = ByteData{hex: signature}
-		adaptorProof = ByteData{hex: proof}
+		adaptorSignature = &AdaptorSignature{Signature: signature}
 	}
-	return adaptorSignature, adaptorProof, err
+	return adaptorSignature, err
 }
 
 // Adapt This function return a decrypted signature.
-func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (signature ByteData, err error) {
+func (obj *AdaptorSignature) Decrypt(adaptorSecret ByteData) (signature ByteData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4754,7 +4766,7 @@ func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (si
 	defer CfdGoFreeHandle(handle)
 
 	var ecSignature string
-	ret := CfdAdaptEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorSecret.ToHex(), &ecSignature)
+	ret := CfdDecryptEcdsaAdaptor(handle, obj.Signature, adaptorSecret.ToHex(), &ecSignature)
 	err = convertCfdError(ret, handle)
 	if err == nil {
 		signature = ByteData{hex: ecSignature}
@@ -4763,7 +4775,7 @@ func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (si
 }
 
 // ExtractSecret This function return a adaptor secret.
-func (obj *EcdsaAdaptorUtil) ExtractSecret(adaptorSignature, signature, adaptor ByteData) (secret ByteData, err error) {
+func (obj *AdaptorSignature) Recover(signature, encryptionKey ByteData) (secret *ByteData, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -4771,16 +4783,16 @@ func (obj *EcdsaAdaptorUtil) ExtractSecret(adaptorSignature, signature, adaptor 
 	defer CfdGoFreeHandle(handle)
 
 	var adaptorSecret string
-	ret := CfdExtractEcdsaAdaptorSecret(handle, adaptorSignature.ToHex(), signature.ToHex(), adaptor.ToHex(), &adaptorSecret)
+	ret := CfdRecoverEcdsaAdaptor(handle, obj.Signature, signature.ToHex(), encryptionKey.ToHex(), &adaptorSecret)
 	err = convertCfdError(ret, handle)
 	if err == nil {
-		secret = ByteData{hex: adaptorSecret}
+		secret = &ByteData{hex: adaptorSecret}
 	}
 	return secret, err
 }
 
 // Verify This function verify a ecdsa-adaptor's signature.
-func (obj *EcdsaAdaptorUtil) Verify(adaptorSignature, adaptorProof, adaptor, msg, pubkey ByteData) (isVerify bool, err error) {
+func (obj *AdaptorSignature) Verify(msg, pubkey, encryptionKey ByteData) (isVerify bool, err error) {
 	isVerify = false
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
@@ -4788,7 +4800,7 @@ func (obj *EcdsaAdaptorUtil) Verify(adaptorSignature, adaptorProof, adaptor, msg
 	}
 	defer CfdGoFreeHandle(handle)
 
-	ret := CfdVerifyEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorProof.ToHex(), adaptor.ToHex(), msg.ToHex(), pubkey.ToHex())
+	ret := CfdVerifyEcdsaAdaptor(handle, obj.Signature, msg.ToHex(), pubkey.ToHex(), encryptionKey.ToHex())
 	if ret == (int)(KCfdSuccess) {
 		isVerify = true
 	} else if ret == (int)(KCfdSignVerificationError) {
@@ -5206,6 +5218,13 @@ func CfdGoCreateScriptTreeHandle(handle uintptr) (treeHandle uintptr, err error)
 	return treeHandle, err
 }
 
+// CfdGoCreateScriptTreeElementsHandle This function is create a script tree handle.
+func CfdGoCreateScriptTreeElementsHandle(handle uintptr) (treeHandle uintptr, err error) {
+	ret := CfdInitializeTaprootScriptTreeWithNetwork(handle, int(KCfdNetworkLiquidv1), &treeHandle)
+	err = convertCfdError(ret, handle)
+	return treeHandle, err
+}
+
 // CfdGoFreeScriptTreeHandle This function is free a script tree handle.
 func CfdGoFreeScriptTreeHandle(handle uintptr, treeHandle uintptr) error {
 	ret := CfdFreeTaprootScriptTreeHandle(handle, treeHandle)
@@ -5213,13 +5232,13 @@ func CfdGoFreeScriptTreeHandle(handle uintptr, treeHandle uintptr) error {
 }
 
 // internalCreateScriptTreeHandle This function is create cfd handle and script tree handle.
-func internalCreateScriptTreeHandle() (handle uintptr, treeHandle uintptr, err error) {
+func internalCreateScriptTreeHandle(networkType int) (handle uintptr, treeHandle uintptr, err error) {
 	handle, err = CfdGoCreateHandle()
 	if err != nil {
 		return uintptr(0), uintptr(0), err
 	}
 
-	ret := CfdInitializeTaprootScriptTree(handle, &treeHandle)
+	ret := CfdInitializeTaprootScriptTreeWithNetwork(handle, networkType, &treeHandle)
 	err = convertCfdError(ret, handle)
 	if err != nil {
 		CfdGoFreeHandle(handle)
@@ -5234,30 +5253,36 @@ type TapBranch struct {
 	Hash ByteData
 	// TapScript
 	TapScript Script
+	// TapLeafHash
+	TapLeafHash ByteData
 	// tree string
 	treeStr string
 	// target node string
 	targetNodeStr string
+	// network type
+	NetworkType int
 }
 
 // internalLoadTapBranchFromStringByNodes This function has load branch by nodes.
-func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) error {
+func internalLoadTapBranchFromStringByNodes(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string, networkType int) error {
 	script := ""
 	node := ""
-	if tapscript != nil {
+	if tapscript != nil && !tapscript.IsEmpty() {
 		script = tapscript.ToHex()
 		node = targetNodes
 	}
 	leafVersion := uint8(0xc0)
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	ret := CfdSetScriptTreeFromString(handle, treeHandle, treeStr, script, leafVersionPtr, node)
 	return convertCfdError(ret, handle)
 }
 
 // internalGetTapBranchData This function return a TapBranch.
-func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string) (branch *TapBranch, err error) {
-	script := ""
-	node := ""
+func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscript *Script, targetNodes string, networkType int) (branch *TapBranch, err error) {
+	var script, node, tapLeafHash string
 	if tapscript != nil {
 		script = tapscript.ToHex()
 		node = targetNodes
@@ -5271,25 +5296,34 @@ func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscr
 		return nil, err
 	}
 
-	targetNodeStr := node
-	var hash string
-	var tempScript string
-	leafVersion := uint8(0xc0)
+	var hash, targetNodeStr, tempScript string
+	var leafVersion uint8
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	depth := uint8(0)
 	depthPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&depth)))
-	if count == uint32(0) { // single leaf
-		ret = CfdGetBaseTapLeaf(handle, treeHandle, leafVersionPtr, &tempScript, &hash)
-	} else { // top branch
-		index := uint8(0)
-		indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
-		ret = CfdGetTapBranchData(handle, treeHandle, indexPtr, true, &hash, leafVersionPtr, &tempScript, depthPtr)
-	}
+	ret = CfdGetBaseTapLeaf(handle, treeHandle, leafVersionPtr, &tempScript, &hash)
 	if err = convertCfdError(ret, handle); err != nil {
 		return nil, err
 	}
+	if tapscript == nil && leafVersion != 0 {
+		script = tempScript
+	}
+	if script != "" {
+		tapLeafHash = hash
+	}
+	if count != uint32(0) { // top branch
+		// index := uint8(0)
+		index := uint8(count) - 1
+		indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
+		ret = CfdGetTapBranchData(handle, treeHandle, indexPtr, true, &hash, leafVersionPtr, &tempScript, depthPtr)
+		if err = convertCfdError(ret, handle); err != nil {
+			return nil, err
+		}
+	}
 
-	if len(script) != 0 && len(node) == 0 {
+	if node != "" {
+		targetNodeStr = node
+	} else if len(script) != 0 {
 		for idx := uint8(0); idx < uint8(count); idx++ {
 			var branchHash string
 			idxPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&idx)))
@@ -5304,14 +5338,21 @@ func internalGetTapBranchData(handle, treeHandle uintptr, treeStr string, tapscr
 	branch = &TapBranch{
 		Hash:          ByteData{hex: hash},
 		TapScript:     Script{hex: script},
+		TapLeafHash:   ByteData{hex: tapLeafHash},
 		treeStr:       treeStr,
 		targetNodeStr: targetNodeStr,
+		NetworkType:   networkType,
 	}
 	return branch, nil
 }
 
 // NewTapBranchFromHash This function return a TapBranch.
 func NewTapBranchFromHash(hash *ByteData) (*TapBranch, error) {
+	return NewTapBranchFromHashWithNetwork(hash, int(KCfdNetworkMainnet))
+}
+
+// NewTapBranchFromHashWithNetwork This function return a TapBranch.
+func NewTapBranchFromHashWithNetwork(hash *ByteData, networkType int) (*TapBranch, error) {
 	if hash == nil {
 		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
@@ -5323,17 +5364,29 @@ func NewTapBranchFromHash(hash *ByteData) (*TapBranch, error) {
 	return &TapBranch{
 		Hash:          *hash,
 		TapScript:     emptyScript,
+		TapLeafHash:   ByteData{},
 		treeStr:       treeStr,
 		targetNodeStr: "",
+		NetworkType:   networkType,
 	}, nil
 }
 
 // NewTapBranchFromTapScript This function return a TapBranch from tapscript.
 func NewTapBranchFromTapScript(tapscript *Script) (*TapBranch, error) {
+	return NewTapBranchFromTapScriptWithNetwork(tapscript, int(KCfdNetworkMainnet))
+}
+
+// NewElementsTapBranchFromTapScript This function return a TapBranch from tapscript.
+func NewElementsTapBranchFromTapScript(tapscript *Script) (*TapBranch, error) {
+	return NewTapBranchFromTapScriptWithNetwork(tapscript, int(KCfdNetworkLiquidv1))
+}
+
+// NewTapBranchFromTapScriptWithNetwork This function return a TapBranch from tapscript.
+func NewTapBranchFromTapScriptWithNetwork(tapscript *Script, networkType int) (*TapBranch, error) {
 	if tapscript == nil {
 		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	handle, treeHandle, err := internalCreateScriptTreeHandle(networkType)
 	if err != nil {
 		return nil, err
 	}
@@ -5341,6 +5394,9 @@ func NewTapBranchFromTapScript(tapscript *Script) (*TapBranch, error) {
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
 	leafVersion := uint8(0xc0)
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	ret := CfdSetInitialTapLeaf(handle, treeHandle, tapscript.ToHex(), leafVersionPtr)
 	err = convertCfdError(ret, handle)
@@ -5349,13 +5405,13 @@ func NewTapBranchFromTapScript(tapscript *Script) (*TapBranch, error) {
 	}
 
 	var treeStr string
-	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &treeStr)
+	ret = CfdGetTaprootScriptTreeString(handle, treeHandle, &treeStr)
 	err = convertCfdError(ret, handle)
 	if err != nil {
 		return nil, err
 	}
 
-	branch, err := internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "")
+	branch, err := internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "", networkType)
 	return branch, err
 }
 
@@ -5365,34 +5421,78 @@ func NewTapBranchFromString(treeStr string, tapscript *Script) (*TapBranch, erro
 	return branch, err
 }
 
+// NewElementsTapBranchFromString This function return a TapBranch from tree string.
+func NewElementsTapBranchFromString(treeStr string, tapscript *Script) (*TapBranch, error) {
+	branch, err := NewElementsTapBranchFromStringByNodes(treeStr, tapscript, []string{})
+	return branch, err
+}
+
+// NewTapBranchFromStringByNodesWithNetwork This function return a TapBranch from tree string.
+func NewTapBranchFromStringWithNetwork(treeStr string, tapscript *Script, networkType int) (*TapBranch, error) {
+	branch, err := NewTapBranchFromStringByNodesWithNetwork(treeStr, tapscript, []string{}, networkType)
+	return branch, err
+}
+
 // NewTapBranchFromStringByNodes This function return a TapBranch from tree string and nodes.
 func NewTapBranchFromStringByNodes(treeStr string, tapscript *Script, nodes []string) (*TapBranch, error) {
+	return internalNewTapBranchFromStringByNodes(treeStr, tapscript, nodes, int(KCfdNetworkMainnet))
+}
+
+// NewElementsTapBranchFromStringByNodes This function return a TapBranch from tree string and nodes.
+func NewElementsTapBranchFromStringByNodes(treeStr string, tapscript *Script, nodes []string) (*TapBranch, error) {
+	return internalNewTapBranchFromStringByNodes(treeStr, tapscript, nodes, int(KCfdNetworkLiquidv1))
+}
+
+// NewTapBranchFromStringByNodesWithNetwork This function return a TapBranch from tree string and nodes.
+func NewTapBranchFromStringByNodesWithNetwork(treeStr string, tapscript *Script, nodes []string, networkType int) (*TapBranch, error) {
+	return internalNewTapBranchFromStringByNodes(treeStr, tapscript, nodes, networkType)
+}
+
+// internalNewTapBranchFromStringByNodes This function return a TapBranch from tree string and nodes.
+func internalNewTapBranchFromStringByNodes(treeStr string, tapscript *Script, nodes []string, networkType int) (*TapBranch, error) {
 	targetNodes := ""
 	if tapscript != nil && len(nodes) > 0 {
 		targetNodes = strings.Join(nodes, "")
 	}
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	handle, treeHandle, err := internalCreateScriptTreeHandle(networkType)
 	if err != nil {
 		return nil, err
 	}
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, treeStr, tapscript, targetNodes)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, treeStr, tapscript, targetNodes, networkType)
 	if err != nil {
 		return nil, err
 	}
 
-	return internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, targetNodes)
+	var newTreeStr string
+	ret := CfdGetTaprootScriptTreeString(handle, treeHandle, &newTreeStr)
+	err = convertCfdError(ret, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	return internalGetTapBranchData(handle, treeHandle, newTreeStr, tapscript, targetNodes, networkType)
 }
 
 // NewTapBranchFromControlBlock This function return a TapBranch from control block.
 func NewTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Script) (branch *TapBranch, internalPubkey *ByteData, err error) {
+	return NewTapBranchFromControlBlockWithNetwork(controlBlock, tapscript, int(KCfdNetworkMainnet))
+}
+
+// NewElementsTapBranchFromControlBlock This function return a TapBranch from control block.
+func NewElementsTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Script) (branch *TapBranch, internalPubkey *ByteData, err error) {
+	return NewTapBranchFromControlBlockWithNetwork(controlBlock, tapscript, int(KCfdNetworkLiquidv1))
+}
+
+// NewTapBranchFromControlBlockWithNetwork This function return a TapBranch from control block.
+func NewTapBranchFromControlBlockWithNetwork(controlBlock *ByteData, tapscript *Script, networkType int) (branch *TapBranch, internalPubkey *ByteData, err error) {
 	if controlBlock == nil || tapscript == nil {
 		return nil, nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
 
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	handle, treeHandle, err := internalCreateScriptTreeHandle(networkType)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -5407,7 +5507,7 @@ func NewTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Script) (br
 
 	var tempScript string
 	var hash string
-	leafVersion := uint8(0xc0)
+	var leafVersion uint8
 	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
 	index := uint8(0)
 	indexPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&index)))
@@ -5419,13 +5519,13 @@ func NewTapBranchFromControlBlock(controlBlock *ByteData, tapscript *Script) (br
 	}
 
 	var treeStr string
-	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &treeStr)
+	ret = CfdGetTaprootScriptTreeString(handle, treeHandle, &treeStr)
 	err = convertCfdError(ret, handle)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	branch, err = internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "")
+	branch, err = internalGetTapBranchData(handle, treeHandle, treeStr, tapscript, "", networkType)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -5444,8 +5544,46 @@ func (obj *TapBranch) AddBranchByTapScript(tapscript *Script) error {
 	if tapscript == nil {
 		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
-	treeStr := "tl(" + tapscript.ToHex() + ")"
-	return obj.AddBranchByString(treeStr)
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
+	if err != nil {
+		return err
+	}
+
+	leafVersion := uint8(0xc0)
+	if obj.NetworkType >= int(KCfdNetworkLiquidv1) {
+		leafVersion = uint8(0xc4)
+	}
+	leafVersionPtr := SwigcptrUint8_t(uintptr(unsafe.Pointer(&leafVersion)))
+	ret := CfdAddTapBranchByTapLeaf(handle, treeHandle, tapscript.ToHex(), leafVersionPtr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	regBr, err := NewTapBranchFromTapScriptWithNetwork(tapscript, obj.NetworkType)
+	if err != nil {
+		return err
+	}
+
+	var newTreeStr string
+	ret = CfdGetTaprootScriptTreeString(handle, treeHandle, &newTreeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	branch, err := internalGetTapBranchData(handle, treeHandle, newTreeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
+	if err == nil {
+		obj.Hash = branch.Hash
+		obj.treeStr = newTreeStr
+		obj.targetNodeStr = obj.targetNodeStr + regBr.Hash.ToHex()
+	}
+	return err
 }
 
 // AddBranchByHash This function is adding a tapbranch hash.
@@ -5453,7 +5591,37 @@ func (obj *TapBranch) AddBranchByHash(hash *ByteData) error {
 	if hash == nil {
 		return convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
-	return obj.AddBranchByString(hash.hex)
+
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
+
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
+	if err != nil {
+		return err
+	}
+
+	ret := CfdAddTapBranchByHash(handle, treeHandle, hash.hex)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	var newTreeStr string
+	ret = CfdGetTaprootScriptTreeString(handle, treeHandle, &newTreeStr)
+	if err = convertCfdError(ret, handle); err != nil {
+		return err
+	}
+
+	branch, err := internalGetTapBranchData(handle, treeHandle, newTreeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
+	if err == nil {
+		obj.Hash = branch.Hash
+		obj.treeStr = newTreeStr
+		obj.targetNodeStr = obj.targetNodeStr + hash.hex
+	}
+	return err
 }
 
 // AddBranchByBranch This function is adding a tapbranch.
@@ -5466,19 +5634,19 @@ func (obj *TapBranch) AddBranchByBranch(branch *TapBranch) error {
 
 // AddBranchByString This function return a tapbranch string.
 func (obj *TapBranch) AddBranchByString(treeStr string) error {
-	addBranch, err := NewTapBranchFromString(treeStr, nil)
+	addBranch, err := NewTapBranchFromStringWithNetwork(treeStr, nil, obj.NetworkType)
 	if err != nil {
 		return err
 	}
 
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
 	if err != nil {
 		return err
 	}
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return err
 	}
@@ -5489,12 +5657,12 @@ func (obj *TapBranch) AddBranchByString(treeStr string) error {
 	}
 
 	var newTreeStr string
-	ret = CfdGetTaprootScriptTreeSrting(handle, treeHandle, &newTreeStr)
+	ret = CfdGetTaprootScriptTreeString(handle, treeHandle, &newTreeStr)
 	if err = convertCfdError(ret, handle); err != nil {
 		return err
 	}
 
-	branch, err := internalGetTapBranchData(handle, treeHandle, newTreeStr, &obj.TapScript, obj.targetNodeStr)
+	branch, err := internalGetTapBranchData(handle, treeHandle, newTreeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err == nil {
 		obj.Hash = branch.Hash
 		obj.treeStr = newTreeStr
@@ -5506,14 +5674,14 @@ func (obj *TapBranch) AddBranchByString(treeStr string) error {
 // GetMaxBranchCount This function return a branch count.
 func (obj *TapBranch) GetMaxBranchCount() (count uint32, err error) {
 	count = uint32(0)
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
 	if err != nil {
 		return
 	}
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return
 	}
@@ -5526,14 +5694,14 @@ func (obj *TapBranch) GetMaxBranchCount() (count uint32, err error) {
 
 // GetBranch This function return a tapbranch.
 func (obj *TapBranch) GetBranch(index uint8) (branch *TapBranch, err error) {
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
 	if err != nil {
 		return nil, err
 	}
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return
 	}
@@ -5548,19 +5716,24 @@ func (obj *TapBranch) GetBranch(index uint8) (branch *TapBranch, err error) {
 	defer CfdGoFreeScriptTreeHandle(handle, branchHandle)
 
 	var branchTreeStr string
-	ret = CfdGetTaprootScriptTreeSrting(handle, branchHandle, &branchTreeStr)
+	ret = CfdGetTaprootScriptTreeString(handle, branchHandle, &branchTreeStr)
 	if err = convertCfdError(ret, handle); err != nil {
 		return nil, err
 	}
 
-	return internalGetTapBranchData(handle, branchHandle, branchTreeStr, nil, "")
+	return internalGetTapBranchData(handle, branchHandle, branchTreeStr, nil, "", obj.NetworkType)
 }
 
 // GetControlNodeList This function return control node list.
 func (obj *TapBranch) GetControlNodeList() (nodeList []string, err error) {
 	nodeList = []string{}
+	/*
+		if obj.TapScript.IsEmpty() {
+			return nodeList, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+		}
+	*/
 	if obj.TapScript.IsEmpty() {
-		return nodeList, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+		return nodeList, nil
 	}
 	if len(obj.targetNodeStr) == 0 {
 		return nodeList, nil
@@ -5585,17 +5758,19 @@ func (obj *TapBranch) GetTweakedPubkey(internalPubkey *ByteData) (pubkey *ByteDa
 	if internalPubkey == nil {
 		return nil, nil, nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
-	if obj.TapScript.IsEmpty() {
-		return nil, nil, nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
-	}
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	/*
+		if obj.TapScript.IsEmpty() {
+			return nil, nil, nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+		}
+	*/
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -5616,17 +5791,19 @@ func (obj *TapBranch) GetTweakedPrivkey(internalPrivkey *ByteData) (privkey *Byt
 	if internalPrivkey == nil {
 		return nil, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
 	}
-	if obj.TapScript.IsEmpty() {
-		return nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
-	}
-	handle, treeHandle, err := internalCreateScriptTreeHandle()
+	/*
+		if obj.TapScript.IsEmpty() {
+			return nil, convertCfdError(int(KCfdIllegalStateError), uintptr(0))
+		}
+	*/
+	handle, treeHandle, err := internalCreateScriptTreeHandle(obj.NetworkType)
 	if err != nil {
 		return nil, err
 	}
 	defer CfdGoFreeHandle(handle)
 	defer CfdGoFreeScriptTreeHandle(handle, treeHandle)
 
-	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr)
+	err = internalLoadTapBranchFromStringByNodes(handle, treeHandle, obj.treeStr, &obj.TapScript, obj.targetNodeStr, obj.NetworkType)
 	if err != nil {
 		return nil, err
 	}
@@ -5722,6 +5899,47 @@ func SetUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo) error {
 	return nil
 }
 
+// SetElementsUtxoListByHandle This function has adding utxo list.
+func SetElementsUtxoListByHandle(createTxHandle uintptr, txinUtxoList []CfdUtxo) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	isAlreadySetGenesisBlockHash := false
+	for _, utxo := range txinUtxoList {
+		if !isAlreadySetGenesisBlockHash && utxo.GenesisBlockHash != "" {
+			ret := CfdSetConfidentialTxGenesisBlockHashByHandle(handle, createTxHandle, utxo.GenesisBlockHash)
+			if err = convertCfdError(ret, handle); err != nil {
+				return err
+			}
+			isAlreadySetGenesisBlockHash = true
+		}
+
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxo.Vout)))
+		satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxo.Amount)))
+		ret := CfdSetConfidentialTxUtxoDataByHandle(handle, createTxHandle, utxo.Txid, voutPtr, satoshiAmountPtr, utxo.AmountCommitment, utxo.Descriptor, "", utxo.Asset, utxo.AssetCommitment, utxo.AmountBlinder, utxo.AssetBlinder, utxo.ScriptSigTemplate, false)
+		if err = convertCfdError(ret, handle); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// SetConfidentialTxGenesisBlockHashByHandle set the genesis block hash for tx handle.
+func SetConfidentialTxGenesisBlockHashByHandle(createTxHandle uintptr, genesisBlockHash string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdSetConfidentialTxGenesisBlockHashByHandle(handle, createTxHandle, genesisBlockHash)
+	return convertCfdError(ret, handle)
+}
+
 // CfdGoAddTxSignWithPrivkeyByUtxoList This function add sign with prikey.
 func CfdGoAddTxSignWithPrivkeyByUtxoList(networkType int, txHex string, txinUtxoList []CfdUtxo, txid string, vout uint32, privkey string, sighashType *SigHashType, hasGrindR bool, auxRand, annex *ByteData) (outputTxHex string, err error) {
 	outputTxHex = ""
@@ -5731,8 +5949,14 @@ func CfdGoAddTxSignWithPrivkeyByUtxoList(networkType int, txHex string, txinUtxo
 	}
 	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
 
-	if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
-		return
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		if err = SetElementsUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+			return
+		}
+	} else {
+		if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+			return
+		}
 	}
 
 	if err = SignWithPrivkeyByHandle(txHandle, txid, vout, privkey, sighashType, hasGrindR, auxRand, annex); err != nil {
@@ -5791,8 +6015,22 @@ func CfdGoGetSighash(networkType int, txHex string, txinUtxoList []CfdUtxo, txid
 	}
 	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
 
-	if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
-		return
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		if err = SetElementsUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+			return
+		}
+	} else {
+		if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+			return
+		}
+	}
+	// TODO: Maybe it should be compensated on the part of the native library.
+	if redeemScript != nil && len(redeemScript.ToHex()) > 0 && tapLeafHash == nil {
+		branch, err := NewTapBranchFromTapScriptWithNetwork(redeemScript, networkType)
+		if err != nil {
+			return "", err
+		}
+		tapLeafHash = &branch.TapLeafHash
 	}
 
 	return GetSighash(txHandle, txid, vout, sighashType, pubkey, redeemScript, tapLeafHash, annex, codeSeparatorPosition)
@@ -5846,8 +6084,14 @@ func CfdGoVerifySign(networkType int, txHex string, txinUtxoList []CfdUtxo, txid
 	}
 	defer CfdFreeTransactionHandle(uintptr(0), txHandle)
 
-	if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
-		return
+	if networkType >= int(KCfdNetworkLiquidv1) {
+		if err = SetElementsUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+			return
+		}
+	} else {
+		if err = SetUtxoListByHandle(txHandle, txinUtxoList); err != nil {
+			return
+		}
 	}
 	return VerifySign(txHandle, txid, vout)
 }
@@ -6513,7 +6757,7 @@ func ExistTxidInBlock(blockHandle uintptr, txid string) (exist bool, err error) 
 	return exist, err
 }
 
-// GetTxCountInBlock This function get a trasaction count in this block.
+// GetTxCountInBlock This function get a transaction count in this block.
 func GetTxCountInBlock(blockHandle uintptr) (count uint32, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
@@ -6784,6 +7028,131 @@ func CfdGoHash256(message string, hasText bool) (output string, err error) {
 	ret := CfdHash256(handle, message, hasText, &output)
 	err = convertCfdError(ret, handle)
 	return
+}
+
+// custom prefix API -----------------------------------------------------------
+
+// CfdGoSetCustomPrefix set custom prefix by json.
+func CfdGoSetCustomPrefix(jsonStr string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var respStr string
+	ret := CfdRequestExecuteJson(handle, "SetCustomPrefix", jsonStr, &respStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+// CfdGoClearCustomPrefix clear custom prefix.
+func CfdGoClearCustomPrefix() error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var respStr string
+	ret := CfdRequestExecuteJson(handle, "ClearCustomPrefix", "", &respStr)
+	err = convertCfdError(ret, handle)
+	return err
+}
+
+const (
+	ExtkeyFormatTypeBip32 int = 0
+	ExtkeyFormatTypeBip49 int = 1
+	ExtkeyFormatTypeBip84 int = 2
+)
+
+// CfdGoCreateExtkeyByFormat create extended key by format.
+func CfdGoCreateExtkeyByFormat(networkType int, extkeyType int, fingerprint string, key string, chainCode string, depth byte, childNumber uint32, formatType int) (extkey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	childNumberPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&childNumber)))
+	ret := CfdCreateExtkeyByFormat(handle, networkType, extkeyType, "", fingerprint, key, chainCode, depth, childNumberPtr, formatType, &extkey)
+	err = convertCfdError(ret, handle)
+	return extkey, err
+}
+
+// CfdGoCreateExtkeyByFormatFromParent create extended key by format.
+func CfdGoCreateExtkeyByFormatFromParent(networkType int, extkeyType int, parentKey string, key string, chainCode string, depth byte, childNumber uint32, formatType int) (extkey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	childNumberPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&childNumber)))
+	ret := CfdCreateExtkeyByFormat(handle, networkType, extkeyType, parentKey, "", key, chainCode, depth, childNumberPtr, formatType, &extkey)
+	err = convertCfdError(ret, handle)
+	return extkey, err
+}
+
+// CfdGoCreateExtkeyByFormatFromSeed create extended key by format.
+func CfdGoCreateExtkeyByFormatFromSeed(seed string, networkType int, keyType int, formatType int) (extkey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdCreateExtkeyByFormatFromSeed(handle, seed, networkType, keyType, formatType, &extkey)
+	err = convertCfdError(ret, handle)
+	return extkey, err
+}
+
+// message sign API ------------------------------------------------------------
+
+// CfdGoSignMessage sign messsage.
+func CfdGoSignMessage(privkey, message, magic string, isOutputBase64 bool) (signature string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return signature, err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdSignMessage(handle, privkey, message, magic, isOutputBase64, &signature)
+	err = convertCfdError(ret, handle)
+	return signature, err
+}
+
+// CfdGoVerifyMessage verify message.
+func CfdGoVerifyMessage(signature, pubkey, message, magic string) (recoveredPubkey string, isVerify bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return recoveredPubkey, false, err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdVerifyMessage(handle, signature, pubkey, message, magic, &recoveredPubkey)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		isVerify = false
+		err = convertCfdError(ret, handle)
+	}
+	return recoveredPubkey, isVerify, err
+}
+
+// CfdGoSetGenesisBlockHashGlobal ...
+func CfdGoSetGenesisBlockHashGlobal(genesisBlockHash string) error {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdSetGenesisBlockHashGlobal(handle, genesisBlockHash)
+	err = convertCfdError(ret, handle)
+	return err
 }
 
 // refine API ------------------------------------------------------------------
