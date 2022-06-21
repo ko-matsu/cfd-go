@@ -78,12 +78,13 @@ func (mr *MockPubkeyApiMockRecorder) VerifyEcSignature(pubkey, sighash, signatur
 }
 
 // VerifyMessage mocks base method.
-func (m *MockPubkeyApi) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (*types.Pubkey, error) {
+func (m *MockPubkeyApi) VerifyMessage(pubkey *types.Pubkey, signature, message, magic string) (*types.Pubkey, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyMessage", pubkey, signature, message, magic)
 	ret0, _ := ret[0].(*types.Pubkey)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // VerifyMessage indicates an expected call of VerifyMessage.
