@@ -14,7 +14,12 @@
 
 %typemap(argout) (char **) {
   if ($1 && *$1) {
-    $input->n = strlen(*$1);
+    if (**$1 == 0) {
+      free(*$1);
+      *$1 = NULL;
+    } else {
+      $input->n = strlen(*$1);
+    }
   }
 }
 
