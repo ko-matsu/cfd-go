@@ -6,6 +6,17 @@ import (
 	cfdgo "github.com/cryptogarageinc/cfd-go"
 )
 
+var (
+	// SigHashType: default (for taproot)
+	SigHashTypeDefault SigHashType = *NewSigHashType(0)
+	// SigHashType: all
+	SigHashTypeAll SigHashType = *NewSigHashType(1)
+	// SigHashType: none
+	SigHashTypeNone SigHashType = *NewSigHashType(2)
+	// SigHashType: single
+	SigHashTypeSingle SigHashType = *NewSigHashType(3)
+)
+
 // SigHashType This struct use for the sighashtype utility function.
 type SigHashType struct {
 	Type         int
@@ -129,8 +140,3 @@ func (obj *SigHashType) ToCfdValue() *cfdgo.SigHashType {
 		Rangeproof:   obj.Rangeproof,
 	}
 }
-
-var SigHashTypeDefault SigHashType = *NewSigHashType(0)
-var SigHashTypeAll SigHashType = *NewSigHashType(1)
-var SigHashTypeNone SigHashType = *NewSigHashType(2)
-var SigHashTypeSingle SigHashType = *NewSigHashType(3)
