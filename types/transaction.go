@@ -7,8 +7,18 @@ import (
 )
 
 const (
-	SequenceLockTimeFinal     uint32 = 0xffffffff
+	// sequence lock time: final
+	SequenceLockTimeFinal uint32 = 0xffffffff
+	// sequence lock time: enable max time
 	SequenceLockTimeEnableMax uint32 = 0xfffffffe
+
+	// tx version: 1
+	TxVersion1 uint32 = 1
+	// tx version: 2
+	TxVersion2 uint32 = 1
+
+	// locktime: 0
+	LockTimeZero uint32 = 0
 )
 
 // Transaction ...

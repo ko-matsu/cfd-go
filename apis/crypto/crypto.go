@@ -7,7 +7,7 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source crypto.go -destination mock/crypto.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.9 -w mock/crypto.go
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.12 -w mock/crypto.go
 
 // -------------------------------------
 // API struct
