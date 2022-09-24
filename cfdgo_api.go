@@ -2524,33 +2524,15 @@ func CfdGoParseScript(script string) (scriptItems []string, err error) {
 	}
 	defer CfdGoFreeHandle(handle)
 
-	var scriptItemHandle uintptr
-	var itemNum uint32
-	itemNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&itemNum)))
-	var ret int
-
-	if ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); ret == (int)(KCfdSuccess) {
-		scriptItems = make([]string, itemNum)
-		for i := uint32(0); i < itemNum; i++ {
-			var item string
-			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-			ret = CfdGetScriptItem(handle, scriptItemHandle, index, &item)
-			if ret != (int)(KCfdSuccess) {
-				break
-			}
-			scriptItems[i] = item
-		}
-
-		if freeRet := CfdFreeScriptItemHandle(handle, scriptItemHandle); ret == (int)(KCfdSuccess) {
-			ret = freeRet
-		}
-	}
-
+	var scriptStr string
+	ret := CfdParseScriptAll(handle, script, &scriptStr)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
-		scriptItems = nil
+		return nil, err
 	}
-	return
+
+	scriptItems = strings.Split(scriptStr, " ")
+	return scriptItems, nil
 }
 
 /**
