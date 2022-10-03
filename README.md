@@ -131,7 +131,7 @@ On Windows, can use `releases asset`.
 
 ### Using releases asset
 
-The fastest and easiest way.
+The fastest and easiest way. Target is amd64(x86_64) only.
 
 - macos / linux(ubuntu)
 
@@ -178,6 +178,8 @@ cd build && sudo ninja install
 cmake version is 3.15 or higher: `cmake --install build`
 
 #### Using releases asset (for install)
+
+Target is amd64(x86_64) only.
 
 - Ubuntu / MacOS
 
