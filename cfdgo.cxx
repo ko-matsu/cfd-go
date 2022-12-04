@@ -3259,6 +3259,23 @@ intgo _wrap_CfdInitializeEstimateFee_cfdgo_53cc92756d2710b7(void *_swig_go_0, vo
 }
 
 
+intgo _wrap_CfdInitializeEstimateFeeWithNetwork_cfdgo_53cc92756d2710b7(void *_swig_go_0, intgo _swig_go_1, void **_swig_go_2) {
+  void *arg1 = (void *) 0 ;
+  int arg2 ;
+  void **arg3 = (void **) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  arg2 = (int)_swig_go_1; 
+  arg3 = *(void ***)&_swig_go_2; 
+  
+  result = (int)CfdInitializeEstimateFeeWithNetwork(arg1,arg2,arg3);
+  _swig_go_result = result; 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_CfdAddTxInForEstimateFee_cfdgo_53cc92756d2710b7(void *_swig_go_0, void *_swig_go_1, _gostring_ _swig_go_2, uint32_t *_swig_go_3, _gostring_ _swig_go_4, _gostring_ _swig_go_5, bool _swig_go_6, bool _swig_go_7, bool _swig_go_8, uint32_t *_swig_go_9, _gostring_ _swig_go_10) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
@@ -3543,6 +3560,43 @@ intgo _wrap_CfdFinalizeEstimateFee_cfdgo_53cc92756d2710b7(void *_swig_go_0, void
   arg8 = (double)_swig_go_7; 
   
   result = (int)CfdFinalizeEstimateFee(arg1,arg2,(char const *)arg3,(char const *)arg4,arg5,arg6,arg7,arg8);
+  _swig_go_result = result; 
+  free(arg3); 
+  free(arg4); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdGetEstimateFee_cfdgo_53cc92756d2710b7(void *_swig_go_0, void *_swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, bool _swig_go_4, double _swig_go_5, int64_t *_swig_go_6, int64_t *_swig_go_7) {
+  void *arg1 = (void *) 0 ;
+  void *arg2 = (void *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  bool arg5 ;
+  double arg6 ;
+  int64_t *arg7 = (int64_t *) 0 ;
+  int64_t *arg8 = (int64_t *) 0 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  arg2 = *(void **)&_swig_go_1; 
+  
+  arg3 = (char *)malloc(_swig_go_2.n + 1);
+  memcpy(arg3, _swig_go_2.p, _swig_go_2.n);
+  arg3[_swig_go_2.n] = '\0';
+  
+  
+  arg4 = (char *)malloc(_swig_go_3.n + 1);
+  memcpy(arg4, _swig_go_3.p, _swig_go_3.n);
+  arg4[_swig_go_3.n] = '\0';
+  
+  arg5 = (bool)_swig_go_4; 
+  arg6 = (double)_swig_go_5; 
+  arg7 = *(int64_t **)&_swig_go_6; 
+  arg8 = *(int64_t **)&_swig_go_7; 
+  
+  result = (int)CfdGetEstimateFee(arg1,arg2,(char const *)arg3,(char const *)arg4,arg5,arg6,arg7,arg8);
   _swig_go_result = result; 
   free(arg3); 
   free(arg4); 
