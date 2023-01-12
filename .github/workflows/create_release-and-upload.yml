@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -39,7 +39,7 @@ jobs:
     - name: output url
       id: output_url
       run: |
-        echo "::set-output name=upload_url::${{steps.get_release.outputs.upload_url}}${{steps.create_release.outputs.upload_url}}"
+        echo "upload_url=${{steps.get_release.outputs.upload_url}}${{steps.create_release.outputs.upload_url}}" >> $GITHUB_OUTPUT
 
   upload-object-windows-mingw:
     name: upload-object-win-mingw
@@ -59,13 +59,13 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
       shell: bash
     - name: dump version
       env:
@@ -123,10 +123,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: cmake-build
       run: |
         mkdir dist
@@ -151,7 +151,7 @@ jobs:
         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib" go test
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:
@@ -169,10 +169,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -200,7 +200,7 @@ jobs:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -220,10 +220,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -251,7 +251,7 @@ jobs:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -271,10 +271,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -302,7 +302,7 @@ jobs:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -313,6 +313,57 @@ jobs:
         upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: /tmp/cfd/cfd.zip
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine-3.16-x86_64.zip
+        asset_content_type: application/zip
+
+  upload-object-alpine-3-17:
+    name: upload-object-alpine-3.17
+    needs: create_releases
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: Get the version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+    - name: list
+      run: ls -a $GITHUB_WORKSPACE
+    - name: docker setup
+      uses: docker://alpine:3.17
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: create archive file
+      run: |
+        echo "---- dump output data ----"
+        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
+        mkdir -p /tmp/cfd
+        sudo chmod 777 /tmp/cfd
+        sudo chown runner /tmp/cfd
+        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
+        cd /tmp/cfd
+        sudo zip -r /tmp/cfd/cfd.zip usr
+        sudo chmod 777 /tmp/cfd/cfd.zip
+        sudo chown runner /tmp/cfd/cfd.zip
+        sudo cp -rp /tmp/cfd/cfd.zip $GITHUB_WORKSPACE/dist/cfd.zip
+        echo "---- dump zip file ----"
+        sudo ls -l /tmp/cfd
+    - name: pre-release-test
+      uses: docker://golang:1.19-alpine3.17
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
+    - name: output url
+      id: get_url
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
+    - name: Upload Release Asset
+      id: upload-release-asset 
+#      if: success()
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: /tmp/cfd/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine-3.17-x86_64.zip
         asset_content_type: application/zip
 
   upload-object-macos:
@@ -340,10 +391,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: Select Xcode version
       run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
     - name: Show Xcode version
@@ -368,7 +419,7 @@ jobs:
         ls -l
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:
