@@ -65,7 +65,7 @@ jobs:
       run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       shell: bash
     - name: dump version
       env:
@@ -126,7 +126,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: cmake-build
       run: |
         mkdir dist
@@ -172,7 +172,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -223,7 +223,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -274,7 +274,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -325,7 +325,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
@@ -394,7 +394,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: Select Xcode version
       run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
     - name: Show Xcode version
