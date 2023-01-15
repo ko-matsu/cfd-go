@@ -7,6 +7,9 @@ services:
       dockerfile: ./docker/tools.dockerfile
     volumes:
       - .:/workspace
+      - gocache-data:/root/.cache/go-build
+      - gomodcache-data:/go/pkg/mod
+      - ccache-data:/root/.cache/ccache
     working_dir: /workspace
     command: make all
 
@@ -16,6 +19,9 @@ services:
       dockerfile: ./docker/tools.dockerfile
     volumes:
       - .:/workspace
+      - gocache-data:/root/.cache/go-build
+      - gomodcache-data:/go/pkg/mod
+      - ccache-data:/root/.cache/ccache
     working_dir: /workspace
     command: make build-all gen-swig
 
@@ -25,14 +31,28 @@ services:
       dockerfile: ./docker/tools.dockerfile
     volumes:
       - .:/workspace
+      - gocache-data:/root/.cache/go-build
+      - gomodcache-data:/go/pkg/mod
+      - ccache-data:/root/.cache/ccache
     working_dir: /workspace
     command: make build-all test
 
   test-1.17:
     build:
       context: .
-      dockerfile: ./docker/golang17-alpine14.dockerfile
+      dockerfile: ./docker/golang19-alpine317.dockerfile
     volumes:
       - .:/workspace
+      - gocache-alpine-data:/root/.cache/go-build
+      - gomodcache-alpine-data:/go/pkg/mod
+      - ccache-alpine-data:/root/.cache/ccache
     working_dir: /workspace
     command: make build-all test
+
+volumes:
+  gocache-data:
+  gomodcache-data:
+  ccache-data:
+  gocache-alpine-data:
+  gomodcache-alpine-data:
+  ccache-alpine-data:

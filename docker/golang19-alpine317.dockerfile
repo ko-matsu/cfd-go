@@ -1,8 +1,11 @@
-FROM golang:1.17-alpine3.14
+FROM golang:1.19-alpine3.17
 
 WORKDIR /workspace
 
-RUN apk add --update --no-cache musl gcc g++ make git cmake
+# set volume: gocache, gomodcache, ccache
+VOLUME ["/root/.cache/go-build", "/go/pkg/mod", "/root/.cache/ccache"]
+
+RUN apk add --update --no-cache musl gcc g++ make git cmake ccache
 
 RUN git config --global --add safe.directory /workspace \
   && git config --global --add safe.directory /workspace/external/cfd \
