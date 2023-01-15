@@ -18,7 +18,7 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source pegout.go -destination mock/pegout.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.12 -w mock/pegout.go
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.5.0 -w mock/pegout.go
 
 const (
 	PegoutAmountMinimum int64 = 100000

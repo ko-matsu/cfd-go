@@ -15,7 +15,7 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source script.go -destination mock/script.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.12 -w mock/script.go
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.5.0 -w mock/script.go
 
 // -------------------------------------
 // API struct
@@ -133,8 +133,6 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pu
 			num, err := strconv.ParseUint(numStr, 10, 32)
 			if err != nil {
 				return nil, 0, errors.Wrap(err, cfdErrors.ErrMultisigScript.Error())
-			} else if num < 0 {
-				return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 			}
 			if i == 0 {
 				reqSigNum = uint32(num)

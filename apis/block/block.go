@@ -11,7 +11,7 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source block.go -destination mock/block.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.12 -w mock/block.go
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.5.0 -w mock/block.go
 
 // -------------------------------------
 // API struct

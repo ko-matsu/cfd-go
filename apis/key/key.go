@@ -11,7 +11,7 @@ import (
 // go generate comment
 //go:generate -command mkdir mock
 //go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source key.go -destination mock/key.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.12 -w mock/key.go
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.5.0 -w mock/key.go
 
 // PubkeyApi This interface has pubkey operation API.
 type PubkeyApi interface {
@@ -58,11 +58,9 @@ func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 // struct
 // -------------------------------------
 
-//
 type PubkeyApiImpl struct {
 }
 
-//
 type PrivkeyApiImpl struct {
 	cfdErrors.HasInitializeError
 	network *types.NetworkType
