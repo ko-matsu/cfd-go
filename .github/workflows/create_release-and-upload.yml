@@ -63,6 +63,7 @@ jobs:
     - name: output url
       id: get_url
       run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
+      shell: bash
     - name: Get the version
       id: get_version
       run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
