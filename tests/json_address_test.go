@@ -50,7 +50,7 @@ func TestAddress(t *testing.T) {
 	}
 	assert.True(t, true)
 	fmt.Printf("%s test done.\n", GetFuncName())
-	os.Stdout.Sync()
+	_ = os.Stdout.Sync()
 	time.Sleep(time.Second)
 }
 

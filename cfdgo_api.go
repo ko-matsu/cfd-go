@@ -5223,7 +5223,7 @@ func internalCreateScriptTreeHandle(networkType int) (handle uintptr, treeHandle
 	ret := CfdInitializeTaprootScriptTreeWithNetwork(handle, networkType, &treeHandle)
 	err = convertCfdError(ret, handle)
 	if err != nil {
-		CfdGoFreeHandle(handle)
+		_ = CfdGoFreeHandle(handle)
 		return uintptr(0), uintptr(0), err
 	}
 	return handle, treeHandle, err
