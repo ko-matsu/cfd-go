@@ -63,3 +63,6 @@ jobs:
     - name: go_test-ubuntu
       if: runner.os == 'Linux'
       run: ./go_test.sh
+    - name: golangci-lint
+      if: matrix.os == 'ubuntu-22.04'
+      uses: reviewdog/action-golangci-lint@v2
