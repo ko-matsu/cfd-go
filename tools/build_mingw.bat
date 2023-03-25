@@ -4,8 +4,8 @@ if exist "build_mingw.bat" (
   cd ..
 )
 
-set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
-set PATH=%PATH:C:\Program Files (x86)\Git\usr\bin;=%
+rem set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+rem set PATH=%PATH:C:\Program Files (x86)\Git\usr\bin;=%
 
 CALL cmake -S . -B build -G "MinGW Makefiles" -DENABLE_SHARED=on -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DENABLE_TESTS=off -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="C:/usr/local"
 if not %ERRORLEVEL% == 0 (
