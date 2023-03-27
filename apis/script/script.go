@@ -130,11 +130,12 @@ func (s *ScriptApiImpl) ParseMultisig(script *types.Script) (pubkeys []*types.Pu
 			} else {
 				numStr = nums[0]
 			}
+			if strings.HasPrefix(numStr, "-") {
+				return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
+			}
 			num, err := strconv.ParseUint(numStr, 10, 32)
 			if err != nil {
 				return nil, 0, errors.Wrap(err, cfdErrors.ErrMultisigScript.Error())
-			} else if num < 0 {
-				return nil, 0, errors.New(cfdErrors.ErrMultisigScript.Error())
 			}
 			if i == 0 {
 				reqSigNum = uint32(num)

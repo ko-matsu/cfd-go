@@ -58,11 +58,9 @@ func NewPrivkeyApi(options ...config.CfdConfigOption) *PrivkeyApiImpl {
 // struct
 // -------------------------------------
 
-//
 type PubkeyApiImpl struct {
 }
 
-//
 type PrivkeyApiImpl struct {
 	cfdErrors.HasInitializeError
 	network *types.NetworkType

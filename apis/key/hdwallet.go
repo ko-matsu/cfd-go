@@ -150,19 +150,16 @@ func NewHdWalletApi(options ...config.CfdConfigOption) *HdWalletApiImpl {
 // struct
 // -------------------------------------
 
-//
 type ExtPubkeyApiImpl struct {
 	cfdErrors.HasInitializeError
 	network *types.NetworkType
 }
 
-//
 type ExtPrivkeyApiImpl struct {
 	cfdErrors.HasInitializeError
 	network *types.NetworkType
 }
 
-//
 type HdWalletApiImpl struct {
 	cfdErrors.HasInitializeError
 	network *types.NetworkType
