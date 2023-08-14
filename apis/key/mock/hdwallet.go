@@ -9,7 +9,7 @@ import (
 
 	key "github.com/cryptogarageinc/cfd-go/apis/key"
 	types "github.com/cryptogarageinc/cfd-go/types"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockExtPubkeyApi is a mock of ExtPubkeyApi interface.

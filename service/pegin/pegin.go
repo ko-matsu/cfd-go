@@ -16,8 +16,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate go run github.com/golang/mock/mockgen@v1.6.0 -source pegin.go -destination mock/pegin.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.1.12 -w mock/pegin.go
+//go:generate go run go.uber.org/mock/mockgen@v0.2.0 -source pegin.go -destination mock/pegin.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.12.0 -w mock/pegin.go
 
 // Pegin This interface defines the API used by the pegin function.
 type Pegin interface {

@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	types "github.com/cryptogarageinc/cfd-go/types"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockConfidentialTxApi is a mock of ConfidentialTxApi interface.

@@ -3,27 +3,27 @@ all: generate format
 
 # for docker
 get-cache:
-	go install golang.org/x/tools/cmd/goimports@v0.7.0
-	go install github.com/golang/mock/mockgen@v1.6.0
+	go install golang.org/x/tools/cmd/goimports@v0.12.0
+	go install go.uber.org/mock/mockgen@v0.2.0
 	go mod download
 
 update:
-	go mod download
 	go mod tidy
 
 generate:
 	go generate ./apis/... ./service/...
 
 format:
-	go run golang.org/x/tools/cmd/goimports@v0.7.0 -w .
+	go run golang.org/x/tools/cmd/goimports@v0.12.0 -w .
 	go vet . ./types/... ./errors ./utils ./config ./apis/... ./service/... ./tests
+	go run github.com/google/yamlfmt/cmd/yamlfmt@v0.9.0
 	go mod tidy
 
 lint:
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.1 run
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3 run
 
 lint-fix:
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.1 run --fix
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3 run --fix
 
 build-lib:
 	echo "build for Linux/MacOS"
