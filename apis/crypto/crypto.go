@@ -6,8 +6,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate go run go.uber.org/mock/mockgen@v0.2.0 -source crypto.go -destination mock/crypto.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.12.0 -w mock/crypto.go
+//go:generate go run go.uber.org/mock/mockgen@v0.4.0 -source crypto.go -destination mock/crypto.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.17.0 -w mock/crypto.go
 
 // -------------------------------------
 // API struct

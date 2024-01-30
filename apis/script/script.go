@@ -14,8 +14,8 @@ import (
 
 // go generate comment
 //go:generate -command mkdir mock
-//go:generate go run go.uber.org/mock/mockgen@v0.2.0 -source script.go -destination mock/script.go -package mock
-//go:generate go run golang.org/x/tools/cmd/goimports@v0.12.0 -w mock/script.go
+//go:generate go run go.uber.org/mock/mockgen@v0.4.0 -source script.go -destination mock/script.go -package mock
+//go:generate go run golang.org/x/tools/cmd/goimports@v0.17.0 -w mock/script.go
 
 // -------------------------------------
 // API struct

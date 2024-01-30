@@ -1,4 +1,4 @@
-# https://github.com/google/yamlfmt/blob/v0.9.0/docs/config-file.md#configuration
+# https://github.com/google/yamlfmt/blob/v0.10.0/docs/config-file.md#configuration
 line_ending: 'lf'
 doublestar: true
 include:
@@ -8,7 +8,7 @@ include:
 formatter:
   # 使用するフォーマッター
   type: basic
-  # フォーマッターの設定 ( https://github.com/google/yamlfmt/blob/v0.9.0/docs/config-file.md#basic-formatter )
+  # フォーマッターの設定 ( https://github.com/google/yamlfmt/blob/v0.10.0/docs/config-file.md#basic-formatter )
   indent: 2
   retain_line_breaks: true
   max_line_length: 0
