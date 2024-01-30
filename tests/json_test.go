@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 )
 
@@ -53,9 +53,9 @@ func waitForTest() {
 }
 
 func readFile(fileName string) []byte {
-	bytes, err := ioutil.ReadFile(fileName)
+	bytes, err := os.ReadFile(fileName)
 	if err != nil {
-		bytes, err = ioutil.ReadFile(path.Join(".", "tests", fileName))
+		bytes, err = os.ReadFile(path.Join(".", "tests", fileName))
 		if err != nil {
 			panic(err)
 		}

@@ -1,11 +1,11 @@
 module github.com/cryptogarageinc/cfd-go
 
-go 1.17
+go 1.20
 
 require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
-	go.uber.org/mock v0.2.0
+	go.uber.org/mock v0.4.0
 )
 
 require (

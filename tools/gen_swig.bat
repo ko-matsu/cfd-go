@@ -6,6 +6,6 @@ swig -c++ -go -DCFD_DISABLE_FREESTRING -outdir . -o cfdgo.cxx -cgo -intgosize 32
 
 powershell -NoProfile -ExecutionPolicy Unrestricted .\tools\convert_crlf.ps1
 
-go run golang.org/x/tools/cmd/goimports@v0.12.0 -w .
+go run golang.org/x/tools/cmd/goimports@v0.17.0 -w .
 
 pause
